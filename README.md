@@ -8,4 +8,5 @@ Data de Entrega: 29/11/2025.
 
 # Resumo
 
-Este documento detalha os princípios teóricos e técnicos do desenvolvimento de uma plataforma de crowdfunding simplificada. Objetivo da proposta é fornecer uma plataforma de fácil utilização onde os usuários possam registrar projetos e apoiar iniciativas de terceiros através de doações financeiras.
+Este documento apresenta os fundamentos teóricos e técnicos para o desenvolvimento de uma aplicação web de crowfunding simplificado. O objetivo principal é oferecer uma plataforma intuitiva e acessível, permitindo que usuários registrem seus próprios projetos e contribuam financeiramente com iniciativas de terceiros.
+			
