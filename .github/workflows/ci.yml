@@ -40,8 +40,7 @@ jobs:
           cache-dependency-path: apps/frontend/package-lock.json
       - run: npm ci
       - run: npm run build
-
-  jobs:
+      
   sonarqube:
     name: SonarQube
     runs-on: windows-latest
