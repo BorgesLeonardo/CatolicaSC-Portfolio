@@ -24,13 +24,10 @@ jobs:
       # Se usar Prisma, manter; caso não use, permanece inofensivo
       - run: npx prisma generate || echo "skip prisma"
       - run: npm run build
-
-
-
   sonar:
     name: SonarQube Scan
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [Backend]
     steps:
       - uses: actions/checkout@v4
       - name: SonarQube Scan
