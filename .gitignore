@@ -5,15 +5,3 @@ coverage
 # Env
 .env
 *.env
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-# OS
-.DS_Store
-# Prisma
-apps/backend/prisma/*.db
-# Frontend build
-apps/frontend/dist
-# Docker
-infra/.data
