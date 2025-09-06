@@ -11,6 +11,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Test database configuration
+datasource testDb {
+  provider = "sqlite"
+  url      = env("TEST_DATABASE_URL")
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -58,6 +64,13 @@ model Support {
   message    String?
   isAnonymous Boolean @default(false)
   createdAt  DateTime @default(now())
+
+  // Payment fields
+  paymentId      String?   @unique
+  paymentStatus  String?   // pending, approved, rejected, cancelled
+  paymentMethod  String?   // credit_card, debit_card, pix, boleto
+  installments   Int?      @default(1)
+  dateApproved   DateTime?
 
   // Relations
   campaignId String

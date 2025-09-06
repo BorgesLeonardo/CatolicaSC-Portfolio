@@ -19,3 +19,17 @@ process.env.PORT = '3001';
 
 // Global test timeout
 jest.setTimeout(10000);
+
+// Global test database setup
+beforeAll(async () => {
+  // Setup test database
+  const { testPrisma } = await import('./src/config/testDatabase');
+  global.testPrisma = testPrisma;
+});
+
+afterAll(async () => {
+  // Cleanup test database
+  if (global.testPrisma) {
+    await global.testPrisma.$disconnect();
+  }
+});

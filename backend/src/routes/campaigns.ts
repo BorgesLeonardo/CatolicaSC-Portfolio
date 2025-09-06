@@ -7,16 +7,24 @@ import {
   deleteCampaign
 } from '../controllers/campaignController';
 import { authMiddleware } from '../middlewares/auth';
+import { generalRateLimit } from '../middlewares/security';
+import { 
+  validateCampaign, 
+  validateCampaignUpdate, 
+  validateId, 
+  validatePagination, 
+  validateSearch 
+} from '../middlewares/validation';
 
 const router = Router();
 
-// Public routes
-router.get('/', getCampaigns);
-router.get('/:id', getCampaignById);
+// Public routes with validation
+router.get('/', validatePagination, validateSearch, getCampaigns);
+router.get('/:id', validateId, getCampaignById);
 
-// Protected routes
-router.post('/', authMiddleware, createCampaign);
-router.put('/:id', authMiddleware, updateCampaign);
-router.delete('/:id', authMiddleware, deleteCampaign);
+// Protected routes with rate limiting and validation
+router.post('/', generalRateLimit, authMiddleware, validateCampaign, createCampaign);
+router.put('/:id', generalRateLimit, authMiddleware, validateId, validateCampaignUpdate, updateCampaign);
+router.delete('/:id', generalRateLimit, authMiddleware, validateId, deleteCampaign);
 
 export default router;

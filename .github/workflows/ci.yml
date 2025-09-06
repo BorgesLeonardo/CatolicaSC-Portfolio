@@ -1,0 +1,157 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run linting
+      working-directory: ./backend
+      run: npm run lint
+    
+    - name: Run unit tests
+      working-directory: ./backend
+      run: npm run test:unit
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+        TEST_DATABASE_URL: file:./test.db
+        CLERK_SECRET_KEY: test_secret_key
+        CLERK_PUBLISHABLE_KEY: test_publishable_key
+        CORS_ORIGIN: http://localhost:3001
+        LOG_LEVEL: error
+        MERCADO_PAGO_ACCESS_TOKEN: test_access_token
+        API_BASE_URL: http://localhost:3001
+        FRONTEND_URL: http://localhost:3000
+    
+    - name: Run integration tests
+      working-directory: ./backend
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+        TEST_DATABASE_URL: file:./test.db
+        CLERK_SECRET_KEY: test_secret_key
+        CLERK_PUBLISHABLE_KEY: test_publishable_key
+        CORS_ORIGIN: http://localhost:3001
+        LOG_LEVEL: error
+        MERCADO_PAGO_ACCESS_TOKEN: test_access_token
+        API_BASE_URL: http://localhost:3001
+        FRONTEND_URL: http://localhost:3000
+    
+    - name: Generate coverage report
+      working-directory: ./backend
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Build application
+      working-directory: ./backend
+      run: npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-files
+        path: backend/dist/
+
+  security:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run security audit
+      working-directory: ./backend
+      run: npm audit --audit-level=moderate
+    
+    - name: Run dependency check
+      working-directory: ./backend
+      run: npx audit-ci --config audit-ci.json
+      continue-on-error: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, build, security]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: build-files
+        path: backend/dist/
+    
+    - name: Deploy to production
+      run: |
+        echo "Deployment would happen here"
+        echo "This could include:"
+        echo "- Deploying to cloud provider (AWS, Azure, GCP)"
+        echo "- Updating database schema"
+        echo "- Running migrations"
+        echo "- Restarting services"

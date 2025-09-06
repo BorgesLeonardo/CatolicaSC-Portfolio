@@ -1,27 +1,44 @@
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import { responseHandler } from './middlewares/responseHandler';
+import { 
+  securityMiddleware, 
+  generalRateLimit, 
+  speedLimiter,
+  securityLogger,
+  requestSizeLimit 
+} from './middlewares/security';
+import { 
+  securityMonitorMiddleware, 
+  sqlInjectionDetector, 
+  xssDetector 
+} from './middlewares/securityMonitor';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware stack
+app.use(securityMiddleware);
 
-// CORS configuration
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:9000',
-    credentials: true,
-  })
-);
+// Security monitoring
+app.use(securityMonitorMiddleware);
+app.use(sqlInjectionDetector);
+app.use(xssDetector);
+
+// Rate limiting
+app.use(generalRateLimit);
+app.use(speedLimiter);
+
+// Request size limiting
+app.use(requestSizeLimit('10mb'));
+
+// Security logging
+app.use(securityLogger);
 
 // Logging middleware
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));

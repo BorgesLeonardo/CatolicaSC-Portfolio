@@ -5,6 +5,7 @@ import supportRoutes from './supports';
 import commentRoutes from './comments';
 import userRoutes from './users';
 import paymentRoutes from './payments';
+import securityRoutes from './security';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/api/supports', supportRoutes);
 router.use('/api/comments', commentRoutes);
 router.use('/api/users', userRoutes);
 router.use('/api/payments', paymentRoutes);
+router.use('/api/security', securityRoutes);
 
 export default router;

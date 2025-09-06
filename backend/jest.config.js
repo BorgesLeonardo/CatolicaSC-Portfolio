@@ -17,4 +17,17 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testTimeout: 10000,
   verbose: true,
+  // Separate test suites
+  projects: [
+    {
+      displayName: 'unit',
+      testMatch: ['<rootDir>/src/__tests__/**/*.test.ts', '!<rootDir>/src/__tests__/integration/**/*.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    },
+    {
+      displayName: 'integration',
+      testMatch: ['<rootDir>/src/__tests__/integration/**/*.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/src/__tests__/integration/setup.ts'],
+    },
+  ],
 };
