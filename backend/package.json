@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -38,7 +39,8 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",
-    "prisma": "^6.15.0"
+    "prisma": "^6.15.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -46,6 +48,7 @@
     "@types/jest": "^30.0.0",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.3.1",
+    "@types/qrcode": "^1.5.5",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
@@ -58,6 +61,7 @@
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }
