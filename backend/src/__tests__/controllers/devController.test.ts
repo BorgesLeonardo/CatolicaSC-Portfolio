@@ -4,7 +4,7 @@ import { getDevStatus } from '../../controllers/devController';
 // Mock the response object
 const mockResponse = {
   success: jest.fn(),
-} as any;
+} as Partial<Response> as Response;
 
 const mockRequest = {} as Request;
 

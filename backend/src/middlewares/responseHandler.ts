@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
@@ -17,7 +17,11 @@ export interface ApiResponse<T = any> {
 declare global {
   namespace Express {
     interface Response {
-      success: <T>(data: T, statusCode?: number, meta?: any) => void;
+      success: <T>(
+        data: T,
+        statusCode?: number,
+        meta?: Record<string, unknown>
+      ) => void;
       error: (message: string, statusCode?: number, stack?: string) => void;
     }
   }
@@ -28,7 +32,11 @@ export const responseHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  res.success = <T>(data: T, statusCode: number = 200, meta?: any): void => {
+  res.success = <T>(
+    data: T,
+    statusCode: number = 200,
+    meta?: Record<string, unknown>
+  ): void => {
     const response: ApiResponse<T> = {
       success: true,
       data,

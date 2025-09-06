@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { logger } from '../utils/logger';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -12,8 +13,8 @@ export const errorHandler = (
 ): void => {
   const { statusCode = 500, message } = err;
 
-  console.error(`Error ${statusCode}: ${message}`);
-  console.error(err.stack);
+  logger.error(`Error ${statusCode}: ${message}`);
+  logger.error('Stack trace:', err.stack);
 
   res.status(statusCode).json({
     success: false,

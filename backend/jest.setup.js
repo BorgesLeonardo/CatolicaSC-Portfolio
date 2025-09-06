@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 
 // Load environment variables for testing
-dotenv.config({ path: './__tests__/config/test.env' });
+dotenv.config({ path: './src/__tests__/config/test.env' });
 
 // Mock console methods to reduce noise in tests
 const originalConsole = console;

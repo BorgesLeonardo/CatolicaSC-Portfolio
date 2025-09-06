@@ -1,10 +1,13 @@
 import { Request, Response } from 'express';
-import { errorHandler, notFoundHandler, createError } from '../../middlewares/errorHandler';
+import {
+  errorHandler,
+  notFoundHandler,
+  createError,
+} from '../../middlewares/errorHandler';
 
 describe('Error Handler Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: jest.Mock;
 
   beforeEach(() => {
     mockRequest = {};
@@ -12,13 +15,17 @@ describe('Error Handler Middleware', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };
-    mockNext = jest.fn();
   });
 
   describe('errorHandler', () => {
     it('should handle error with status code', () => {
-      const error = new Error('Test error') as any;
+      const error = new Error('Test error') as unknown as {
+        statusCode: number;
+        message: string;
+        name: string;
+      };
       error.statusCode = 400;
+      error.name = 'Error';
 
       errorHandler(error, mockRequest as Request, mockResponse as Response);
 
