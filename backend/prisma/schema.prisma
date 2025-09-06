@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  campaigns Campaign[]
+  donations Donation[]
+  comments  Comment[]
+
+  @@map("users")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  goal        Float
+  current     Float    @default(0)
+  imageUrl    String?
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  donations Donation[]
+  comments  Comment[]
+
+  @@map("campaigns")
+}
+
+model Donation {
+  id         String   @id @default(cuid())
+  amount     Float
+  status     String   @default("pending") // pending, completed, failed, refunded
+  paymentId  String?  // ID do pagamento no Mercado Pago
+  qrCode     String?  // URL ou dados do QR Code
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relacionamentos
+  donorId    String
+  donor      User     @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("donations")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
