@@ -2,6 +2,7 @@
   "name": "catolica-sc-portfolio-backend",
   "version": "1.0.0",
   "description": "Backend para o sistema de campanhas de financiamento coletivo",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

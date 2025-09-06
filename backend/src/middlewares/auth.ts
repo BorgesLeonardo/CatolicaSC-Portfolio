@@ -16,14 +16,14 @@ export const authMiddleware = async (
 ): Promise<void> => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    
+
     if (!token) {
       throw createError('Authorization token is required', 401);
     }
 
     const payload = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY!,
-      issuer: (iss) => iss.startsWith('https://clerk.') || iss.includes('clerk'),
+      issuer: iss => iss.startsWith('https://clerk.') || iss.includes('clerk'),
     });
 
     req.auth = {
@@ -32,7 +32,7 @@ export const authMiddleware = async (
     };
 
     next();
-  } catch (error) {
+  } catch {
     next(createError('Invalid or expired token', 401));
   }
 };

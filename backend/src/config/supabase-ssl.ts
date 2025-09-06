@@ -7,12 +7,13 @@ declare global {
 // Configuração específica para Supabase com certificado SSL
 const createPrismaClient = () => {
   const databaseUrl = process.env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     console.warn('⚠️  DATABASE_URL not found, using fallback configuration');
     // Fallback para desenvolvimento sem banco
     return new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      log:
+        process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     });
   }
 
@@ -21,12 +22,15 @@ const createPrismaClient = () => {
   url.searchParams.set('sslmode', 'require');
 
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'error', 'warn']
+        : ['error'],
     datasources: {
       db: {
-        url: url.toString()
-      }
-    }
+        url: url.toString(),
+      },
+    },
   });
 };
 
