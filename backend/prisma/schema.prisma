@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  campaigns Campaign[]
+  supports  Support[]
+  comments  Comment[]
+
+  @@map("users")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  goal        Decimal  @db.Decimal(10, 2)
+  current     Decimal  @default(0) @db.Decimal(10, 2)
+  imageUrl    String?
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  authorId String
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  supports Support[]
+  comments Comment[]
+
+  @@map("campaigns")
+}
+
+model Support {
+  id         String   @id @default(cuid())
+  amount     Decimal  @db.Decimal(10, 2)
+  message    String?
+  isAnonymous Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("supports")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
