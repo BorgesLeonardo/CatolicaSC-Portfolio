@@ -108,7 +108,8 @@ jobs:
         fetch-depth: 0
 
     - name: 📊 Check Quality Gate
-      uses: sonarqube-quality-gate-action@master
+      id: sonarqube-quality-gate-check
+      uses: sonarsource/sonarqube-quality-gate-action@master
       timeout-minutes: 5
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
