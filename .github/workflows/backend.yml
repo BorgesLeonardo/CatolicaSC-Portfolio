@@ -93,6 +93,7 @@ jobs:
       run: npm run db:generate
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
     - name: 📦 Create deployment package
       run: |
@@ -138,12 +139,14 @@ jobs:
       run: npm run db:generate
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
     - name: 🗄️ Run database migration
       working-directory: ${{ env.BACKEND_DIR }}
       run: npm run db:push
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
         CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
 
