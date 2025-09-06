@@ -56,20 +56,43 @@ jobs:
 
     - name: 🧪 Run tests with coverage
       working-directory: ${{ env.BACKEND_DIR }}
-      run: npm run test:coverage
+      run: npm run test:ci
       env:
         NODE_ENV: test
+        CI: true
 
     - name: 🔒 Security audit
       working-directory: ${{ env.BACKEND_DIR }}
       run: npm audit --audit-level moderate
 
+    - name: 📊 Cache SonarCloud packages
+      if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
     - name: 📊 SonarQube Scan
       if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-      uses: SonarSource/sonarqube-scan-action@v5
+      uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.projectKey=BorgesLeonardo_CatolicaSC-Portfolio
+          -Dsonar.organization=catolicasc-portfolio
+          -Dsonar.sources=backend/src
+          -Dsonar.tests=backend/src/__tests__
+          -Dsonar.typescript.lcov.reportPaths=backend/coverage/lcov.info
+          -Dsonar.test.inclusions=**/*.test.ts,**/*.spec.ts
+          -Dsonar.coverage.exclusions=**/*.test.ts,**/*.spec.ts,**/__tests__/**,**/node_modules/**,**/dist/**,**/coverage/**,**/prisma/**,**/*.config.js,**/*.setup.js
+          -Dsonar.cpd.exclusions=**/*.test.ts,**/*.spec.ts,**/__tests__/**,**/prisma/**
+          -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/*.d.ts,**/jest.setup.js,**/jest.config.js,**/eslint.config.js,**/prisma/migrations/**
+          -Dsonar.inclusions=backend/src/**/*.ts
+          -Dsonar.qualitygate.wait=true
+          -Dsonar.scm.provider=git
 
   # Job de verificação do Quality Gate
   quality-gate:
@@ -79,11 +102,30 @@ jobs:
     if: always() && (needs.quality-and-analysis.result == 'success' || needs.quality-and-analysis.result == 'skipped') && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
     - name: 📊 Check Quality Gate
-      uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+      uses: sonarqube-quality-gate-action@master
+      timeout-minutes: 5
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      continue-on-error: true
+        SONAR_HOST_URL: https://sonarcloud.io
+      continue-on-error: false
+
+    - name: 📈 Quality Gate Results
+      if: always()
+      run: |
+        echo "🔍 Quality Gate Status: ${{ steps.sonarqube-quality-gate-check.outcome }}"
+        if [ "${{ steps.sonarqube-quality-gate-check.outcome }}" == "failure" ]; then
+          echo "❌ Quality Gate FAILED - Please check SonarCloud for details"
+          echo "🔗 SonarCloud URL: https://sonarcloud.io/dashboard?id=BorgesLeonardo_CatolicaSC-Portfolio"
+          exit 1
+        else
+          echo "✅ Quality Gate PASSED"
+        fi
 
   # Job de build e preparação para deploy
   build:
