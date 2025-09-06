@@ -1,0 +1,202 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  BACKEND_DIR: './backend'
+
+jobs:
+  # Job de qualidade de código e testes
+  quality:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ env.BACKEND_DIR }}/package-lock.json
+
+    - name: 📦 Install dependencies
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm ci
+
+    - name: 🔍 Run ESLint
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run lint
+
+    - name: 💅 Check Prettier formatting
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run format -- --check
+
+    - name: 🏗️ Build TypeScript
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run build
+
+    - name: 🧪 Run tests
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm test
+      env:
+        NODE_ENV: test
+
+    - name: 🔒 Security audit
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm audit --audit-level moderate
+
+  # Job de build e preparação para deploy
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ env.BACKEND_DIR }}/package-lock.json
+
+    - name: 📦 Install dependencies
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm ci
+
+    - name: 🏗️ Build application
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run build
+
+    - name: 📋 Generate Prisma client
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run db:generate
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    - name: 📦 Create deployment package
+      run: |
+        cd ${{ env.BACKEND_DIR }}
+        tar -czf ../backend-deploy.tar.gz \
+          dist/ \
+          package.json \
+          package-lock.json \
+          node_modules/ \
+          prisma/
+
+    - name: 📤 Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-deploy-${{ github.sha }}
+        path: backend-deploy.tar.gz
+        retention-days: 7
+
+  # Job de migração do banco de dados
+  database:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ env.BACKEND_DIR }}/package-lock.json
+
+    - name: 📦 Install dependencies
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm ci
+
+    - name: 📋 Generate Prisma client
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run db:generate
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    - name: 🗄️ Run database migration
+      working-directory: ${{ env.BACKEND_DIR }}
+      run: npm run db:push
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+        CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+
+  # Job de deploy (placeholder)
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, database]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: 📥 Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-deploy-${{ github.sha }}
+
+    - name: 📦 Extract build
+      run: tar -xzf backend-deploy.tar.gz
+
+    - name: 🚀 Deploy to production
+      run: |
+        echo "🚀 Deploying backend to production..."
+        echo "📦 Build extracted successfully"
+        echo "🔧 Ready for deployment to hosting service"
+        echo ""
+        echo "💡 Deploy options:"
+        echo "  - Heroku: heroku container:push web"
+        echo "  - Railway: railway deploy"
+        echo "  - DigitalOcean: doctl apps create"
+        echo "  - AWS: aws ecs update-service"
+        echo "  - Docker: docker run -p 3000:3000 backend"
+
+  # Job de notificação
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [quality, build, database]
+    if: always()
+
+    steps:
+    - name: 📢 Notify success
+      if: needs.quality.result == 'success' && needs.build.result == 'success'
+      run: |
+        echo "✅ Backend CI/CD completed successfully!"
+        echo "🏗️ Build: ${{ needs.build.result }}"
+        echo "🗄️ Database: ${{ needs.database.result }}"
+        echo "🔍 Quality: ${{ needs.quality.result }}"
+
+    - name: 📢 Notify failure
+      if: needs.quality.result == 'failure' || needs.build.result == 'failure'
+      run: |
+        echo "❌ Backend CI/CD failed!"
+        echo "🏗️ Build: ${{ needs.build.result }}"
+        echo "🗄️ Database: ${{ needs.database.result }}"
+        echo "🔍 Quality: ${{ needs.quality.result }}"
+        exit 1
