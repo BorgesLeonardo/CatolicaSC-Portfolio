@@ -30,7 +30,7 @@
   "author": "Leonardo Borges",
   "license": "MIT",
   "dependencies": {
-    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@clerk/clerk-sdk-node": "^5.1.6",
     "@prisma/client": "^6.15.0",
     "@supabase/supabase-js": "^2.57.2",
     "cors": "^2.8.5",
