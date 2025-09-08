@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: Católica SC Crowdfunding API
+  description: API para o sistema de crowdfunding da Católica SC
+  version: 1.0.0
+  contact:
+    name: Equipe de Desenvolvimento
+    email: dev@catolicasc.edu.br
+
+servers:
+  - url: http://localhost:3333/api
+    description: Servidor de desenvolvimento
+  - url: https://api.crowdfunding.catolicasc.edu.br
+    description: Servidor de produção
+
+security:
+  - ClerkAuth: []
+
+paths:
+  /campaigns:
+    get:
+      summary: Listar campanhas
+      description: Retorna uma lista paginada de campanhas
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, COMPLETED, CANCELLED, SUSPENDED]
+      responses:
+        '200':
+          description: Lista de campanhas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Campaign'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      summary: Criar campanha
+      description: Cria uma nova campanha (requer autenticação)
+      security:
+        - ClerkAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCampaignRequest'
+      responses:
+        '201':
+          description: Campanha criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Não autenticado
+
+  /campaigns/{id}:
+    get:
+      summary: Obter campanha
+      description: Retorna os detalhes de uma campanha específica
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalhes da campanha
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignDetails'
+        '404':
+          description: Campanha não encontrada
+
+  /campaigns/{id}/contributions:
+    post:
+      summary: Fazer contribuição
+      description: Cria uma nova contribuição para uma campanha (requer autenticação)
+      security:
+        - ClerkAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContributionRequest'
+      responses:
+        '201':
+          description: Contribuição criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contribution'
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Não autenticado
+        '404':
+          description: Campanha não encontrada
+
+components:
+  securitySchemes:
+    ClerkAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        goal:
+          type: number
+          format: decimal
+        current:
+          type: number
+          format: decimal
+        image:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ACTIVE, COMPLETED, CANCELLED, SUSPENDED]
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        category:
+          $ref: '#/components/schemas/Category'
+
+    CampaignDetails:
+      allOf:
+        - $ref: '#/components/schemas/Campaign'
+        - type: object
+          properties:
+            contributions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Contribution'
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+
+    CreateCampaignRequest:
+      type: object
+      required:
+        - title
+        - description
+        - goal
+        - endDate
+        - categoryId
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 100
+        description:
+          type: string
+          minLength: 20
+          maxLength: 2000
+        goal:
+          type: number
+          format: decimal
+          minimum: 100
+        image:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          format: date-time
+        categoryId:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        clerkId:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    Contribution:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        message:
+          type: string
+          nullable: true
+        anonymous:
+          type: boolean
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+        createdAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+
+    CreateContributionRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 1
+        message:
+          type: string
+          maxLength: 500
+        anonymous:
+          type: boolean
+          default: false
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer

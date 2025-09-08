@@ -1,35 +1,200 @@
-# Plataforma de Crowdfunding
+# Católica SC Crowdfunding
 
-Nome do Estudante: Leonardo Pereira Borges.
+Sistema de crowdfunding para a Universidade Católica de Santa Catarina, desenvolvido como projeto de conclusão de curso.
 
-Curso: Engenharia de Software.
+**Estudante**: Leonardo Pereira Borges  
+**Curso**: Engenharia de Software  
+**Data de Entrega**: 29/11/2025
 
-Data de Entrega: 29/11/2025.
+## 🏗️ Arquitetura
 
-## Resumo
+Este é um monorepo contendo:
 
-Este documento apresenta os fundamentos teóricos e técnicos para o desenvolvimento de uma aplicação web de crowdfunding. O objetivo principal é oferecer uma plataforma intuitiva e acessível, permitindo que usuários registrem seus próprios projetos e contribuam financeiramente com iniciativas de terceiros.
+- **Frontend**: Quasar (Vue 3) + TypeScript + Clerk
+- **Backend**: Express.js + TypeScript + Prisma + PostgreSQL
+- **Infraestrutura**: Docker + Docker Compose
+- **CI/CD**: GitHub Actions
 
-## Introdução
+## 📁 Estrutura do Projeto
 
-O crowdfunding é uma técnica de financiamento coletivo que permite a colaboração voluntária de pessoas em projetos através de doações financeiras.  Com o progresso tecnológico e o aumento da conectividade digital, este modelo tornou-se popular globalmente, sobretudo por meio de plataformas digitais que simplificam a interação entre os idealizadores e os apoiadores.
+```
+catolica-sc-crowdfunding/
+├─ frontend/                     # Quasar (Vue 3) + Clerk (SPA)
+├─ backend/                      # Express + Prisma + validação Clerk + integrações externas
+├─ docs/                         # Diagramas C4, especificações, OpenAPI e ADRs
+├─ infra/                        # Docker, Compose, scripts de provisionamento
+├─ .github/workflows/            # Pipelines CI (lint, build, testes, migrate)
+├─ .editorconfig
+├─ .gitignore
+└─ README.md
+```
 
-Neste contexto, a criação de uma plataforma web de crowdfunding representa uma ótima chance de utilizar, na prática, os princípios básicos da Engenharia de Software.  Este tipo de sistema requer a aplicação de princípios cruciais como arquitetura de software, segurança da informação, administração e armazenamento de dados, design responsivo e experiência do usuário, além de favorecer a integração com serviços externos, tais como métodos de pagamento.
+## 🚀 Como Executar
 
-Objetivo final do projeto é:
+### Pré-requisitos
+- Node.js 18+ ou 20+
+- Docker e Docker Compose
+- PostgreSQL (ou usar Docker)
 
-- Desenvolver uma aplicação web que possibilite o cadastro, a visualização e o apoio financeiro a projetos de forma simples e acessível;
-- Implementar funcionalidades essenciais, como autenticação de usuários, listagem e detalhamento de projetos, registro de apoios e integração com um sistema de pagamento confiável;
-- Criar uma interface moderna, clara e responsiva, garantindo uma experiência de uso intuitiva em diferentes dispositivos e tamanhos de tela.
+### Desenvolvimento Local
 
-## Documentação adicional:
+1. **Clone o repositório**
+   ```bash
+   git clone <repository-url>
+   cd catolica-sc-crowdfunding
+   ```
+
+2. **Configure as variáveis de ambiente**
+   ```bash
+   # Backend
+   cp backend/env.example backend/.env
+   # Edite o arquivo .env com suas configurações
+   ```
+
+3. **Execute com Docker Compose**
+   ```bash
+   docker-compose -f infra/docker-compose.yml up -d
+   ```
+
+4. **Ou execute localmente**
+   ```bash
+   # Backend
+   cd backend
+   npm install
+   npm run db:migrate
+   npm run dev
+
+   # Frontend (em outro terminal)
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+## 📚 Documentação
+
+- [Arquitetura](docs/architecture/)
+- [API](docs/api/)
+- [ADRs](docs/adr/)
+- [CI/CD e Qualidade](docs/ci-cd/)
+- [Regras de Qualidade](docs/quality/)
+
+## 🔍 Análise de Qualidade
+
+O projeto utiliza SonarQube para análise de qualidade de código com os seguintes critérios:
+
+### Cobertura de Código
+- **Mínimo**: 80% de cobertura de linhas
+- **Branches**: 80% de cobertura de branches
+- **Functions**: 80% de cobertura de funções
+
+### Qualidade
+- **Duplicação**: Máximo 3% de código duplicado
+- **Complexidade**: Máximo 10 por função
+- **Vulnerabilidades**: 0 críticas/altas permitidas
+- **Code Smells**: Máximo 5 altos
+
+### Configuração Local do SonarQube
+
+```bash
+# Iniciar SonarQube localmente
+cd infra/scripts
+chmod +x setup-sonar.sh
+./setup-sonar.sh
+
+# Acessar: http://localhost:9000
+# Usuário: admin / Senha: admin
+```
+
+## 🚀 CI/CD Pipeline
+
+O projeto possui pipelines automatizados para:
+
+- **Análise de Qualidade**: SonarQube + ESLint
+- **Testes**: Unitários, Integração e Cobertura
+- **Segurança**: Snyk para análise de vulnerabilidades
+- **Deploy**: Automático com validação de qualidade
+
+### Workflows Disponíveis
+
+1. **CI Pipeline** (`.github/workflows/ci.yml`)
+   - Executa em push/PR para main/develop
+   - Análise de qualidade, testes e segurança
+
+2. **SonarQube Quality Gate** (`.github/workflows/sonar-quality-gate.yml`)
+   - Análise específica de qualidade
+   - Validação de cobertura e duplicação
+
+3. **Deploy** (`.github/workflows/deploy.yml`)
+   - Deploy com validação de qualidade
+   - Suporte a staging e production
+
+## 🛠️ Scripts Disponíveis
+
+### Backend
+- `npm run dev` - Executa em modo desenvolvimento
+- `npm run build` - Compila o projeto
+- `npm run db:migrate` - Executa migrações
+- `npm run db:seed` - Popula o banco com dados de exemplo
+- `npm test` - Executa testes
+- `npm run test:coverage` - Executa testes com cobertura
+- `npm run test:integration` - Executa testes de integração
+- `npm run test:unit` - Executa testes unitários
+- `npm run lint` - Executa linter
+- `npm run sonar` - Executa análise SonarQube
+
+### Frontend
+- `npm run dev` - Executa em modo desenvolvimento
+- `npm run build` - Compila o projeto
+- `npm run test:unit` - Executa testes unitários
+- `npm run test:coverage` - Executa testes com cobertura
+- `npm run lint` - Executa linter
+- `npm run sonar` - Executa análise SonarQube
+
+## 🔧 Tecnologias
+
+### Frontend
+- Vue 3 + Composition API
+- Quasar Framework
+- TypeScript
+- Pinia (Gerenciamento de Estado)
+- Vue Router
+- Clerk (Autenticação)
+- Axios (HTTP Client)
+
+### Backend
+- Node.js + Express
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- Clerk (Autenticação)
+- Mercado Pago (Pagamentos)
+- Zod (Validação)
+- Pino (Logging)
+
+### Infraestrutura
+- Docker + Docker Compose
+- GitHub Actions
+- PostgreSQL
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👥 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📞 Contato
+
+- **Equipe de Desenvolvimento**: dev@catolicasc.edu.br
+- **Universidade Católica de Santa Catarina**: [Site Oficial](https://www.catolicasc.edu.br)
+
+## 📋 Documentação Adicional
+
 - [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Descri%C3%A7%C3%A3o-Projeto)
 - [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
 - [Próximos Passos](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Pr%C3%B3ximos-Passos)
-
-
-
-
-
-
-
