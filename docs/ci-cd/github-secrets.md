@@ -1,106 +1,154 @@
-# Configuração de Secrets do GitHub
+# Configuração dos Secrets do GitHub
 
-## Secrets Necessários
+Este documento explica como configurar os secrets necessários para o funcionamento do CI/CD.
 
-Para que os pipelines CI/CD funcionem corretamente, você precisa configurar os seguintes secrets no GitHub:
+## Secrets Obrigatórios
 
-### 1. SonarQube
-- **SONAR_TOKEN**: Token de acesso do SonarQube
-- **SONAR_HOST_URL**: URL do servidor SonarQube
+### 1. SONAR_TOKEN
 
-### 2. Snyk (Opcional)
-- **SNYK_TOKEN**: Token de acesso do Snyk para análise de segurança
+**Descrição**: Token de acesso para autenticação no SonarQube/SonarCloud
 
-### 3. Deploy (Opcional)
-- **DOCKER_USERNAME**: Usuário do Docker Hub
-- **DOCKER_PASSWORD**: Senha do Docker Hub
-- **KUBECONFIG**: Configuração do Kubernetes (se usando K8s)
+**Valor**: `c8ecd4d1da050850cb10c45663b1201cc9bec071`
 
-## Como Configurar
+**Como configurar**:
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Clique em **New repository secret**
+4. Configure:
+   - **Name**: `SONAR_TOKEN`
+   - **Value**: `c8ecd4d1da050850cb10c45663b1201cc9bec071`
+5. Clique em **Add secret**
 
-### 1. Acesse as Configurações do Repositório
-1. Vá para o seu repositório no GitHub
-2. Clique em **Settings**
-3. No menu lateral, clique em **Secrets and variables** > **Actions**
+## Secrets Opcionais
 
-### 2. Adicione os Secrets
-1. Clique em **New repository secret**
-2. Digite o nome do secret (ex: `SONAR_TOKEN`)
-3. Digite o valor do secret
-4. Clique em **Add secret**
+### 2. DEPLOY_TOKEN (Opcional)
 
-### 3. Configuração do SonarQube
+**Descrição**: Token para deploy em ambientes específicos
 
-#### Para SonarQube Cloud (SonarCloud):
-1. Acesse [sonarcloud.io](https://sonarcloud.io)
-2. Faça login com sua conta GitHub
-3. Crie um novo projeto
-4. Vá em **Administration** > **Security** > **Generate Tokens**
-5. Gere um token e copie o valor
-6. Configure os secrets:
-   - `SONAR_TOKEN`: Token gerado
-   - `SONAR_HOST_URL`: https://sonarcloud.io
+**Como configurar**:
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Clique em **New repository secret**
+4. Configure:
+   - **Name**: `DEPLOY_TOKEN`
+   - **Value**: [Seu token de deploy]
+5. Clique em **Add secret**
 
-#### Para SonarQube Self-Hosted:
-1. Acesse seu servidor SonarQube
-2. Faça login como administrador
-3. Vá em **Administration** > **Security** > **Users**
-4. Gere um token para o usuário
-5. Configure os secrets:
-   - `SONAR_TOKEN`: Token gerado
-   - `SONAR_HOST_URL`: URL do seu servidor (ex: http://localhost:9000)
+### 3. DATABASE_URL (Opcional)
 
-### 4. Configuração do Snyk (Opcional)
+**Descrição**: URL de conexão com o banco de dados para testes
 
-1. Acesse [snyk.io](https://snyk.io)
-2. Faça login com sua conta GitHub
-3. Vá em **Account settings** > **General** > **API Token**
-4. Copie o token
-5. Configure o secret:
-   - `SNYK_TOKEN`: Token do Snyk
+**Como configurar**:
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Clique em **New repository secret**
+4. Configure:
+   - **Name**: `DATABASE_URL`
+   - **Value**: [Sua URL de banco de dados]
+5. Clique em **Add secret**
 
-## Verificação
+## Variáveis de Ambiente
 
-Após configurar os secrets, você pode verificar se estão funcionando:
+### 1. NODE_VERSION
 
-1. Faça um push para a branch `main` ou `develop`
-2. Vá para a aba **Actions** do seu repositório
-3. Verifique se os workflows estão executando sem erros
-4. Se houver erros relacionados a secrets, verifique se os nomes estão corretos
+**Descrição**: Versão do Node.js para usar no CI/CD
+
+**Valor Padrão**: `20`
+
+**Como configurar**:
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Clique na aba **Variables**
+4. Clique em **New repository variable**
+5. Configure:
+   - **Name**: `NODE_VERSION`
+   - **Value**: `20`
+6. Clique em **Add variable**
+
+### 2. SONAR_ORGANIZATION
+
+**Descrição**: Organização do SonarQube
+
+**Valor Padrão**: `catolicasc-portfolio`
+
+**Como configurar**:
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Clique na aba **Variables**
+4. Clique em **New repository variable**
+5. Configure:
+   - **Name**: `SONAR_ORGANIZATION`
+   - **Value**: `catolicasc-portfolio`
+6. Clique em **Add variable**
+
+## Verificação da Configuração
+
+### 1. Verificar Secrets
+
+Para verificar se os secrets estão configurados:
+
+1. Acesse o repositório no GitHub
+2. Vá para **Settings** > **Secrets and variables** > **Actions**
+3. Verifique se os secrets listados acima estão presentes
+
+### 2. Testar Workflow
+
+Para testar se a configuração está funcionando:
+
+1. Crie um Pull Request
+2. Verifique se o workflow é executado
+3. Verifique se não há erros de autenticação
+4. Verifique se a análise do SonarQube é executada
 
 ## Troubleshooting
 
-### Erro: "Secret not found"
-- Verifique se o nome do secret está correto
-- Certifique-se de que o secret foi adicionado no repositório correto
+### Erro de Autenticação
 
-### Erro: "Invalid token"
-- Verifique se o token está correto
-- Para SonarQube, certifique-se de que o token tem as permissões necessárias
+Se houver erro de autenticação:
 
-### Erro: "Connection refused"
-- Verifique se a URL do SonarQube está correta
-- Certifique-se de que o servidor está acessível
+1. Verifique se o `SONAR_TOKEN` está configurado corretamente
+2. Confirme se o token tem permissões adequadas
+3. Verifique se a organização `catolicasc-portfolio` existe
 
-## Exemplo de Configuração Local
+### Erro de Deploy
 
-Para testar localmente, você pode criar um arquivo `.env` na raiz do projeto:
+Se houver erro de deploy:
 
-```bash
-# .env (não commitar este arquivo)
-SONAR_TOKEN=seu-token-aqui
-SONAR_HOST_URL=http://localhost:9000
-SNYK_TOKEN=seu-token-snyk-aqui
-```
+1. Verifique se o `DEPLOY_TOKEN` está configurado
+2. Confirme se o token tem permissões de deploy
+3. Verifique se as configurações de ambiente estão corretas
 
-E executar os comandos:
+### Erro de Banco de Dados
 
-```bash
-# Frontend
-cd frontend
-npm run sonar
+Se houver erro de banco de dados:
 
-# Backend
-cd backend
-npm run sonar
-```
+1. Verifique se o `DATABASE_URL` está configurado
+2. Confirme se a URL está acessível
+3. Verifique se as credenciais estão corretas
+
+## Segurança
+
+### Boas Práticas
+
+1. **Nunca commite secrets no código**
+2. **Use tokens com permissões mínimas necessárias**
+3. **Rotacione tokens regularmente**
+4. **Monitore o uso dos tokens**
+5. **Use variáveis de ambiente para valores não sensíveis**
+
+### Rotação de Tokens
+
+Para rotacionar tokens:
+
+1. Gere um novo token no serviço correspondente
+2. Atualize o secret no GitHub
+3. Teste se o workflow ainda funciona
+4. Revogue o token antigo
+
+## Suporte
+
+Para problemas com a configuração:
+
+1. Verifique a documentação do SonarQube
+2. Consulte os logs do GitHub Actions
+3. Entre em contato com a equipe de desenvolvimento

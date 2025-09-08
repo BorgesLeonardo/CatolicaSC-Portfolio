@@ -1,0 +1,107 @@
+name: Build and SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Backend
+        run: |
+          cd backend
+          npm run build
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          npm run test:coverage
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: Run Backend Lint
+        run: |
+          cd backend
+          npm run lint
+
+      - name: Run Frontend Lint
+        run: |
+          cd frontend
+          npm run lint
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: windows-latest
+    needs: build-and-test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run Backend Tests with Coverage
+        run: |
+          cd backend
+          npm run test:coverage
+
+      - name: Run Frontend Tests with Coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

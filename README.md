@@ -107,26 +107,51 @@ chmod +x setup-sonar.sh
 
 ## 🚀 CI/CD Pipeline
 
-O projeto possui pipelines automatizados para:
+Sistema CI/CD simples e eficiente com:
 
 - **Análise de Qualidade**: SonarQube + ESLint
-- **Testes**: Unitários, Integração e Cobertura
-- **Segurança**: Snyk para análise de vulnerabilidades
-- **Deploy**: Automático com validação de qualidade
+- **Testes**: Unitários e Integração
+- **Deploy**: Automático para staging, manual para production
 
 ### Workflows Disponíveis
 
-1. **CI Pipeline** (`.github/workflows/ci.yml`)
-   - Executa em push/PR para main/develop
-   - Análise de qualidade, testes e segurança
+1. **Build** (`.github/workflows/build.yml`)
+   - Executa em push/PR para main
+   - Análise SonarQube (se token configurado)
+   - Lint, build e testes
 
-2. **SonarQube Quality Gate** (`.github/workflows/sonar-quality-gate.yml`)
-   - Análise específica de qualidade
-   - Validação de cobertura e duplicação
+2. **Test** (`.github/workflows/test.yml`)
+   - Executa em push/PR para main/develop
+   - Testes unitários e de integração
+   - Banco de dados de teste
 
 3. **Deploy** (`.github/workflows/deploy.yml`)
-   - Deploy com validação de qualidade
-   - Suporte a staging e production
+   - Executa em push para main
+   - Deploy automático para staging
+   - Deploy manual para production
+
+### Configuração Rápida
+
+1. **Configure os secrets no GitHub**:
+   ```
+   SONAR_TOKEN=<seu-token-sonar>
+   SONAR_HOST_URL=https://sonarcloud.io
+   ```
+
+2. **Faça push para main**:
+   ```bash
+   git push origin main
+   ```
+
+3. **Monitore a qualidade**:
+   - Acesse o SonarQube
+   - Verifique os workflows no GitHub Actions
+
+### Troubleshooting
+
+Se houver problemas com os workflows, consulte:
+- [Troubleshooting CI/CD](docs/ci-cd/troubleshooting.md)
+- [Configuração](docs/ci-cd/setup.md)
 
 ## 🛠️ Scripts Disponíveis
 

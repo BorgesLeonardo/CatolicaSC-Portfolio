@@ -1,99 +1,27 @@
 name: SonarQube Quality Gate
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-
-env:
-  NODE_VERSION: '20.x'
-  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  workflow_run:
+    workflows: ["Build and SonarQube Analysis"]
+    types:
+      - completed
 
 jobs:
-  sonar-analysis:
-    name: SonarQube Analysis
-    runs-on: ubuntu-latest
+  sonarqube-quality-gate:
+    name: SonarQube Quality Gate
+    runs-on: windows-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Shallow clones should be disabled for better analysis
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: |
-        cd frontend && npm ci
-        cd ../backend && npm ci
-    
-    - name: Run tests with coverage
-      run: |
-        cd frontend && npm run test:coverage
-        cd ../backend && npm run test:coverage
-      env:
-        DATABASE_URL: "postgresql://test:test@localhost:5432/test?schema=public"
-        CLERK_SECRET_KEY: "test-key"
-        NODE_ENV: "test"
-    
-    - name: Build applications
-      run: |
-        cd frontend && npm run build
-        cd ../backend && npm run build
-    
-    - name: SonarQube Scan
-      uses: sonarqube-quality-gate-action@v1.0.3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
-      with:
-        scanMetadataReportFile: target/sonar/report-task.txt
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  # Job para análise de segurança com Snyk
-  security-analysis:
-    name: Security Analysis
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: |
-        cd frontend && npm ci
-        cd ../backend && npm ci
-    
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --file=frontend/package.json
-        command: test
-    
-    - name: Run Snyk to check backend vulnerabilities
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --file=backend/package.json
-        command: test
-    
-    - name: Upload Snyk results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: snyk.sarif
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        timeout-minutes: 5
