@@ -1,23 +1,23 @@
-name: Deploy
+name: Continuous Integration
 
 on:
   push:
     branches:
       - main
-  workflow_run:
-    workflows: ["SonarQube Quality Gate"]
-    types:
-      - completed
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  deploy:
-    name: Deploy
+  test:
+    name: Test
     runs-on: windows-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,18 +50,34 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build Backend
+      - name: Run Backend Tests
         run: |
           cd backend
-          npm run build
+          npm run test:coverage
 
-      - name: Build Frontend
+      - name: Run Frontend Tests
         run: |
           cd frontend
-          npm run build
+          npm run test:coverage
 
-      - name: Deploy to Production
+      - name: Run Backend Lint
         run: |
-          echo "Deploying to production..."
-          # Add your deployment commands here
-          # For example: docker build, docker push, etc.
+          cd backend
+          npm run lint
+
+      - name: Run Frontend Lint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Upload Backend Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+
+      - name: Upload Frontend Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
