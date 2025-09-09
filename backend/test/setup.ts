@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client'
-
 // Setup global test configuration
 beforeAll(async () => {
   // Setup test database or mock services
