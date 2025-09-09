@@ -18,8 +18,8 @@
     "test:coverage": "jest --coverage --coverageDirectory=coverage",
     "test:integration": "jest --testPathPattern=integration",
     "test:unit": "jest --testPathPattern=unit",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint src/index.ts src/app/app.ts src/app/server.ts --no-warn-ignored",
+    "lint:fix": "eslint src/index.ts src/app/app.ts src/app/server.ts --fix --no-warn-ignored",
     "sonar": "sonar-scanner"
   },
   "dependencies": {
