@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import pluginVue from 'eslint-plugin-vue'
+import vueParser from 'vue-eslint-parser'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 
@@ -9,7 +10,7 @@ export default [
     ignores: ['dist/**', 'coverage/**', 'node_modules/**']
   },
   {
-    files: ['**/*.{js,mjs,cjs,vue}'],
+    files: ['**/*.{js,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       globals: {
@@ -21,10 +22,13 @@ export default [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parser: pluginVue.parser,
+      parser: vueParser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: 'module'
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true
+        }
       }
     },
     plugins: {
@@ -71,7 +75,6 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/prefer-const': 'error',
       '@typescript-eslint/no-var-requires': 'error'
     }
   },
@@ -114,7 +117,6 @@ export default [
       // Regras de performance
       'no-await-in-loop': 'warn',
       'no-return-await': 'error',
-      'prefer-const': 'error',
       'prefer-arrow-callback': 'error',
       'prefer-template': 'error'
     }
