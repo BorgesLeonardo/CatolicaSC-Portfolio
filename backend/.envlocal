@@ -1,0 +1,11 @@
+# Database Configuration (Supabase PostgreSQL)
+# Connect to Supabase via connection pooling
+DATABASE_URL="postgresql://postgres.jbuozkvrslranpnjtsen:emCire6Jy.udXAb@aws-1-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Direct connection to the database. Used for migrations
+DIRECT_URL="postgresql://postgres.jbuozkvrslranpnjtsen:emCire6Jy.udXAb@aws-1-sa-east-1.pooler.supabase.com:5432/postgres"
+
+# Clerk Authentication Configuration
+CLERK_SECRET_KEY="sk_test_your_clerk_secret_key_here"
+CLERK_PUBLISHABLE_KEY="pk_test_your_clerk_publishable_key_here"
+CLERK_WEBHOOK_SECRET="whsec_your_webhook_secret_here"

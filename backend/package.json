@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@clerk/backend": "^2.13.0",
+    "@prisma/client": "^6.15.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "prisma": "^6.15.0",
+    "svix": "^1.76.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
