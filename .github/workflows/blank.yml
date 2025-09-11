@@ -36,6 +36,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/app
       # Secrets de runtime (mockados ou reais para testes de integração)
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -50,12 +51,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install deps
+      - name: Clean install deps
         working-directory: backend
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --prefer-offline --no-audit
 
       - name: Prisma generate
         working-directory: backend
@@ -112,12 +115,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install deps
+      - name: Clean install deps
         working-directory: frontend
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --prefer-offline --no-audit
 
       - name: Lint
         working-directory: frontend
