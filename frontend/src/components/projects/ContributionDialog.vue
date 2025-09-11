@@ -169,13 +169,14 @@ const processContribution = async () => {
     })
 
     if (error) {
-      throw error
+      throw new Error(error.message || 'Stripe checkout error')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao processar contribuição:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao processar contribuição'
     $q.notify({
       type: 'negative',
-      message: error.message || 'Erro ao processar contribuição',
+      message: errorMessage,
     })
   } finally {
     loading.value = false

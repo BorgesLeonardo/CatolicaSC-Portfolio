@@ -165,12 +165,14 @@ let searchTimeout: NodeJS.Timeout
 
 const onSearch = () => {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(async () => {
-    try {
-      await projectsStore.fetch({ search: searchQuery.value })
-    } catch (error) {
-      console.error('Erro ao buscar projetos:', error)
-    }
+  searchTimeout = setTimeout(() => {
+    void (async () => {
+      try {
+        await projectsStore.fetch({ search: searchQuery.value })
+      } catch (error) {
+        console.error('Erro ao buscar projetos:', error)
+      }
+    })()
   }, 500)
 }
 

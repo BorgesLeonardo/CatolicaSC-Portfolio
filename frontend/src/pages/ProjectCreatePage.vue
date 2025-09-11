@@ -234,7 +234,7 @@ const previousStep = () => {
   }
 }
 
-const onFileRejected = (rejectedEntries: any[]) => {
+const onFileRejected = () => {
   $q.notify({
     type: 'negative',
     message: 'Arquivo muito grande. Máximo 5MB.',
@@ -273,8 +273,9 @@ const createProject = async () => {
       message: 'Campanha criada com sucesso!',
     })
 
-    router.push(`/projects/${project.id}`)
+    await router.push(`/projects/${project.id}`)
   } catch (error) {
+    console.error('Erro ao criar campanha:', error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao criar campanha. Tente novamente.',

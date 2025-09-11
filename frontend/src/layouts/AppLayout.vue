@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useClerk } from '@clerk/vue'
 import EssentialLink from 'src/components/EssentialLink.vue'
 

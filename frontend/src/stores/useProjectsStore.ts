@@ -21,12 +21,15 @@ export const useProjectsStore = defineStore('projects', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  // Ensure items is always an array
+  const safeItems = computed(() => Array.isArray(items.value) ? items.value : [])
+
   const owned = computed(() => 
-    items.value.filter(project => !project.isCollaborator)
+    safeItems.value.filter(project => !project.isCollaborator)
   )
 
   const collaborating = computed(() => 
-    items.value.filter(project => project.isCollaborator)
+    safeItems.value.filter(project => project.isCollaborator)
   )
 
   const fetch = async (params?: { search?: string }) => {
@@ -36,8 +39,13 @@ export const useProjectsStore = defineStore('projects', () => {
     try {
       const response = await http.get('/api/projects', { params })
       items.value = response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erro ao carregar projetos'
+    } catch (err: unknown) {
+      const errorMessage = err && typeof err === 'object' && 'response' in err && 
+        err.response && typeof err.response === 'object' && 'data' in err.response &&
+        err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? (typeof err.response.data.message === 'string' ? err.response.data.message : JSON.stringify(err.response.data.message))
+        : 'Erro ao carregar projetos'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -52,8 +60,13 @@ export const useProjectsStore = defineStore('projects', () => {
       const response = await http.post('/api/projects', projectData)
       items.value.unshift(response.data)
       return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erro ao criar projeto'
+    } catch (err: unknown) {
+      const errorMessage = err && typeof err === 'object' && 'response' in err && 
+        err.response && typeof err.response === 'object' && 'data' in err.response &&
+        err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? (typeof err.response.data.message === 'string' ? err.response.data.message : JSON.stringify(err.response.data.message))
+        : 'Erro ao criar projeto'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -64,14 +77,19 @@ export const useProjectsStore = defineStore('projects', () => {
     try {
       const response = await http.get(`/api/projects/${id}`)
       return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erro ao carregar projeto'
+    } catch (err: unknown) {
+      const errorMessage = err && typeof err === 'object' && 'response' in err && 
+        err.response && typeof err.response === 'object' && 'data' in err.response &&
+        err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? (typeof err.response.data.message === 'string' ? err.response.data.message : JSON.stringify(err.response.data.message))
+        : 'Erro ao carregar projeto'
+      error.value = errorMessage
       throw err
     }
   }
 
   return {
-    items,
+    items: safeItems,
     loading,
     error,
     owned,

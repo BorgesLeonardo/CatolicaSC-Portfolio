@@ -20,7 +20,7 @@ http.interceptors.request.use(
     return config
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   }
 )
 
@@ -32,7 +32,7 @@ http.interceptors.response.use(
       // Redirect to sign-in if unauthorized
       window.location.href = '/auth/sign-in'
     }
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   }
 )
 
