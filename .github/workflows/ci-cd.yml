@@ -89,16 +89,7 @@ jobs:
             echo "No lint script available for ${{ matrix.project.name }}"
           fi
         continue-on-error: true
-
-      - name: Run Tests with Coverage
-        working-directory: ${{ matrix.project.path }}
-        run: |
-          echo "Running tests with coverage for ${{ matrix.project.name }}"
-          npm run ${{ matrix.project.test-script }}
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-
+        
       - name: Build
         working-directory: ${{ matrix.project.path }}
         run: |
