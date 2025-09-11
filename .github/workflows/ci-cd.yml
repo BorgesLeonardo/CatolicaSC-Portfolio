@@ -58,7 +58,14 @@ jobs:
 
       - name: Install dependencies
         working-directory: ${{ matrix.project.path }}
-        run: npm ci
+        run: |
+          if [ "${{ matrix.project.name }}" = "frontend" ]; then
+            # Fix for Rollup optional dependencies issue
+            rm -rf node_modules package-lock.json
+            npm install --legacy-peer-deps
+          else
+            npm ci
+          fi
 
       - name: Run Prisma migrations (backend only)
         if: matrix.project.name == 'backend'
@@ -132,7 +139,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend && npm ci
-          cd ../frontend && npm ci
+          cd ../frontend && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
 
       - name: SonarQube Scan
         id: sqscan
@@ -154,51 +161,4 @@ jobs:
     outputs:
       quality_gate: ${{ steps.qg.outputs.quality-gate-status }}
 
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-22.04
-    needs: [ci_test_scan, sonar_scan]
-    if: github.ref == 'refs/heads/main' && needs.sonar_scan.outputs.quality_gate == 'PASS'
-    environment: production
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm ci
-      
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-      
-      - name: Build backend
-        working-directory: ./backend
-        run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-        env:
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-      
-      - name: Deploy to production
-        run: |
-          echo "Deployment would happen here with the following environment variables:"
-          echo "DATABASE_URL: ${{ secrets.DATABASE_URL }}"
-          echo "DIRECT_URL: ${{ secrets.DIRECT_URL }}"
-          echo "CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}"
-          echo "STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}"
-          echo "SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}"
-          echo "SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}"
+  
