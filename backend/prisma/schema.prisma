@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Usuário: chave primária é o ID do Clerk (string)
+model User {
+  id            String         @id
+  email         String?        @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  projects      Project[]
+  contributions Contribution[]
+  comments      Comment[]
+}
+
+/// Campanha/Projeto
+model Project {
+  id            String         @id @default(cuid())
+  ownerId       String
+  title         String
+  description   String?
+  goalCents     Int
+  deadline      DateTime
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  contributions Contribution[]
+  comments      Comment[]
+
+  @@index([ownerId])
+}
+
+/// Contribuição/Doação
+model Contribution {
+  id                      String    @id @default(cuid())
+  projectId               String
+  contributorId           String
+  amountCents             Int
+  currency                String    @default("BRL")
+  status                  String    @default("PENDING") // PENDING, SUCCEEDED, FAILED, REFUNDED
+  stripePaymentIntentId   String?
+  stripeCheckoutSessionId String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contributor             User      @relation(fields: [contributorId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([contributorId])
+}
+
+/// Comentário em projeto
+model Comment {
+  id        String   @id @default(cuid())
+  projectId String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([authorId])
+}

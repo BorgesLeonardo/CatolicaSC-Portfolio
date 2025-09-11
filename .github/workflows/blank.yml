@@ -1,36 +1,220 @@
-# This is a basic workflow to help you get started with Actions
+name: CI / Build + Test + Sonar
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+  pull-requests: write
+  packages: write
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  backend:
+    name: Backend • Lint/Typecheck/Test/Build
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+      # Secrets de runtime (mockados ou reais para testes de integração)
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      SUPABASE_POSTGRES_URL: ${{ secrets.SUPABASE_POSTGRES_URL }}
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Use Node 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Install deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Prisma generate
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Migrate schema (deploy)
+        working-directory: backend
+        run: npx prisma migrate deploy
+
+      - name: Lint
+        working-directory: backend
+        run: npm run lint --if-present
+
+      - name: Typecheck
+        working-directory: backend
+        run: npm run typecheck --if-present
+
+      - name: Test + Coverage
+        working-directory: backend
+        env:
+          CI: "true"
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          npm test --if-present -- --coverage || echo "No tests"
+          [ -f coverage/lcov.info ] || mkdir -p coverage && touch coverage/lcov.info
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+      - name: Upload backend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist
+          if-no-files-found: ignore
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/lcov.info
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend • Lint/Typecheck/Test/Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint --if-present
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck --if-present
+
+      - name: Test + Coverage (Vitest/Jest)
+        working-directory: frontend
+        env:
+          CI: "true"
+        run: |
+          npm test --if-present -- --coverage || echo "No tests"
+          [ -f coverage/lcov.info ] || mkdir -p coverage && touch coverage/lcov.info
+
+      - name: Build (Quasar)
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: |
+            frontend/dist
+            frontend/dist/spa
+          if-no-files-found: ignore
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
+          if-no-files-found: ignore
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage (backend)
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage-reports/backend
+
+      - name: Download coverage (frontend)
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage-reports/frontend
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # garante que o SHA do PR seja corretamente ligado no Sonar
+        with:
+          args: >
+            -Dsonar.scm.revision=${{ github.sha }}
+
+  # Exemplo de CD por imagens (opcional, descomente e ajuste Dockerfiles/contexts)
+  # docker:
+  #   name: Build & Push Docker Images (GHCR)
+  #   runs-on: ubuntu-latest
+  #   needs: [backend, frontend]
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Log in to GHCR
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Build & Push backend
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: ./backend
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository }}/backend:latest
+  #           ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+  #     - name: Build & Push frontend
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: ./frontend
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository }}/frontend:latest
+  #           ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
