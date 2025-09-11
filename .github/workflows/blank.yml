@@ -58,7 +58,8 @@ jobs:
         working-directory: backend
         run: |
           rm -rf node_modules package-lock.json
-          npm install
+          npm cache clean --force
+          npm install --legacy-peer-deps
 
       - name: Prisma generate
         working-directory: backend
@@ -122,7 +123,8 @@ jobs:
         working-directory: frontend
         run: |
           rm -rf node_modules package-lock.json
-          npm install
+          npm cache clean --force
+          npm install --legacy-peer-deps
 
       - name: Lint
         working-directory: frontend
