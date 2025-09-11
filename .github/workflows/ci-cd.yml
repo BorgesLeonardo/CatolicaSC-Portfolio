@@ -139,7 +139,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.javascript.lcov.reportPaths=coverage-reports/backend/coverage/lcov.info,coverage-reports/frontend/coverage/lcov.info
+            -Dsonar.javascript.lcov.reportPaths=coverage-reports/coverage-backend/coverage/lcov.info,coverage-reports/coverage-frontend/coverage/lcov.info
 
       - name: SonarQube Quality Gate
         id: qg
