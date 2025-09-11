@@ -4,9 +4,10 @@
     <div class="project-image-container">
       <q-img
         :src="imageUrl || '/placeholder-project.jpg'"
-        :alt="title"
+        :alt="`Imagem da campanha ${title}`"
         class="project-image"
         fit="cover"
+        loading="lazy"
       >
         <div class="absolute-bottom-right q-pa-sm">
           <q-chip

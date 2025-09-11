@@ -20,3 +20,27 @@
 body {
   font-family: $typography-font-family;
 }
+
+// Focus styles for accessibility
+.q-btn:focus-visible,
+.q-input:focus-within,
+.q-card:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .q-card {
+    border: 2px solid currentColor;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

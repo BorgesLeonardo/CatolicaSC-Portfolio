@@ -22,19 +22,21 @@ model User {
 
 /// Campanha/Projeto
 model Project {
-  id            String         @id @default(cuid())
-  ownerId       String
-  title         String
-  description   String?
-  goalCents     Int
-  deadline      DateTime
-  imageUrl      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  deletedAt     DateTime?
-  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  contributions Contribution[]
-  comments      Comment[]
+  id              String         @id @default(cuid())
+  ownerId         String
+  title           String
+  description     String?
+  goalCents       Int
+  deadline        DateTime
+  imageUrl        String?
+  raisedCents     Int            @default(0)
+  supportersCount Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+  owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  contributions   Contribution[]
+  comments        Comment[]
 
   @@index([ownerId])
 }
@@ -43,16 +45,16 @@ model Project {
 model Contribution {
   id                      String    @id @default(cuid())
   projectId               String
-  contributorId           String
+  contributorId           String?
   amountCents             Int
-  currency                String    @default("BRL")
+  currency                String    @default("brl")
   status                  String    @default("PENDING") // PENDING, SUCCEEDED, FAILED, REFUNDED
-  stripePaymentIntentId   String?
-  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?   @unique
+  stripeCheckoutSessionId String?   @unique
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
   project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  contributor             User      @relation(fields: [contributorId], references: [id], onDelete: Cascade)
+  contributor             User?     @relation(fields: [contributorId], references: [id], onDelete: SetNull)
 
   @@index([projectId])
   @@index([contributorId])

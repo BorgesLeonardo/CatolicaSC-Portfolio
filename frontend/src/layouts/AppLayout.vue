@@ -7,7 +7,7 @@
           dense
           round
           icon="menu"
-          aria-label="Menu"
+          aria-label="Abrir menu de navegação"
           @click="toggleLeftDrawer"
           class="q-mr-sm"
         />
@@ -38,7 +38,7 @@
               round
               dense
               icon="person"
-              :aria-label="`Perfil de ${user?.firstName || 'Usuário'}`"
+              :aria-label="`Menu do perfil de ${user?.firstName || 'Usuário'}`"
             >
               <q-menu>
                 <q-list style="min-width: 200px">
