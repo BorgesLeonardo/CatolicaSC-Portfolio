@@ -129,6 +129,11 @@ jobs:
           find coverage-reports/ -name "lcov.info" -type f || echo "No lcov.info files found"
           echo "Directory structure:"
           find coverage-reports/ -type d || echo "No directories found"
+          echo "Checking specific paths:"
+          ls -la coverage-reports/coverage-backend/coverage/ || echo "Backend coverage directory not found"
+          ls -la coverage-reports/coverage-frontend/coverage/ || echo "Frontend coverage directory not found"
+          echo "All files in coverage-reports:"
+          find coverage-reports/ -type f || echo "No files found"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
