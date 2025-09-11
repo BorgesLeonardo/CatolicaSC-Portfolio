@@ -87,8 +87,12 @@ describe('MyProjects', () => {
 
     const wrapper = mount(MyProjects)
 
+    // Wait for the async operation to complete
     await nextTick()
     await wrapper.vm.$nextTick()
+    
+    // Wait a bit more for the async error handling to complete
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     expect(consoleSpy).toHaveBeenCalledWith('Error fetching my projects:', expect.any(Error))
 
