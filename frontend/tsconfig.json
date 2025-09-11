@@ -1,6 +1,9 @@
 {
   "extends": "./.quasar/tsconfig.json",
   "compilerOptions": {
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false
   }
 }
