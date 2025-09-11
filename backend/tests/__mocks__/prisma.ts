@@ -7,6 +7,9 @@ export const prisma = {
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+    upsert: jest.fn(),
+    aggregate: jest.fn(),
+    groupBy: jest.fn(),
   },
   contribution: {
     create: jest.fn(),
@@ -16,6 +19,9 @@ export const prisma = {
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+    upsert: jest.fn(),
+    aggregate: jest.fn(),
+    groupBy: jest.fn(),
   },
   comment: {
     create: jest.fn(),
@@ -25,6 +31,9 @@ export const prisma = {
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+    upsert: jest.fn(),
+    aggregate: jest.fn(),
+    groupBy: jest.fn(),
   },
   user: {
     create: jest.fn(),
@@ -35,9 +44,14 @@ export const prisma = {
     delete: jest.fn(),
     upsert: jest.fn(),
     count: jest.fn(),
+    aggregate: jest.fn(),
+    groupBy: jest.fn(),
   },
   $disconnect: jest.fn(),
   $connect: jest.fn(),
+  $transaction: jest.fn(),
+  $queryRaw: jest.fn(),
+  $executeRaw: jest.fn(),
 };
 
 export default { prisma };

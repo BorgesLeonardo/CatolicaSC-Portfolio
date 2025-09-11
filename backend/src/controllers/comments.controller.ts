@@ -1,54 +1,68 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { CommentsService } from '../services/comments.service';
 import { AppError } from '../utils/AppError';
 
-const commentsService = new CommentsService();
-
-const idParamProject = z.object({ id: z.string().cuid() });
-const createCommentSchema = z.object({ content: z.string().min(1).max(5000) });
-const idParamComment = z.object({ commentId: z.string().cuid() });
+// Injeção de dependência para testes
+const commentsService = (global as any).__COMMENTS_SERVICE__ || new CommentsService();
 
 export class CommentsController {
-  async create(req: Request, res: Response) {
-    const params = idParamProject.safeParse(req.params);
-    if (!params.success) {
-      throw new AppError('ValidationError', 400, params.error.flatten());
-    }
+  constructor(private service: CommentsService = commentsService) {}
 
-    const body = createCommentSchema.safeParse(req.body);
-    if (!body.success) {
-      throw new AppError('ValidationError', 400, body.error.flatten());
-    }
+  private idParamProject = z.object({ id: z.string().cuid() });
+  private createCommentSchema = z.object({ content: z.string().min(1).max(5000) });
+  private idParamComment = z.object({ commentId: z.string().cuid() });
+  async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.idParamProject.safeParse(req.params);
+      if (!params.success) {
+        throw new AppError('ValidationError', 400, params.error.flatten());
+      }
 
-    const userId: string = (req as any).authUserId;
-    const comment = await commentsService.create(params.data.id, body.data, userId);
-    
-    return res.status(201).json(comment);
+      const body = this.createCommentSchema.safeParse(req.body);
+      if (!body.success) {
+        throw new AppError('ValidationError', 400, body.error.flatten());
+      }
+
+      const userId: string = (req as any).authUserId;
+      const comment = await this.service.create(params.data.id, body.data, userId);
+      
+      return res.status(201).json(comment);
+    } catch (error) {
+      return next(error);
+    }
   }
 
-  async listByProject(req: Request, res: Response) {
-    const params = idParamProject.safeParse(req.params);
-    if (!params.success) {
-      throw new AppError('ValidationError', 400, params.error.flatten());
+  async listByProject(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.idParamProject.safeParse(req.params);
+      if (!params.success) {
+        throw new AppError('ValidationError', 400, params.error.flatten());
+      }
+
+      const page = Math.max(parseInt(String(req.query.page ?? '1'), 10), 1);
+      const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize ?? '10'), 10), 1), 50);
+
+      const result = await this.service.listByProject(params.data.id, page, pageSize);
+      return res.json(result);
+    } catch (error) {
+      return next(error);
     }
-
-    const page = Math.max(parseInt(String(req.query.page ?? '1'), 10), 1);
-    const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize ?? '10'), 10), 1), 50);
-
-    const result = await commentsService.listByProject(params.data.id, page, pageSize);
-    return res.json(result);
   }
 
-  async delete(req: Request, res: Response) {
-    const params = idParamComment.safeParse(req.params);
-    if (!params.success) {
-      throw new AppError('ValidationError', 400, params.error.flatten());
-    }
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.idParamComment.safeParse(req.params);
+      if (!params.success) {
+        throw new AppError('ValidationError', 400, params.error.flatten());
+      }
 
-    const userId: string = (req as any).authUserId;
-    await commentsService.delete(params.data.commentId, userId);
-    
-    return res.status(204).send();
+      const userId: string = (req as any).authUserId;
+      await this.service.delete(params.data.commentId, userId);
+      
+      return res.status(204).send();
+    } catch (error) {
+      return next(error);
+    }
   }
 }

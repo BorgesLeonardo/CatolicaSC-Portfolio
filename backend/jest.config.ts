@@ -18,7 +18,12 @@ const config: Config = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'cobertura'],
   coverageThreshold: {
-    global: { branches: 80, functions: 80, lines: 80, statements: 80 },
+    global: { 
+      branches: 82, 
+      functions: 80, 
+      lines: 80, 
+      statements: 80 
+    },
   },
   reporters: [
     'default',
@@ -29,15 +34,14 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  moduleDirectories: ['node_modules', '<rootDir>/src'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
-  },
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
+    '^.+\\.ts$': ['ts-jest', {
       useESM: true,
-    },
+    }],
   },
+  // Timeout global
+  testTimeout: 10000,
 }
 
 export default config

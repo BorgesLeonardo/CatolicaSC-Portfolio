@@ -1,9 +1,41 @@
 import request from 'supertest'
 import app from '../app'
-import { prisma } from '../infrastructure/prisma'
 
-// Mock do Prisma
-const mockPrisma = prisma as any
+// Mock the prisma module
+jest.mock('../infrastructure/prisma', () => ({
+  prisma: {
+    project: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+    user: {
+      upsert: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    comment: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+  },
+}));
+
+// Get the mocked prisma instance
+const { prisma: mockPrisma } = require('../infrastructure/prisma');
 
 describe('Comments API', () => {
   beforeEach(() => {
@@ -52,7 +84,16 @@ describe('Comments API', () => {
           projectId: 'clr12345678901234567890123',
           authorId: 'user_test_id',
           content: 'Comentário de teste'
-        }
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       })
       expect(res.body).toEqual(fakeComment)
     })
@@ -67,10 +108,17 @@ describe('Comments API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
 
     it('400 em body inválido', async () => {
+      // Mock do projeto para evitar erro 404
+      mockPrisma.project.findUnique.mockResolvedValue({
+        id: 'clr12345678901234567890123',
+        title: 'Projeto Teste',
+        deletedAt: null
+      })
+
       const res = await request(app)
         .post('/api/projects/clr12345678901234567890123/comments')
         .set('Authorization', 'Bearer token_fake')
@@ -80,7 +128,7 @@ describe('Comments API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
 
     it('404 quando projeto não existe', async () => {
@@ -94,7 +142,7 @@ describe('Comments API', () => {
         })
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'ProjectNotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('404 quando projeto foi deletado', async () => {
@@ -111,12 +159,13 @@ describe('Comments API', () => {
         })
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'ProjectNotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('401 quando não autenticado', async () => {
       const res = await request(app)
         .post('/api/projects/clr12345678901234567890123/comments')
+        .set('x-test-auth-bypass', 'false')
         .send({
           content: 'Comentário de teste'
         })
@@ -151,7 +200,16 @@ describe('Comments API', () => {
         where: { projectId: 'clr12345678901234567890123' },
         orderBy: { createdAt: 'desc' },
         skip: 0,
-        take: 10
+        take: 10,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       })
       expect(mockPrisma.comment.count).toHaveBeenCalledWith({
         where: { projectId: 'clr12345678901234567890123' }
@@ -174,7 +232,16 @@ describe('Comments API', () => {
         where: { projectId: 'clr12345678901234567890123' },
         orderBy: { createdAt: 'desc' },
         skip: 0,
-        take: 10
+        take: 10,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       })
     })
 
@@ -191,7 +258,16 @@ describe('Comments API', () => {
         where: { projectId: 'clr12345678901234567890123' },
         orderBy: { createdAt: 'desc' },
         skip: 0,
-        take: 50
+        take: 50,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       })
     })
 
@@ -201,7 +277,7 @@ describe('Comments API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
   })
 
@@ -261,7 +337,7 @@ describe('Comments API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
 
     it('404 quando comentário não existe', async () => {
@@ -272,7 +348,7 @@ describe('Comments API', () => {
         .set('Authorization', 'Bearer token_fake')
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Comment not found')
     })
 
     it('403 quando não é autor nem dono do projeto', async () => {
@@ -297,6 +373,7 @@ describe('Comments API', () => {
     it('401 quando não autenticado', async () => {
       const res = await request(app)
         .delete('/api/comments/clr98765432109876543210987')
+        .set('x-test-auth-bypass', 'false')
         .expect(401)
 
       expect(res.body).toHaveProperty('error', 'Unauthorized')

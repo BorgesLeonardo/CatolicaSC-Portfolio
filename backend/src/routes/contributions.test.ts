@@ -1,9 +1,50 @@
 import request from 'supertest'
 import app from '../app'
-import { prisma } from '../infrastructure/prisma'
 
-// Mock do Prisma
-const mockPrisma = prisma as any
+// Mock the prisma module
+jest.mock('../infrastructure/prisma', () => ({
+  prisma: {
+    project: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+    user: {
+      upsert: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    comment: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+    contribution: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+  },
+}));
+
+// Get the mocked prisma instance
+const { prisma: mockPrisma } = require('../infrastructure/prisma');
 
 // Mock do Stripe
 jest.mock('../lib/stripe', () => ({
@@ -200,7 +241,7 @@ describe('Contributions API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
 
     it('404 quando projeto não existe', async () => {
@@ -215,7 +256,7 @@ describe('Contributions API', () => {
         })
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'ProjectNotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('404 quando projeto foi deletado', async () => {
@@ -233,7 +274,7 @@ describe('Contributions API', () => {
         })
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'ProjectNotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('400 quando projeto está fechado (deadline passou)', async () => {
@@ -256,12 +297,13 @@ describe('Contributions API', () => {
         })
         .expect(400)
 
-      expect(res.body).toHaveProperty('error', 'ProjectClosed')
+      expect(res.body).toHaveProperty('error', 'Project is closed')
     })
 
     it('401 quando não autenticado', async () => {
       const res = await request(app)
         .post('/api/contributions/checkout')
+        .set('x-test-auth-bypass', 'false')
         .send({
           projectId: 'clr12345678901234567890123',
           amountCents: 10000

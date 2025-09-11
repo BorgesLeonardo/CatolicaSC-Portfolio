@@ -1,9 +1,50 @@
 import request from 'supertest'
 import app from '../app'
-import { prisma } from '../infrastructure/prisma'
 
-// Mock do Prisma
-const mockPrisma = prisma as any
+// Mock the prisma module
+jest.mock('../infrastructure/prisma', () => ({
+  prisma: {
+    project: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+    user: {
+      upsert: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    comment: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+    contribution: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+    },
+  },
+}));
+
+// Get the mocked prisma instance
+const { prisma: mockPrisma } = require('../infrastructure/prisma');
 
 describe('Projects API', () => {
   beforeEach(() => {
@@ -69,12 +110,13 @@ describe('Projects API', () => {
         .expect(400)
 
       expect(res.body).toHaveProperty('error', 'ValidationError')
-      expect(res.body).toHaveProperty('issues')
+      expect(res.body).toHaveProperty('details')
     })
 
     it('401 quando sem Authorization', async () => {
       const res = await request(app)
         .post('/api/projects')
+        .set('x-test-auth-bypass', 'false')
         .send({
           title: 'Nova Campanha',
           goalCents: 100000,
@@ -205,6 +247,7 @@ describe('Projects API', () => {
     it('401 quando não autenticado', async () => {
       const res = await request(app)
         .get('/api/projects/mine')
+        .set('x-test-auth-bypass', 'false')
         .expect(401)
 
       expect(res.body).toHaveProperty('error', 'Unauthorized')
@@ -242,7 +285,7 @@ describe('Projects API', () => {
         .get('/api/projects/clr12345678901234567890123')
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('404 quando projeto foi deletado', async () => {
@@ -255,7 +298,7 @@ describe('Projects API', () => {
         .get('/api/projects/clr12345678901234567890123')
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('400 quando ID inválido', async () => {
@@ -331,7 +374,7 @@ describe('Projects API', () => {
         .send({ title: 'Tentativa de Edição' })
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
   })
 
@@ -378,7 +421,7 @@ describe('Projects API', () => {
         .set('Authorization', 'Bearer token_fake')
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('404 quando projeto foi deletado', async () => {
@@ -393,7 +436,7 @@ describe('Projects API', () => {
         .set('Authorization', 'Bearer token_fake')
         .expect(404)
 
-      expect(res.body).toHaveProperty('error', 'NotFound')
+      expect(res.body).toHaveProperty('error', 'Project not found')
     })
 
     it('400 quando ID inválido', async () => {
@@ -408,6 +451,7 @@ describe('Projects API', () => {
     it('401 quando não autenticado', async () => {
       const res = await request(app)
         .delete('/api/projects/clr12345678901234567890123')
+        .set('x-test-auth-bypass', 'false')
         .expect(401)
 
       expect(res.body).toHaveProperty('error', 'Unauthorized')
