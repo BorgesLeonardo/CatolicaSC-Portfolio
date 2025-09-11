@@ -1,98 +1,184 @@
-<!-- src/pages/ProjectsPage.vue -->
-<script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
-import { http } from 'src/utils/http'
-import { useUser } from '@clerk/vue'
-import { formatMoneyBRL, formatDateTimeBR, isPast } from 'src/utils/format'
-import { useRouter } from 'vue-router'
-import type { Project, ProjectResponse } from 'src/components/models'
-
-const router = useRouter()
-const { isSignedIn, user } = useUser()
-
-// filtros
-const q = ref('')
-const onlyActive = ref(true)
-const onlyMine = ref(false)
-
-// paginação
-const page = ref(1)
-const pageSize = ref(8)
-const total = ref(0)
-const items = ref<Project[]>([])
-const loading = ref(false)
-
-const ownerId = computed(() => (onlyMine.value && isSignedIn.value ? user.value?.id : undefined))
-
-async function fetchProjects() {
-  loading.value = true
-  try {
-    const { data } = await http.get<ProjectResponse>('/api/projects', {
-      params: {
-        q: q.value || undefined,
-        active: onlyActive.value ? 1 : undefined,
-        ownerId: ownerId.value,
-        page: page.value,
-        pageSize: pageSize.value
-      }
-    })
-    total.value = data.total ?? 0
-    items.value = data.items ?? []
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchProjects)
-watch([q, onlyActive, onlyMine, page, pageSize], fetchProjects)
-
-function openProject(id: string) {
-  void router.push(`/projects/${id}`)
-}
-</script>
-
 <template>
-  <div class="q-pa-md">
-    <div class="row items-end q-col-gutter-md q-mb-md">
-      <div class="col-12 col-md-6">
-        <q-input v-model="q" label="Buscar por título" dense clearable filled>
-          <template #append><q-icon name="search" /></template>
-        </q-input>
+  <q-page class="q-pa-md">
+    <!-- Header -->
+    <div class="row items-center justify-between q-mb-lg">
+      <div>
+        <h1 class="text-h4 text-weight-700 q-ma-none">
+          Campanhas
+        </h1>
+        <p class="text-body1 text-grey-7 q-mt-xs q-mb-none">
+          Gerencie suas campanhas e apoie outras iniciativas
+        </p>
       </div>
-      <div class="col-6 col-md-2">
-        <q-toggle v-model="onlyActive" label="Somente ativas" />
-      </div>
-      <div class="col-6 col-md-2">
-        <q-toggle v-model="onlyMine" :disable="!isSignedIn" label="Só minhas" />
-      </div>
-    </div>
-
-    <q-inner-loading :showing="loading"><q-spinner size="32px" /></q-inner-loading>
-
-    <div class="row q-col-gutter-md">
-      <div v-for="p in items" :key="p.id" class="col-12 col-md-6 col-lg-4">
-        <q-card clickable bordered @click="openProject(p.id)">
-          <q-img v-if="p.imageUrl" :src="p.imageUrl" ratio="16/9" />
-          <q-card-section>
-            <div class="text-subtitle1">{{ p.title }}</div>
-            <div class="text-caption">
-              Meta: {{ formatMoneyBRL(p.goalCents) }}
-              • Limite: {{ formatDateTimeBR(p.deadline) }}
-              <q-badge v-if="isPast(p.deadline)" color="grey-7" class="q-ml-sm">Encerrada</q-badge>
-              <q-badge v-else color="positive" class="q-ml-sm">Ativa</q-badge>
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-    </div>
-
-    <div class="q-mt-md flex justify-end">
-      <q-pagination
-        v-model="page"
-        :max="Math.max(1, Math.ceil(total / pageSize))"
-        boundary-numbers
-        direction-links
+      <q-btn
+        color="primary"
+        label="Nova Campanha"
+        icon="add_circle"
+        to="/projects/create"
+        size="lg"
       />
     </div>
-  </div>
+
+    <!-- Search Bar -->
+    <div class="row q-mb-lg">
+      <div class="col-12 col-md-6">
+        <q-input
+          v-model="searchQuery"
+          placeholder="Buscar campanhas..."
+          outlined
+          clearable
+          @update:model-value="onSearch"
+        >
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <!-- My Campaigns Section -->
+    <div class="q-mb-xl">
+      <h2 class="text-h5 text-weight-600 q-mb-md">
+        Campanhas que você lidera
+      </h2>
+      
+      <div v-if="loading" class="row q-gutter-md">
+        <div v-for="n in 3" :key="n" class="col-12 col-md-6 col-lg-4">
+          <q-card class="rounded-borders">
+            <q-skeleton height="200px" />
+            <q-card-section>
+              <q-skeleton type="text" width="80%" />
+              <q-skeleton type="text" width="60%" />
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+
+      <div v-else-if="owned.length === 0" class="q-mt-lg">
+        <UiEmptyState
+          icon="campaign"
+          title="Você ainda não criou campanhas"
+          description="Que tal criar sua primeira campanha e começar a fazer a diferença?"
+        >
+          <template #action>
+            <q-btn
+              color="primary"
+              label="Criar Primeira Campanha"
+              to="/projects/create"
+              icon="add_circle"
+            />
+          </template>
+        </UiEmptyState>
+      </div>
+
+      <div v-else class="row q-gutter-md">
+        <div
+          v-for="project in owned"
+          :key="project.id"
+          class="col-12 col-md-6 col-lg-4"
+        >
+          <ProjectCard
+            :id="project.id"
+            :title="project.name"
+            :owner-name="project.ownerName"
+            :image-url="project.imageUrl"
+            :goal="project.goal"
+            :raised="project.raised"
+            :supporters="project.supporters"
+            :ends-at="project.endsAt"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Supporting Campaigns Section -->
+    <div>
+      <h2 class="text-h5 text-weight-600 q-mb-md">
+        Campanhas que você apoia
+      </h2>
+      
+      <div v-if="loading" class="row q-gutter-md">
+        <div v-for="n in 3" :key="n" class="col-12 col-md-6 col-lg-4">
+          <q-card class="rounded-borders">
+            <q-skeleton height="200px" />
+            <q-card-section>
+              <q-skeleton type="text" width="80%" />
+              <q-skeleton type="text" width="60%" />
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+
+      <div v-else-if="collaborating.length === 0" class="q-mt-lg">
+        <UiEmptyState
+          icon="favorite"
+          title="Você ainda não apoia campanhas"
+          description="Explore as campanhas disponíveis e apoie iniciativas que você acredita!"
+        >
+          <template #action>
+            <q-btn
+              color="primary"
+              label="Explorar Campanhas"
+              to="/"
+              icon="explore"
+            />
+          </template>
+        </UiEmptyState>
+      </div>
+
+      <div v-else class="row q-gutter-md">
+        <div
+          v-for="project in collaborating"
+          :key="project.id"
+          class="col-12 col-md-6 col-lg-4"
+        >
+          <ProjectCard
+            :id="project.id"
+            :title="project.name"
+            :owner-name="project.ownerName"
+            :image-url="project.imageUrl"
+            :goal="project.goal"
+            :raised="project.raised"
+            :supporters="project.supporters"
+            :ends-at="project.endsAt"
+          />
+        </div>
+      </div>
+    </div>
+  </q-page>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { useProjectsStore } from '../stores/useProjectsStore'
+import UiEmptyState from '../components/ui/UiEmptyState.vue'
+import ProjectCard from '../components/projects/ProjectCard.vue'
+
+const projectsStore = useProjectsStore()
+
+const searchQuery = ref('')
+const loading = computed(() => projectsStore.loading)
+const owned = computed(() => projectsStore.owned)
+const collaborating = computed(() => projectsStore.collaborating)
+
+let searchTimeout: NodeJS.Timeout
+
+const onSearch = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(async () => {
+    try {
+      await projectsStore.fetch({ search: searchQuery.value })
+    } catch (error) {
+      console.error('Erro ao buscar projetos:', error)
+    }
+  }, 500)
+}
+
+onMounted(async () => {
+  try {
+    await projectsStore.fetch()
+  } catch (error) {
+    console.error('Erro ao carregar projetos:', error)
+  }
+})
+</script>

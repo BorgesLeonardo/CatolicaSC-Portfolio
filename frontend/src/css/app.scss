@@ -1,1 +1,22 @@
 // app global css in SCSS form
+
+// Import Inter font
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// Utility classes
+.text-weight-600 {
+  font-weight: 600;
+}
+
+.text-weight-700 {
+  font-weight: 700;
+}
+
+.rounded-borders {
+  border-radius: $generic-border-radius;
+}
+
+// Global styles
+body {
+  font-family: $typography-font-family;
+}

@@ -33,5 +33,20 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  // Auth guard
+  Router.beforeEach((to, from, next) => {
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+    const isAuthenticated = window.Clerk?.user
+
+    if (requiresAuth && !isAuthenticated) {
+      next({
+        name: 'sign-in',
+        query: { redirect: to.fullPath }
+      })
+    } else {
+      next()
+    }
+  })
+
   return Router;
 });
