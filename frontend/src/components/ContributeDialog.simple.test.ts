@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 
-describe('ProjectsPage - Simple Tests', () => {
+describe('ContributeDialog - Simple Tests', () => {
   it('should be importable', () => {
-    expect(() => import('./ProjectsPage.vue')).not.toThrow()
+    expect(() => import('./ContributeDialog.vue')).not.toThrow()
   })
 
   it('should have correct interface', () => {

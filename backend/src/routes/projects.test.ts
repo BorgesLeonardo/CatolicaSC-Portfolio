@@ -369,5 +369,201 @@ describe('Projects API', () => {
 
       expect(res.body).toHaveProperty('error', 'Forbidden')
     })
+
+    it('404 quando projeto não existe', async () => {
+      mockPrisma.project.findUnique.mockResolvedValue(null)
+
+      const res = await request(app)
+        .delete('/api/projects/clr12345678901234567890123')
+        .set('Authorization', 'Bearer token_fake')
+        .expect(404)
+
+      expect(res.body).toHaveProperty('error', 'NotFound')
+    })
+
+    it('404 quando projeto foi deletado', async () => {
+      mockPrisma.project.findUnique.mockResolvedValue({
+        id: 'clr12345678901234567890123',
+        ownerId: 'user_test_id',
+        deletedAt: new Date()
+      })
+
+      const res = await request(app)
+        .delete('/api/projects/clr12345678901234567890123')
+        .set('Authorization', 'Bearer token_fake')
+        .expect(404)
+
+      expect(res.body).toHaveProperty('error', 'NotFound')
+    })
+
+    it('400 quando ID inválido', async () => {
+      const res = await request(app)
+        .delete('/api/projects/invalid-id')
+        .set('Authorization', 'Bearer token_fake')
+        .expect(400)
+
+      expect(res.body).toHaveProperty('error', 'ValidationError')
+    })
+
+    it('401 quando não autenticado', async () => {
+      const res = await request(app)
+        .delete('/api/projects/clr12345678901234567890123')
+        .expect(401)
+
+      expect(res.body).toHaveProperty('error', 'Unauthorized')
+    })
+  })
+
+  describe('PATCH /api/projects/:id - additional scenarios', () => {
+    it('400 em body vazio', async () => {
+      const res = await request(app)
+        .patch('/api/projects/clr12345678901234567890123')
+        .set('Authorization', 'Bearer token_fake')
+        .send({})
+        .expect(400)
+
+      expect(res.body).toHaveProperty('error', 'ValidationError')
+    })
+
+    it('atualiza com deadline convertida para Date', async () => {
+      const fakeProject = {
+        id: 'clr12345678901234567890123',
+        ownerId: 'user_test_id',
+        title: 'Campanha Atualizada',
+        deadline: '2025-12-31T23:59:59.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+        deletedAt: null
+      }
+
+      mockPrisma.project.findUnique.mockResolvedValue({
+        id: 'clr12345678901234567890123',
+        ownerId: 'user_test_id',
+        deletedAt: null
+      })
+      mockPrisma.project.update.mockResolvedValue(fakeProject)
+
+      await request(app)
+        .patch('/api/projects/clr12345678901234567890123')
+        .set('Authorization', 'Bearer token_fake')
+        .send({
+          deadline: '2025-12-31T23:59:59Z'
+        })
+        .expect(200)
+
+      expect(mockPrisma.project.update).toHaveBeenCalledWith({
+        where: { id: 'clr12345678901234567890123' },
+        data: {
+          deadline: expect.any(Date)
+        }
+      })
+    })
+
+    it('500 em erro interno', async () => {
+      mockPrisma.project.findUnique.mockRejectedValue(new Error('Database error'))
+
+      const res = await request(app)
+        .patch('/api/projects/clr12345678901234567890123')
+        .set('Authorization', 'Bearer token_fake')
+        .send({ title: 'Teste' })
+        .expect(500)
+
+      expect(res.body).toHaveProperty('error', 'InternalError')
+    })
+  })
+
+  describe('GET /api/projects - additional scenarios', () => {
+    it('filtra por active=1', async () => {
+      mockPrisma.project.findMany.mockResolvedValue([])
+      mockPrisma.project.count.mockResolvedValue(0)
+
+      await request(app)
+        .get('/api/projects')
+        .query({ active: '1' })
+        .expect(200)
+
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: {
+          deletedAt: null,
+          deadline: { gte: expect.any(Date) }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 10
+      })
+    })
+
+    it('filtra por active=true', async () => {
+      mockPrisma.project.findMany.mockResolvedValue([])
+      mockPrisma.project.count.mockResolvedValue(0)
+
+      await request(app)
+        .get('/api/projects')
+        .query({ active: 'true' })
+        .expect(200)
+
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: {
+          deletedAt: null,
+          deadline: { gte: expect.any(Date) }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 10
+      })
+    })
+
+    it('ignora active quando não é 1 ou true', async () => {
+      mockPrisma.project.findMany.mockResolvedValue([])
+      mockPrisma.project.count.mockResolvedValue(0)
+
+      await request(app)
+        .get('/api/projects')
+        .query({ active: 'false' })
+        .expect(200)
+
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: {
+          deletedAt: null
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 10
+      })
+    })
+
+    it('aplica page mínimo de 1', async () => {
+      mockPrisma.project.findMany.mockResolvedValue([])
+      mockPrisma.project.count.mockResolvedValue(0)
+
+      await request(app)
+        .get('/api/projects')
+        .query({ page: 0 })
+        .expect(200)
+
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 10
+      })
+    })
+
+    it('aplica pageSize mínimo de 1', async () => {
+      mockPrisma.project.findMany.mockResolvedValue([])
+      mockPrisma.project.count.mockResolvedValue(0)
+
+      await request(app)
+        .get('/api/projects')
+        .query({ pageSize: 0 })
+        .expect(200)
+
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 1
+      })
+    })
   })
 })

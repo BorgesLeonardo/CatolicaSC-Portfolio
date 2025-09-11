@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">94.28% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>33/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">16.66% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">94.28% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>33/35</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -98,76 +98,76 @@
 <a name='L33'></a><a href='#L33'>33</a>
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >&lt;script setup lang="ts"&gt;</span></span></span>
-<span class="cstat-no" title="statement not covered" >import { ref, onMounted } from 'vue'</span>
-<span class="cstat-no" title="statement not covered" >import { http } from 'src/utils/http'</span>
-<span class="cstat-no" title="statement not covered" >import { useAuth } from '@clerk/vue'</span>
-<span class="cstat-no" title="statement not covered" >import type { Project, ProjectResponse } from 'src/components/models'</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >const { isSignedIn, getToken } = useAuth()</span>
-<span class="cstat-no" title="statement not covered" >const items = ref&lt;Project[]&gt;([])</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >onMounted(async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  if (!isSignedIn.value) return</span>
-<span class="cstat-no" title="statement not covered" >  </span>
-<span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    const token = await getToken.value()</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">&lt;script setup lang="ts"&gt;
+import { ref, onMounted } from 'vue'
+import { http } from 'src/utils/http'
+import { useAuth } from '@clerk/vue'
+import type { Project, ProjectResponse } from 'src/components/models'
+&nbsp;
+const { isSignedIn, getToken } = useAuth()
+const items = ref&lt;Project[]&gt;([])
+&nbsp;
+onMounted(async () =&gt; {
+  if (!isSignedIn.value) <span class="branch-0 cbranch-no" title="branch not covered" >return</span>
+  
+  try {
+    const token = await getToken.value(<span class="branch-0 cbranch-no" title="branch not covered" >)</span>
 <span class="cstat-no" title="statement not covered" >    const { data } = await http.get&lt;ProjectResponse&gt;('/api/projects/mine', {</span>
-<span class="cstat-no" title="statement not covered" >      headers: token ? { Authorization: `Bearer ${token}` } : {}</span>
-<span class="cstat-no" title="statement not covered" >    })</span>
+      headers: token ? { Authorization: `Bearer ${token}` <span class="branch-0 cbranch-no" title="branch not covered" >} : {}</span>
+    }<span class="branch-0 cbranch-no" title="branch not covered" >)</span>
 <span class="cstat-no" title="statement not covered" >    items.value = data.items ?? []</span>
-<span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >    console.error('Error fetching my projects:', error)</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >})</span>
-<span class="cstat-no" title="statement not covered" >&lt;/script&gt;</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >&lt;template&gt;</span>
-<span class="cstat-no" title="statement not covered" >  &lt;div class="q-pa-md"&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;h5&gt;Minhas Campanhas&lt;/h5&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;div v-if="!isSignedIn"&gt;Faça login para ver suas campanhas.&lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;q-list v-else bordered&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;q-item v-for="p in items" :key="p.id"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;q-item-section&gt;{{ p.title }}&lt;/q-item-section&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/q-item&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;/q-list&gt;</span>
-<span class="cstat-no" title="statement not covered" >  &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >&lt;/template&gt;</span>
+  } catch (error) {
+    console.error('Error fetching my projects:', error)
+  }
+})
+&lt;/script&gt;
+&nbsp;
+&lt;template&gt;
+  &lt;div class="q-pa-md"&gt;
+    &lt;h5&gt;Minhas Campanhas&lt;/h5&gt;
+    &lt;div v-if="!<span class="branch-0 cbranch-no" title="branch not covered" >isSignedIn"&gt;Faça login para ver suas campanhas.&lt;/div&gt;</span>
+    &lt;q-list v-else bordered&gt;
+      &lt;q-item v-for="p in items" :key="p.id"&gt;
+        &lt;q-item-section&gt;{{ p.title }}&lt;/q-item-section&gt;
+      &lt;/q-item&gt;
+    &lt;/q-list&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -175,7 +175,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-11T01:40:28.168Z
+                at 2025-09-11T02:10:43.660Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

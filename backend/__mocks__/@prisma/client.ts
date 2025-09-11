@@ -1,3 +1,8 @@
+// Declaração de tipos para Jest
+declare const jest: {
+  fn: () => any;
+};
+
 class PrismaClientMock {
   project = {
     create: jest.fn(),
@@ -29,6 +34,7 @@ class PrismaClientMock {
     findUnique: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   }
   
   $connect = jest.fn()
