@@ -32,12 +32,16 @@ export function requireApiAuth(req: Request, res: Response, next: NextFunction):
   }
 
   // Fluxo normal com Clerk
-  const { userId } = getAuth(req);
-  if (!userId) {
+  try {
+    const { userId } = getAuth(req);
+    if (!userId) {
+      throw new AppError('Unauthorized', 401);
+    }
+    (req as any).authUserId = userId;
+    next();
+  } catch (error) {
     throw new AppError('Unauthorized', 401);
   }
-  (req as any).authUserId = userId;
-  next();
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
@@ -50,11 +54,15 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   // Fluxo normal com Clerk
-  const { userId } = getAuth(req);
-  if (!userId) {
+  try {
+    const { userId } = getAuth(req);
+    if (!userId) {
+      throw new AppError('Unauthorized', 401);
+    }
+    (req as any).authUserId = userId;
+    next();
+  } catch (error) {
     throw new AppError('Unauthorized', 401);
   }
-  (req as any).authUserId = userId;
-  next();
 }
 

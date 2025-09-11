@@ -1,6 +1,6 @@
-# Backend - Católica SC Portfolio
+# Backend - Crowdfunding Platform
 
-Backend API para a plataforma de crowdfunding Católica SC Portfolio.
+Backend API para a plataforma de Crowdfunding.
 
 ## Arquitetura
 

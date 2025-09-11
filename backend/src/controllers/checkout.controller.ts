@@ -33,7 +33,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     }
 
     // Get user ID from auth (if available)
-    const userId = req.auth?.userId
+    const userId = (req as any).authUserId
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -47,7 +47,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
             product_data: {
               name: project.title,
               description: project.description || 'Contribuição para campanha',
-              images: project.imageUrl ? [project.imageUrl] : undefined,
+              ...(project.imageUrl && { images: [project.imageUrl] }),
             },
           },
           quantity: 1,
@@ -61,7 +61,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       },
     })
 
-    res.json({ id: session.id })
+    return res.json({ id: session.id })
   } catch (error) {
     console.error('Error creating checkout session:', error)
     
@@ -69,6 +69,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       return res.status(error.statusCode).json({ message: error.message })
     }
 
-    res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }

@@ -20,10 +20,24 @@ model User {
   comments      Comment[]
 }
 
+/// Categoria de Campanha
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  color       String?   // Para UI: cor do badge/tag
+  icon        String?   // Para UI: ícone da categoria
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}
+
 /// Campanha/Projeto
 model Project {
   id              String         @id @default(cuid())
   ownerId         String
+  categoryId      String?
   title           String
   description     String?
   goalCents       Int
@@ -35,10 +49,12 @@ model Project {
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?
   owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category        Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   contributions   Contribution[]
   comments        Comment[]
 
   @@index([ownerId])
+  @@index([categoryId])
 }
 
 /// Contribuição/Doação

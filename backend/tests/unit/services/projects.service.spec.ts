@@ -51,7 +51,11 @@ describe('ProjectsService', () => {
           goalCents: projectData.goalCents,
           deadline: new Date(projectData.deadline),
           imageUrl: projectData.imageUrl,
+          categoryId: null,
         },
+        include: {
+          category: true
+        }
       });
     });
 
@@ -87,7 +91,11 @@ describe('ProjectsService', () => {
           goalCents: projectData.goalCents,
           deadline: new Date(projectData.deadline),
           imageUrl: null,
+          categoryId: null,
         },
+        include: {
+          category: true
+        }
       });
     });
   });
@@ -115,6 +123,9 @@ describe('ProjectsService', () => {
         orderBy: { createdAt: 'desc' },
         skip: 0,
         take: 10,
+        include: {
+          category: true
+        }
       });
     });
 

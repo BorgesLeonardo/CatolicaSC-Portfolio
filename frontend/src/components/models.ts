@@ -7,9 +7,19 @@ export interface Meta {
   totalCount: number;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  projectsCount?: number;
+}
+
 export interface Project {
   id: string;
   ownerId: string;
+  categoryId?: string;
   title: string;
   description?: string;
   goalCents: number;
@@ -18,6 +28,7 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+  category?: Category;
 }
 
 export interface ProjectResponse {

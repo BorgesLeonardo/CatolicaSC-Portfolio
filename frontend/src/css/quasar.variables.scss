@@ -12,21 +12,21 @@
 // to match your app's branding.
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
 
-// Design System Tokens
-$primary: #4f46e5;
-$secondary: #22c55e;
-$accent: #8b5cf6;
+// Paleta de cores moderna para crowdfunding
+$primary: #6366f1; // Indigo moderno
+$secondary: #10b981; // Verde sucesso
+$accent: #f59e0b; // Amarelo dourado
 
-$dark: #1d1d1d;
-$dark-page: #121212;
+$dark: #1f2937;
+$dark-page: #111827;
 
-$positive: #22c55e;
-$negative: #ef4444;
-$info: #3b82f6;
-$warning: #f59e0b;
+$positive: #10b981; // Verde sucesso
+$negative: #ef4444; // Vermelho moderno
+$info: #3b82f6; // Azul informativo
+$warning: #f59e0b; // Amarelo alerta
 
-// Typography
-$typography-font-family: 'Inter', 'system-ui', -apple-system, sans-serif;
-
-// Border radius
-$generic-border-radius: 16px;
+// Cores customizadas para crowdfunding
+$success: #10b981;
+$danger: #ef4444;
+$light-bg: #f8fafc;
+$card-shadow: rgba(0, 0, 0, 0.1);

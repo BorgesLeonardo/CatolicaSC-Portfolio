@@ -15,19 +15,21 @@ export class ProjectsController {
   });
 
   private createProjectSchema = z.object({
-    title: z.string().min(3).max(120),
-    description: z.string().max(5000).optional(),
-    goalCents: z.number().int().positive(),
-    deadline: z.string().datetime(),
-    imageUrl: z.string().url().optional(),
+    title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres').max(120, 'Título deve ter no máximo 120 caracteres'),
+    description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres'),
+    goalCents: z.number().int().positive('Meta deve ser um valor positivo'),
+    deadline: z.string().datetime('Data limite deve ser uma data válida'),
+    imageUrl: z.string().url('URL da imagem deve ser válida').optional(),
+    categoryId: z.string().cuid('Categoria deve ser selecionada'),
   });
 
   private updateProjectSchema = z.object({
-    title: z.string().min(3).max(120).optional(),
-    description: z.string().max(5000).optional(),
-    goalCents: z.number().int().positive().optional(),
-    deadline: z.string().datetime().optional(),
-    imageUrl: z.string().url().optional(),
+    title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres').max(120, 'Título deve ter no máximo 120 caracteres').optional(),
+    description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres').optional(),
+    goalCents: z.number().int().positive('Meta deve ser um valor positivo').optional(),
+    deadline: z.string().datetime('Data limite deve ser uma data válida').optional(),
+    imageUrl: z.string().url('URL da imagem deve ser válida').optional(),
+    categoryId: z.string().cuid('Categoria deve ser válida').optional(),
   }).refine((b) => Object.values(b).some((v) => v !== undefined), {
     message: 'Envie ao menos um campo para atualização',
   });
@@ -53,6 +55,7 @@ export class ProjectsController {
       const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize ?? '10'), 10), 1), 50);
       const q = typeof req.query.q === 'string' ? req.query.q : undefined;
       const ownerId = typeof req.query.ownerId === 'string' ? req.query.ownerId : undefined;
+      const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : undefined;
       const active = String(req.query.active ?? '').toLowerCase();
 
       const filters = {
@@ -60,6 +63,7 @@ export class ProjectsController {
         pageSize,
         q,
         ownerId,
+        categoryId,
         active: active === '1' || active === 'true',
       };
 

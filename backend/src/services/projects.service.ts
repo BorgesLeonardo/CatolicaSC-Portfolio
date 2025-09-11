@@ -3,10 +3,11 @@ import { AppError } from '../utils/AppError';
 
 export interface CreateProjectData {
   title: string;
-  description?: string | undefined;
+  description: string;
   goalCents: number;
   deadline: string;
   imageUrl?: string | undefined;
+  categoryId: string;
 }
 
 export interface UpdateProjectData {
@@ -15,12 +16,14 @@ export interface UpdateProjectData {
   goalCents?: number | undefined;
   deadline?: string | undefined;
   imageUrl?: string | undefined;
+  categoryId?: string | undefined;
 }
 
 export interface ProjectFilters {
   q?: string | undefined;
   ownerId?: string | undefined;
   active?: boolean | undefined;
+  categoryId?: string | undefined;
   page?: number | undefined;
   pageSize?: number | undefined;
 }
@@ -34,15 +37,27 @@ export class ProjectsService {
       create: { id: ownerId } 
     });
 
+    // Valida categoria (agora obrigatória)
+    const category = await prisma.category.findFirst({
+      where: { id: data.categoryId, isActive: true }
+    });
+    if (!category) {
+      throw new AppError('Category not found or inactive', 400);
+    }
+
     const project = await prisma.project.create({
       data: {
         ownerId,
         title: data.title,
-        description: data.description || null,
+        description: data.description,
         goalCents: data.goalCents,
         deadline: new Date(data.deadline),
         imageUrl: data.imageUrl || null,
+        categoryId: data.categoryId,
       },
+      include: {
+        category: true
+      }
     });
 
     return project;
@@ -62,6 +77,10 @@ export class ProjectsService {
       where.ownerId = filters.ownerId;
     }
     
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+    
     if (filters.active) {
       where.deadline = { gte: new Date() };
     }
@@ -72,6 +91,9 @@ export class ProjectsService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
+        include: {
+          category: true
+        }
       }),
       prisma.project.count({ where }),
     ]);
@@ -81,7 +103,10 @@ export class ProjectsService {
 
   async getById(id: string) {
     const project = await prisma.project.findUnique({ 
-      where: { id } 
+      where: { id },
+      include: {
+        category: true
+      }
     });
     
     if (!project || project.deletedAt) {
@@ -95,6 +120,9 @@ export class ProjectsService {
     const items = await prisma.project.findMany({
       where: { ownerId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
+      include: {
+        category: true
+      }
     });
 
     return { items };
@@ -103,6 +131,16 @@ export class ProjectsService {
   async update(id: string, data: UpdateProjectData, userId: string) {
     await this.assertOwnerOrThrow(id, userId);
 
+    // Valida categoria se fornecida
+    if (data.categoryId) {
+      const category = await prisma.category.findFirst({
+        where: { id: data.categoryId, isActive: true }
+      });
+      if (!category) {
+        throw new AppError('Category not found or inactive', 400);
+      }
+    }
+
     const updateData: any = { ...data };
     if (updateData.deadline) {
       updateData.deadline = new Date(updateData.deadline);
@@ -110,7 +148,10 @@ export class ProjectsService {
 
     const updated = await prisma.project.update({ 
       where: { id }, 
-      data: updateData 
+      data: updateData,
+      include: {
+        category: true
+      }
     });
 
     return updated;

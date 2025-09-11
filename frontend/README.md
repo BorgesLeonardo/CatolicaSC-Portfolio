@@ -1,165 +1,53 @@
-# CatólicaSC Portfolio - Frontend
+# Frontend - Crowdfunding Platform
 
-Frontend da plataforma de crowdfunding desenvolvido com Quasar + Vue 3 + TypeScript.
+Este é o frontend da plataforma de Crowdfunding construído com Quasar/Vue 3 e autenticação Clerk.
 
-## 🚀 Tecnologias
+## Setup
 
-- **Quasar Framework** - UI Framework baseado em Vue.js
-- **Vue 3** - Framework JavaScript reativo
-- **TypeScript** - Superset tipado do JavaScript
-- **Pinia** - Gerenciamento de estado
-- **Vue Router** - Roteamento
-- **Clerk** - Autenticação
-- **Stripe** - Pagamentos
-- **Axios** - Cliente HTTP
-
-## 🎨 Design System
-
-### Cores
-- **Primary**: #4f46e5 (Indigo)
-- **Secondary**: #22c55e (Green)
-- **Accent**: #8b5cf6 (Purple)
-- **Positive**: #22c55e (Green)
-- **Negative**: #ef4444 (Red)
-- **Info**: #3b82f6 (Blue)
-- **Warning**: #f59e0b (Amber)
-
-### Tipografia
-- **Fonte**: Inter (Google Fonts)
-- **Fallback**: system-ui, -apple-system, sans-serif
-
-### Componentes Base
-- `UiEmptyState` - Estado vazio com ícone, título e descrição
-- `UiProgress` - Barra de progresso com label e percentual
-- `ProjectCard` - Card de campanha reutilizável
-
-## 🛠️ Configuração
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com:
-
-```env
-# Clerk Authentication
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-
-# API Configuration
-VITE_API_BASE_URL=http://localhost:3333
-
-# Stripe Payment
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
-```
-
-### Instalação
-
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-### Desenvolvimento
+2. Configure environment variables:
+   - Copy `.env.example` to `.env` (if available) or create `.env` file
+   - Set your Clerk publishable key:
+     ```
+     VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
+     VITE_API_BASE_URL=http://localhost:3333
+     ```
 
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
-### Build
+## Features Implemented (Phase 1)
 
-```bash
-npm run build
-```
+- ✅ Clerk authentication integration
+- ✅ Sign-in and Sign-up pages with redirect to home
+- ✅ Public projects listing (Home page)
+- ✅ Private projects listing (My Projects page) with Bearer token authentication
+- ✅ Responsive layout with authentication controls
+- ✅ HTTP client with Axios for API communication
 
-## 📱 Funcionalidades
+## Project Structure
 
-### ✅ Implementadas
-- [x] Design system com tokens de cores e tipografia
-- [x] Layout responsivo com AppLayout (header + drawer)
-- [x] Componentes UI reutilizáveis
-- [x] Autenticação com Clerk
-- [x] Listagem de campanhas (próprias e apoiadas)
-- [x] Wizard de criação de campanhas
-- [x] Diálogo de contribuição com Stripe
-- [x] Páginas de retorno do checkout
-- [x] Acessibilidade (ARIA labels, foco visível, contraste)
-- [x] Responsividade (mobile-first)
-- [x] Estados de loading e erro
-- [x] Dark mode (automático)
+- `src/boot/clerk.ts` - Clerk plugin configuration
+- `src/utils/http.ts` - Axios HTTP client
+- `src/pages/` - Vue pages (HomePage, MyProjects, AuthSignIn, AuthSignUp)
+- `src/layouts/MainLayout.vue` - Main layout with authentication controls
+- `src/router/routes.ts` - Application routes
 
-### 🔄 Fluxo de Contribuição
-1. Usuário clica em "Contribuir" na página de detalhes
-2. Diálogo abre com valores pré-definidos ou customizado
-3. Validação do valor mínimo (R$ 5,00)
-4. Redirecionamento para Stripe Checkout
-5. Processamento do pagamento
-6. Webhook atualiza dados no backend
-7. Retorno para página de sucesso/cancelamento
+## API Integration
 
-## 🎯 Padrões de Desenvolvimento
+The frontend integrates with the backend API:
+- `GET /api/projects` - Public projects (no authentication required)
+- `GET /api/projects/mine` - User's projects (requires Bearer token)
 
-### Componentes
-- Use `script setup` + TypeScript
-- Props tipadas com interfaces
-- Emits tipados
-- Slots para customização
+## Authentication Flow
 
-### Estilos
-- SCSS com variáveis do Quasar
-- Classes utilitárias para reutilização
-- Mobile-first approach
-- Suporte a dark mode
-
-### Estados
-- Loading: `QSkeleton` para carregamento
-- Vazio: `UiEmptyState` com ação
-- Erro: Notificação + botão de retry
-
-### Acessibilidade
-- ARIA labels em botões icônicos
-- Foco visível em elementos interativos
-- Contraste AA mínimo
-- Suporte a leitores de tela
-- Navegação por teclado
-
-## 🧪 Testes
-
-```bash
-# Executar testes
-npm run test
-
-# Testes com coverage
-npm run test:coverage
-
-# Testes em modo watch
-npm run test:watch
-```
-
-## 📦 Build e Deploy
-
-```bash
-# Build para produção
-npm run build
-
-# Preview do build
-npm run preview
-```
-
-## 🔧 Configuração do Stripe
-
-1. Crie uma conta no [Stripe](https://stripe.com)
-2. Obtenha as chaves de API (test/live)
-3. Configure o webhook endpoint: `https://seu-dominio.com/api/webhooks/stripe`
-4. Eventos necessários: `checkout.session.completed`
-
-## 🔧 Configuração do Clerk
-
-1. Crie uma conta no [Clerk](https://clerk.com)
-2. Configure o domínio da aplicação
-3. Obtenha a chave pública
-4. Configure as URLs de redirecionamento
-
-## 📚 Documentação
-
-- [Quasar Framework](https://quasar.dev)
-- [Vue 3](https://vuejs.org)
-- [TypeScript](https://www.typescriptlang.org)
-- [Clerk](https://clerk.com/docs)
-- [Stripe](https://stripe.com/docs)
+1. Users can access public projects without authentication
+2. Sign-in/Sign-up redirects to home page after successful authentication
+3. Authenticated users can access "My Projects" page
+4. All authenticated API calls include Bearer token in Authorization header
