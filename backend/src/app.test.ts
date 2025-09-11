@@ -1,6 +1,6 @@
 import request from 'supertest'
 import app from './app'
-import { prisma } from './lib/prisma'
+import { prisma } from './infrastructure/prisma'
 import { stripe } from './lib/stripe'
 
 // Mock do Prisma

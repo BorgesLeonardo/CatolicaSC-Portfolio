@@ -28,18 +28,15 @@ describe('auth middleware', () => {
     expect((req as any).authUserId).toBe('user_test_id')
   })
 
-  it('retorna 401 quando ausente', async () => {
+  it('lança AppError quando ausente', async () => {
     const req = { headers: {} } as unknown as Request
     const res = makeRes()
     
-    requireApiAuth(req, res, mockNext)
-    
-    expect(res.status).toHaveBeenCalledWith(401)
-    expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' })
+    expect(() => requireApiAuth(req, res, mockNext)).toThrow('Unauthorized')
     expect(mockNext).not.toHaveBeenCalled()
   })
 
-  it('retorna 401 quando userId é null', async () => {
+  it('lança AppError quando userId é null', async () => {
     const req = { 
       headers: { authorization: 'Bearer token_fake' },
       auth: { userId: null }
@@ -50,10 +47,7 @@ describe('auth middleware', () => {
     const { getAuth } = require('@clerk/express')
     getAuth.mockReturnValueOnce({ userId: null })
     
-    requireApiAuth(req, res, mockNext)
-    
-    expect(res.status).toHaveBeenCalledWith(401)
-    expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' })
+    expect(() => requireApiAuth(req, res, mockNext)).toThrow('Unauthorized')
     expect(mockNext).not.toHaveBeenCalled()
   })
 })

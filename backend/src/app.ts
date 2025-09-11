@@ -3,7 +3,9 @@ import cors from 'cors';
 import 'dotenv/config';
 import { clerkMiddleware } from '@clerk/express';
 import { stripe } from './lib/stripe';
-import { prisma } from './lib/prisma';
+import { prisma } from './infrastructure/prisma';
+import { errorHandler } from './middleware/error';
+import { HealthController } from './controllers/health.controller';
 
 import projectsRouter from './routes/projects';
 import contributionsRouter from './routes/contributions';
@@ -73,11 +75,15 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 app.use(express.json());
 app.use(clerkMiddleware());
 
-app.get('/health', (_req, res) => res.json({ ok: true }));
+const healthController = new HealthController();
+app.get('/health', healthController.alive.bind(healthController));
 
 /** ---------- Rotas ---------- */
 app.use('/api/projects', projectsRouter);
 app.use('/api/contributions', contributionsRouter);
 app.use('/api', commentsRouter);
+
+/** ---------- Error Handler ---------- */
+app.use(errorHandler);
 
 export default app;
