@@ -14,7 +14,7 @@ vi.mock('src/utils/http', () => ({
 vi.mock('@clerk/vue', () => ({
   useAuth: () => ({
     isSignedIn: { value: true },
-    getToken: vi.fn(() => Promise.resolve('mock-token'))
+    getToken: { value: vi.fn(() => Promise.resolve('mock-token')) }
   })
 }))
 
@@ -100,7 +100,7 @@ describe('MyProjects', () => {
     vi.doMock('@clerk/vue', () => ({
       useAuth: () => ({
         isSignedIn: { value: false },
-        getToken: vi.fn()
+        getToken: { value: vi.fn() }
       })
     }))
 

@@ -108,6 +108,7 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          TZ: America/Sao_Paulo
 
       - name: Upload coverage artifacts
         if: always()
