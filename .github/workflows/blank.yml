@@ -57,8 +57,8 @@ jobs:
       - name: Clean install deps
         working-directory: backend
         run: |
-          rm -rf node_modules
-          npm ci --prefer-offline --no-audit
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Prisma generate
         working-directory: backend
@@ -121,8 +121,8 @@ jobs:
       - name: Clean install deps
         working-directory: frontend
         run: |
-          rm -rf node_modules
-          npm ci --prefer-offline --no-audit
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Lint
         working-directory: frontend
