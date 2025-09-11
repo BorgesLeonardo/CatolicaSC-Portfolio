@@ -119,7 +119,21 @@ jobs:
       - name: Download coverage artifacts
         uses: actions/download-artifact@v4
         with:
-          path: coverage-reports/
+          name: coverage-backend
+          path: coverage-reports/coverage-backend/
+      
+      - name: Download frontend coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend
+          path: coverage-reports/coverage-frontend/
+
+      - name: Verify coverage files
+        run: |
+          echo "Checking coverage files..."
+          ls -la coverage-reports/coverage-backend/coverage/ || echo "Backend coverage not found"
+          ls -la coverage-reports/coverage-frontend/coverage/ || echo "Frontend coverage not found"
+          find coverage-reports/ -name "lcov.info" || echo "No lcov.info files found"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
