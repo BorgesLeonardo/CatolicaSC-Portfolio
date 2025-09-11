@@ -65,7 +65,8 @@ jobs:
         working-directory: ${{ matrix.project.path }}
         run: npx prisma migrate deploy
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
       - name: Generate Prisma client (backend only)
         if: matrix.project.name == 'backend'
@@ -96,7 +97,10 @@ jobs:
         working-directory: ${{ matrix.project.path }}
         run: npm run ${{ matrix.project.test-script }}
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
       - name: Upload coverage artifacts
         if: always()
@@ -151,68 +155,50 @@ jobs:
       quality_gate: ${{ steps.qg.outputs.quality-gate-status }}
 
   deploy:
-    name: Build & Push Docker (+ deploy hook)
-    needs: [sonar_scan]
-    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/')) && needs.sonar_scan.outputs.quality_gate == 'PASSED'
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        service:
-          - name: backend
-            path: ./backend
-            dockerfile: backend/Dockerfile
-          - name: frontend
-            path: ./frontend
-            dockerfile: frontend/Dockerfile
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}/${{ matrix.service.name }}
-          tags: |
-            type=sha,prefix=sha-
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.service.dockerfile }}
-          platforms: linux/amd64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  deploy_hook:
     name: Deploy to Production
-    needs: [deploy, sonar_scan]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') && needs.sonar_scan.outputs.quality_gate == 'PASSED'
     runs-on: ubuntu-22.04
+    needs: [ci_test_scan, sonar_scan]
+    if: github.ref == 'refs/heads/main' && needs.sonar_scan.outputs.quality_gate == 'PASS'
+    environment: production
+    
     steps:
       - uses: actions/checkout@v4
-
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      
       - name: Deploy to production
         run: |
-          if [ -x deploy/production/deploy.sh ]; then
-            echo "Running production deployment..."
-            chmod +x deploy/production/deploy.sh
-            ./deploy/production/deploy.sh
-          else
-            echo "TODO: Deploy script not found at deploy/production/deploy.sh"
-            echo "Please create the deployment script for your infrastructure"
-          fi
+          echo "Deployment would happen here with the following environment variables:"
+          echo "DATABASE_URL: ${{ secrets.DATABASE_URL }}"
+          echo "DIRECT_URL: ${{ secrets.DIRECT_URL }}"
+          echo "CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}"
+          echo "STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}"
+          echo "SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}"
+          echo "SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}"
