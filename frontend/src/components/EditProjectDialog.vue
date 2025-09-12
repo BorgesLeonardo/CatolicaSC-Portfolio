@@ -112,6 +112,35 @@
                   </q-input>
                 </div>
 
+                <div class="form-field">
+                  <label class="field-label">Categoria *</label>
+                  <q-select
+                    v-model="formData.categoryId"
+                    :options="categories"
+                    option-value="id"
+                    option-label="name"
+                    emit-value
+                    map-options
+                    outlined
+                    dense
+                    placeholder="Selecione uma categoria"
+                    :loading="loadingCategories"
+                    :rules="[val => !!val || 'Categoria é obrigatória']"
+                    class="form-input"
+                  >
+                    <template #prepend>
+                      <q-icon name="category" color="primary" />
+                    </template>
+                    <template #no-option>
+                      <q-item>
+                        <q-item-section class="text-grey">
+                          {{ loadingCategories ? 'Carregando...' : 'Nenhuma categoria disponível' }}
+                        </q-item-section>
+                      </q-item>
+                    </template>
+                  </q-select>
+                </div>
+
                 <div class="form-field full-width">
                   <label class="field-label">Descrição</label>
                   <q-input
@@ -143,13 +172,13 @@
                 <div class="form-field">
                   <label class="field-label">Meta de Arrecadação *</label>
                   <q-input
-                    v-model="goalAmount"
+                    v-model="goalAmountInput"
                     outlined
                     dense
                     placeholder="0,00"
-                    :rules="[val => !!val && parseFloat(val.replace(',', '.')) > 0 || 'Meta deve ser maior que zero']"
+                    :rules="[val => parseBRLToCents(String(val)) > 0 || 'Meta deve ser maior que zero']"
                     class="form-input"
-                    @input="formatGoalAmount"
+                    @blur="normalizeGoalAmount"
                   >
                     <template #prepend>
                       <q-icon name="attach_money" color="primary" />
@@ -229,11 +258,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { projectsService } from 'src/services/projects'
-import type { Project } from 'src/components/models'
-import { formatMoneyBRL } from 'src/utils/format'
+import { categoriesService } from 'src/services/categories'
+import type { Project, Category } from 'src/components/models'
 
 interface Props {
   modelValue: boolean
@@ -251,6 +280,8 @@ const emit = defineEmits<Emits>()
 // Refs
 const imageInput = ref<HTMLInputElement>()
 const saving = ref(false)
+const categories = ref<Category[]>([])
+const loadingCategories = ref(false)
 
 // Form data
 const formData = ref({
@@ -258,12 +289,46 @@ const formData = ref({
   description: '',
   goalCents: 0,
   deadline: '',
-  imageUrl: ''
+  imageUrl: '',
+  categoryId: ''
 })
 
-const goalAmount = ref('')
+// ===== Helpers de moeda (pt-BR) =====
+function formatBRL(value: number): string {
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 
-// Computed
+function parseBRLToCents(input: string): number {
+  // remove espaços, remove separadores de milhar ".", troca vírgula por ponto
+  const cleaned = (input || '')
+    .replace(/\s/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.')
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? Math.round(n * 100) : 0
+}
+
+// Computed para o input da Meta: string <-> cents
+const goalAmountInput = computed<string>({
+  get() {
+    return formData.value.goalCents > 0
+      ? formatBRL(formData.value.goalCents / 100)
+      : ''
+  },
+  set(val: string) {
+    formData.value.goalCents = parseBRLToCents(val)
+  }
+})
+
+function normalizeGoalAmount() {
+  if (formData.value.goalCents > 0) {
+    goalAmountInput.value = formatBRL(formData.value.goalCents / 100)
+  } else {
+    goalAmountInput.value = ''
+  }
+}
+
+// ===== Computeds =====
 const isOpen = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
@@ -279,6 +344,8 @@ const isFormValid = computed(() => {
   return formData.value.title.trim().length > 0 &&
          formData.value.goalCents > 0 &&
          formData.value.deadline &&
+         formData.value.categoryId &&
+         formData.value.categoryId.trim().length > 0 &&
          new Date(formData.value.deadline) > new Date()
 })
 
@@ -293,7 +360,23 @@ const formatLastUpdate = computed(() => {
   })
 })
 
-// Methods
+// ===== Methods =====
+async function loadCategories() {
+  loadingCategories.value = true
+  try {
+    categories.value = await categoriesService.getAll()
+  } catch (error) {
+    console.error('Error loading categories:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'Erro ao carregar categorias',
+      icon: 'error'
+    })
+  } finally {
+    loadingCategories.value = false
+  }
+}
+
 function initializeForm() {
   if (!props.project) return
   
@@ -302,22 +385,12 @@ function initializeForm() {
     description: props.project.description || '',
     goalCents: props.project.goalCents,
     deadline: new Date(props.project.deadline).toISOString().slice(0, 16),
-    imageUrl: props.project.imageUrl || ''
+    imageUrl: props.project.imageUrl || '',
+    categoryId: props.project.categoryId || ''
   }
-  
-  goalAmount.value = formatMoneyBRL(props.project.goalCents).replace('R$ ', '').replace('.', ',')
-}
 
-function formatGoalAmount() {
-  const value = goalAmount.value.replace(/\D/g, '')
-  if (value) {
-    const cents = parseInt(value)
-    formData.value.goalCents = cents
-    goalAmount.value = (cents / 100).toLocaleString('pt-BR', { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2 
-    })
-  }
+  // normaliza exibição da meta já na abertura
+  normalizeGoalAmount()
 }
 
 function triggerImageUpload() {
@@ -329,7 +402,6 @@ function handleImageUpload(event: Event) {
   const file = target.files?.[0]
   
   if (file) {
-    // Validação do arquivo
     if (file.size > 5 * 1024 * 1024) { // 5MB
       Notify.create({
         type: 'negative',
@@ -346,7 +418,6 @@ function handleImageUpload(event: Event) {
       return
     }
     
-    // Criar preview da imagem
     const reader = new FileReader()
     reader.onload = (e) => {
       formData.value.imageUrl = e.target?.result as string
@@ -367,15 +438,30 @@ async function handleSubmit() {
   
   saving.value = true
   
+  const updateData = {
+    title: formData.value.title.trim(),
+    description: formData.value.description && formData.value.description.trim().length >= 10 
+      ? formData.value.description.trim() 
+      : undefined,
+    goalCents: formData.value.goalCents,
+    // converte o valor do input local (sem timezone) para ISO UTC corretamente
+    deadline: formData.value.deadline
+      ? new Date(formData.value.deadline).toISOString()
+      : undefined,
+    imageUrl: formData.value.imageUrl && formData.value.imageUrl.trim() && 
+      (formData.value.imageUrl.startsWith('http://') || 
+       formData.value.imageUrl.startsWith('https://') || 
+       formData.value.imageUrl.startsWith('data:'))
+      ? formData.value.imageUrl.trim() 
+      : undefined,
+    categoryId: formData.value.categoryId && formData.value.categoryId.trim() 
+      ? formData.value.categoryId.trim() 
+      : undefined
+  }
+  
+  console.log('Sending goalCents:', updateData.goalCents)
+  
   try {
-    const updateData = {
-      title: formData.value.title.trim(),
-      description: formData.value.description.trim() || undefined,
-      goalCents: formData.value.goalCents,
-      deadline: formData.value.deadline,
-      imageUrl: formData.value.imageUrl || undefined
-    }
-    
     const updatedProject = await projectsService.update(props.project.id, updateData)
     
     Notify.create({
@@ -387,11 +473,22 @@ async function handleSubmit() {
     emit('projectUpdated', updatedProject)
     closeDialog()
     
-  } catch (error) {
-    console.error('Error updating project:', error)
+  } catch (error: unknown) {
+    let errorMessage = 'Erro ao atualizar a campanha. Tente novamente.'
+    
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string; details?: unknown } } }
+      
+      if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message
+      } else if (axiosError.response?.data?.details) {
+        errorMessage = `Erro de validação: ${JSON.stringify(axiosError.response.data.details)}`
+      }
+    }
+    
     Notify.create({
       type: 'negative',
-      message: 'Erro ao atualizar a campanha. Tente novamente.',
+      message: errorMessage,
       icon: 'error'
     })
   } finally {
@@ -403,7 +500,7 @@ function closeDialog() {
   isOpen.value = false
 }
 
-// Watch for project changes
+// ===== Watchers =====
 watch(() => props.project, (newProject) => {
   if (newProject) {
     void nextTick(() => {
@@ -417,6 +514,11 @@ watch(isOpen, (newValue) => {
     initializeForm()
   }
 })
+
+// Load categories on component mount
+onMounted(() => {
+  void loadCategories()
+})
 </script>
 
 <style scoped lang="scss">
@@ -428,7 +530,7 @@ watch(isOpen, (newValue) => {
   flex-direction: column;
 }
 
-// === HEADER ===
+/* HEADER */
 .dialog-header {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
@@ -471,7 +573,7 @@ watch(isOpen, (newValue) => {
   }
 }
 
-// === CONTENT ===
+/* CONTENT */
 .dialog-content {
   flex: 1;
   overflow-y: auto;
@@ -502,7 +604,7 @@ watch(isOpen, (newValue) => {
   border-bottom: 2px solid #e2e8f0;
 }
 
-// === IMAGE UPLOAD ===
+/* IMAGE UPLOAD */
 .image-upload-section {
   display: flex;
   flex-direction: column;
@@ -570,7 +672,7 @@ watch(isOpen, (newValue) => {
   }
 }
 
-// === FORM FIELDS ===
+/* FORM FIELDS */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -609,7 +711,7 @@ watch(isOpen, (newValue) => {
   font-weight: 500;
 }
 
-// === STATUS INFO ===
+/* STATUS INFO */
 .status-info {
   display: flex;
   align-items: flex-start;
@@ -626,7 +728,7 @@ watch(isOpen, (newValue) => {
   }
 }
 
-// === ACTIONS ===
+/* ACTIONS */
 .dialog-actions {
   border-top: 1px solid rgba(229, 231, 235, 0.3);
   padding: 24px 32px;
@@ -682,7 +784,7 @@ watch(isOpen, (newValue) => {
   padding: 8px 24px;
 }
 
-// === RESPONSIVE ===
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .dialog-header {
     padding: 20px 16px;

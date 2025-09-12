@@ -186,7 +186,6 @@
         <div class="steps-container">
           <div class="step-item fade-in-up stagger-animation">
             <div class="step-card modern-card hover-lift">
-              <div class="step-number">01</div>
               <div class="step-icon">
                 <q-icon name="create" size="2xl" color="primary" />
               </div>
@@ -205,7 +204,6 @@
           
           <div class="step-item fade-in-up stagger-animation">
             <div class="step-card modern-card hover-lift">
-              <div class="step-number">02</div>
               <div class="step-icon">
                 <q-icon name="share" size="2xl" color="secondary" />
               </div>
@@ -224,7 +222,6 @@
           
           <div class="step-item fade-in-up stagger-animation">
             <div class="step-card modern-card hover-lift">
-              <div class="step-number">03</div>
               <div class="step-icon">
                 <q-icon name="monetization_on" size="2xl" color="accent" />
               </div>
@@ -675,22 +672,6 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.step-number {
-  position: absolute;
-  top: -20px;
-  right: 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1.125rem;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
 
 .step-icon {
   margin-bottom: 24px;
@@ -1008,10 +989,6 @@ onMounted(() => {
 @media (max-width: 640px) {
   .step-card {
     padding: 32px 24px;
-  }
-  
-  .step-number {
-    right: 24px;
   }
   
   .trust-indicators,

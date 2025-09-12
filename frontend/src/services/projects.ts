@@ -3,6 +3,7 @@ import { http } from '../utils/http'
 export interface Project {
   id: string
   ownerId: string
+  categoryId?: string
   title: string
   description?: string
   goalCents: number
@@ -13,6 +14,13 @@ export interface Project {
   createdAt: string
   updatedAt: string
   deletedAt?: string
+  category?: {
+    id: string
+    name: string
+    description?: string
+    color?: string
+    icon?: string
+  }
 }
 
 export interface CreateProjectData {
@@ -29,6 +37,7 @@ export interface UpdateProjectData {
   goalCents?: number
   deadline?: string
   imageUrl?: string
+  categoryId?: string
 }
 
 export interface ProjectFilters {
