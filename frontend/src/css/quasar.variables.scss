@@ -1,32 +1,24 @@
 // Quasar SCSS (& Sass) Variables
 // --------------------------------------------------
-// To customize the look and feel of this app, you can override
-// the Sass/SCSS variables found in Quasar's source Sass/SCSS files.
+// Modern UI/UX Variables for Crowdfunding Platform
 
-// Check documentation for full list of Quasar variables
+// === CORE BRAND COLORS ===
+$primary: #6366f1; // Modern indigo - primary actions
+$secondary: #10b981; // Success green - progress, achievements
+$accent: #f59e0b; // Golden yellow - highlights, featured content
 
-// Your own variables (that are declared here) and Quasar's own
-// ones will be available out of the box in your .vue/.scss/.sass files
+// === SEMANTIC COLORS ===
+$positive: #10b981; // Success states
+$negative: #ef4444; // Error states
+$info: #3b82f6; // Information
+$warning: #f59e0b; // Warnings
 
-// It's highly recommended to change the default colors
-// to match your app's branding.
-// Tip: Use the "Theme Builder" on Quasar's documentation website.
+// === DARK MODE ===
+$dark: #1f2937;
+$dark-page: #0f172a;
 
-// Design System Tokens
-$primary: #4f46e5;
-$secondary: #22c55e;
-$accent: #8b5cf6;
-
-$dark: #1d1d1d;
-$dark-page: #121212;
-
-$positive: #22c55e;
-$negative: #ef4444;
-$info: #3b82f6;
-$warning: #f59e0b;
-
-// Typography
-$typography-font-family: 'Inter', 'system-ui', -apple-system, sans-serif;
-
-// Border radius
-$generic-border-radius: 16px;
+// === EXTENDED PALETTE ===
+$success: #10b981;
+$danger: #ef4444;
+$light-bg: #f8fafc;
+$card-shadow: rgba(0, 0, 0, 0.1);

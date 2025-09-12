@@ -8,6 +8,8 @@ export interface Project {
   goalCents: number
   deadline: string
   imageUrl?: string
+  raisedCents?: number        // Valor arrecadado em centavos
+  supportersCount?: number    // Número de apoiadores únicos
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -84,6 +86,11 @@ export class ProjectsService {
 
   async delete(id: string): Promise<void> {
     await http.delete(`/api/projects/${id}`)
+  }
+
+  async updateAllStats(): Promise<{ message: string; timestamp: string }> {
+    const response = await http.post('/api/projects/update-stats')
+    return response.data
   }
 }
 

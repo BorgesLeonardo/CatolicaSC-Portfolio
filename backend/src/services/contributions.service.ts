@@ -98,4 +98,15 @@ export class ContributionsService {
 
     return { page, pageSize, total, items };
   }
+
+  async hasContributions(projectId: string): Promise<boolean> {
+    const count = await prisma.contribution.count({
+      where: {
+        projectId,
+        status: 'SUCCEEDED'
+      }
+    });
+    
+    return count > 0;
+  }
 }

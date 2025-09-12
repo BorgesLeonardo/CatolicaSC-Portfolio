@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prisma'
 import Stripe from 'stripe'
+import { projectStatsService } from './project-stats.service'
 
 export const createContributionFromCheckoutSession = async (session: Stripe.Checkout.Session) => {
   const { projectId, userId } = session.metadata || {}
@@ -33,38 +34,11 @@ export const createContributionFromCheckoutSession = async (session: Stripe.Chec
       },
     })
 
-    // Update project raised amount
-    await tx.project.update({
-      where: { id: projectId },
-      data: {
-        raisedCents: {
-          increment: amountTotal,
-        },
-      },
-    })
-
-    // If this is the first contribution from this user to this project, increment supporters count
-    if (userId) {
-      const existingContributions = await tx.contribution.count({
-        where: {
-          projectId,
-          contributorId: userId,
-          status: 'SUCCEEDED',
-        },
-      })
-
-      if (existingContributions === 1) {
-        await tx.project.update({
-          where: { id: projectId },
-          data: {
-            supportersCount: {
-              increment: 1,
-            },
-          },
-        })
-      }
-    }
-
     return contribution
   })
+  
+  // Atualiza as estatísticas do projeto de forma consistente
+  await projectStatsService.updateProjectStats(projectId)
+  
+  return contribution
 }

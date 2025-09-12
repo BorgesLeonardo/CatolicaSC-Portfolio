@@ -47,4 +47,18 @@ export class ContributionsController {
       return next(error);
     }
   }
+
+  async hasContributions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const projectId = req.params.projectId;
+      if (!projectId) {
+        throw new AppError('Project ID is required', 400);
+      }
+
+      const hasContributions = await this.service.hasContributions(projectId);
+      return res.json({ hasContributions });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

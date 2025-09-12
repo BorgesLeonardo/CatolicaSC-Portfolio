@@ -11,4 +11,7 @@ router.post('/checkout', requireApiAuth, contributionsController.createCheckout.
 // GET /api/contributions/project/:projectId (público)
 router.get('/project/:projectId', contributionsController.listByProject.bind(contributionsController));
 
+// GET /api/contributions/project/:projectId/has-contributions (público)
+router.get('/project/:projectId/has-contributions', contributionsController.hasContributions.bind(contributionsController));
+
 export default router;

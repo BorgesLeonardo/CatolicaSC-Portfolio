@@ -52,6 +52,11 @@ export class ContributionsService {
     const response = await http.get(`/api/contributions/project/${projectId}?${params.toString()}`)
     return response.data
   }
+
+  async hasContributions(projectId: string): Promise<boolean> {
+    const response = await http.get(`/api/contributions/project/${projectId}/has-contributions`)
+    return response.data.hasContributions
+  }
 }
 
 export const contributionsService = new ContributionsService()

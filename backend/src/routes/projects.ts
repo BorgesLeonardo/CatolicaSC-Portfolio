@@ -31,4 +31,7 @@ router.patch('/:id', requireApiAuth, projectsController.update.bind(projectsCont
 /** ---------- Exclusão (privado: dono) — SOFT DELETE ---------- */
 router.delete('/:id', requireApiAuth, projectsController.delete.bind(projectsController));
 
+/** ---------- Atualizar estatísticas (público) ---------- */
+router.post('/update-stats', projectsController.updateAllStats.bind(projectsController));
+
 export default router;
