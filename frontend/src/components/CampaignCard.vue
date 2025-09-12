@@ -210,7 +210,6 @@ function formatDateBR(dateString: string): string {
 }
 
 // formatNumber is now imported from utils/format
-
 function toggleFavorite() {
   emit('favorite', props.project)
 }
