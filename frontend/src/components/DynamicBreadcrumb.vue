@@ -244,12 +244,12 @@ onUnmounted(() => {
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
+      background: rgba(30, 64, 175, 0.1);
+      color: #1e40af;
       transition: all 0.2s ease;
       
       &:hover {
-        background: rgba(99, 102, 241, 0.2);
+        background: rgba(30, 64, 175, 0.2);
         transform: scale(1.1);
       }
     }
@@ -258,7 +258,7 @@ onUnmounted(() => {
   &--clickable {
     .breadcrumb-link:hover {
       .breadcrumb-text {
-        color: #6366f1;
+        color: #1e40af;
       }
     }
   }
@@ -283,7 +283,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   
   &:hover {
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(30, 64, 175, 0.05);
   }
 }
 

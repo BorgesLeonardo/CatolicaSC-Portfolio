@@ -2,23 +2,32 @@
 // --------------------------------------------------
 // Modern UI/UX Variables for Crowdfunding Platform
 
-// === CORE BRAND COLORS ===
-$primary: #6366f1; // Modern indigo - primary actions
-$secondary: #10b981; // Success green - progress, achievements
-$accent: #f59e0b; // Golden yellow - highlights, featured content
+// === CORE BRAND COLORS - 2025 SOPHISTICATED TRENDS ===
+$primary: #1e40af; // Deep blue - trust and professionalism
+$secondary: #f97316; // Vibrant orange - energy and action
+$accent: #10b981; // Emerald green - success and growth
+$tertiary: #8b5cf6; // Purple - creativity and innovation
 
 // === SEMANTIC COLORS ===
-$positive: #10b981; // Success states
-$negative: #ef4444; // Error states
-$info: #3b82f6; // Information
-$warning: #f59e0b; // Warnings
+$positive: #1e40af; // Deep blue - success states
+$negative: #ef4444; // Red - error states
+$info: #3b82f6; // Blue - information
+$warning: #f59e0b; // Amber - warnings
 
 // === DARK MODE ===
-$dark: #1f2937;
-$dark-page: #0f172a;
+$dark: #0f172a;
+$dark-page: #020617;
 
 // === EXTENDED PALETTE ===
-$success: #10b981;
+$success: #1e40af;
 $danger: #ef4444;
 $light-bg: #f8fafc;
-$card-shadow: rgba(0, 0, 0, 0.1);
+$card-shadow: rgba(30, 64, 175, 0.08);
+
+// === 2025 SOPHISTICATED GRADIENTS ===
+$gradient-primary: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+$gradient-secondary: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+$gradient-accent: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
+$gradient-creative: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%);
+$gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #f97316 70%, #fb923c 100%);
+$gradient-subtle: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);

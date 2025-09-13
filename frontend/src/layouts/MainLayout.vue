@@ -406,10 +406,7 @@ onUnmounted(() => {
 
 .logo-text {
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: white;
   letter-spacing: -0.025em;
 }
 
@@ -447,10 +444,10 @@ onUnmounted(() => {
   }
   
   &:hover {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.3);
+    background: rgba(30, 64, 175, 0.1);
+    border-color: rgba(30, 64, 175, 0.3);
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
     
     &::before {
       left: 100%;
@@ -645,7 +642,7 @@ onUnmounted(() => {
     margin: -4px -8px;
     
     &:hover {
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(30, 64, 175, 0.05);
       transform: translateY(-1px);
     }
     
@@ -675,13 +672,13 @@ onUnmounted(() => {
   transition: all var(--transition-fast);
   
   &:hover {
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    background: rgba(30, 64, 175, 0.1);
+    color: #1e40af;
   }
   
   &.nav-active {
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    background: rgba(30, 64, 175, 0.1) !important;
+    color: #1e40af !important;
     font-weight: 700;
   }
 }
@@ -715,10 +712,10 @@ onUnmounted(() => {
   }
   
   &--primary {
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.15);
     
     &:hover {
-      box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 4px 8px rgba(30, 64, 175, 0.25);
     }
   }
 }
@@ -734,19 +731,24 @@ onUnmounted(() => {
   gap: 6px;
   
   &--create {
-    color: #6366f1;
+    color: #1e40af;
     
     &:hover {
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(30, 64, 175, 0.1);
     }
   }
   
   &--campaigns {
-    color: #10b981;
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
     
     &:hover {
-      background: rgba(16, 185, 129, 0.1);
-      color: #059669;
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #ea580c 100%) !important;
+      color: white !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
     }
     
     // Ensure visibility
@@ -755,11 +757,11 @@ onUnmounted(() => {
   }
   
   &--dashboard {
-    color: #64748b;
+    color: #3b82f6;
     
     &:hover {
-      background: rgba(100, 116, 139, 0.1);
-      color: #475569;
+      background: rgba(59, 130, 246, 0.1);
+      color: #1e40af;
     }
   }
 }
@@ -800,10 +802,7 @@ onUnmounted(() => {
 .drawer-title {
   font-size: 1.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: white;
   letter-spacing: -0.025em;
 }
 
@@ -841,39 +840,46 @@ onUnmounted(() => {
   transition: all var(--transition-fast);
   
   &:hover {
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(30, 64, 175, 0.08);
     transform: translateX(4px);
   }
   
   &--active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-    border-left: 3px solid #6366f1;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+    border-left: 3px solid #1e40af;
     
     .nav-label {
-      color: #6366f1;
+      color: #1e40af;
       font-weight: 700;
     }
     
     .q-icon {
-      color: #6366f1;
+      color: #1e40af;
     }
   }
   
   &--highlighted {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%) !important;
+    border: none !important;
+    color: white !important;
     
     &:hover {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #ea580c 100%) !important;
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
     }
     
     .nav-label {
-      color: #059669;
+      color: white !important;
       font-weight: 600;
     }
     
+    .nav-caption {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
     .q-icon {
-      color: #10b981;
+      color: white !important;
     }
   }
 }
@@ -898,7 +904,7 @@ onUnmounted(() => {
 // === DRAWER CTA ===
 .drawer-cta {
   padding: 24px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
   border-top: 1px solid rgba(226, 232, 240, 0.5);
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
 }
@@ -927,11 +933,11 @@ onUnmounted(() => {
   font-weight: 600;
   border-radius: 10px;
   padding: 12px 24px;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 2px 4px rgba(91, 33, 182, 0.2);
   transition: all var(--transition-base);
   
   &:hover {
-    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 8px rgba(91, 33, 182, 0.3);
     transform: translateY(-1px);
   }
 }

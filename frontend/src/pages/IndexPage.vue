@@ -157,13 +157,13 @@
         </DynamicGrid>
 
         <div class="text-center q-mt-xl">
-          <q-btn 
+          <q-btn
             unelevated
             color="primary"
             label="Ver Todas as Campanhas"
             to="/projects"
             size="lg"
-            class="q-px-xl"
+            class="q-px-xl gradient-btn"
           />
         </div>
       </div>
@@ -174,7 +174,7 @@
       <div class="container">
         <div class="text-center q-mb-xl">
           <div class="section-badge fade-in-up">
-            <q-icon name="lightbulb" size="sm" class="q-mr-xs" />
+            <q-icon name="lightbulb" size="sm" class="q-mr-xs" color="primary" />
             Processo Simples
           </div>
           <h2 class="section-title fade-in-up">Como Funciona</h2>
@@ -258,7 +258,7 @@
           <div class="testimonial-card modern-card fade-in-up stagger-animation">
             <div class="testimonial-content">
               <div class="testimonial-stars">
-                <q-icon name="star" color="accent" size="sm" v-for="i in 5" :key="i" />
+                <q-icon name="star" color="primary" size="sm" v-for="i in 5" :key="i" />
               </div>
               <p class="testimonial-text">
                 "Consegui arrecadar R$ 50.000 para meu projeto de tecnologia educacional. A plataforma é intuitiva e o suporte é excepcional!"
@@ -276,7 +276,7 @@
           <div class="testimonial-card modern-card fade-in-up stagger-animation">
             <div class="testimonial-content">
               <div class="testimonial-stars">
-                <q-icon name="star" color="accent" size="sm" v-for="i in 5" :key="i" />
+                <q-icon name="star" color="primary" size="sm" v-for="i in 5" :key="i" />
               </div>
               <p class="testimonial-text">
                 "Minha campanha para um projeto social superou a meta em 150%. A comunidade aqui é incrível e muito engajada!"
@@ -294,7 +294,7 @@
           <div class="testimonial-card modern-card fade-in-up stagger-animation">
             <div class="testimonial-content">
               <div class="testimonial-stars">
-                <q-icon name="star" color="accent" size="sm" v-for="i in 5" :key="i" />
+                <q-icon name="star" color="primary" size="sm" v-for="i in 5" :key="i" />
               </div>
               <p class="testimonial-text">
                 "Interface moderna, processo simples e resultados incríveis. Recomendo para qualquer empreendedor!"
@@ -704,13 +704,13 @@ onMounted(() => {
     display: flex;
     align-items: center;
     font-size: 0.875rem;
-    color: #059669;
+    color: #1e40af;
     font-weight: 500;
     
     &::before {
       content: '\2713';
       margin-right: 8px;
-      color: #10b981;
+      color: #1e40af;
       font-weight: bold;
     }
   }
@@ -774,7 +774,7 @@ onMounted(() => {
 
 // === FINAL CTA SECTION ===
 .final-cta-section {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #a855f7 60%, #06b6d4 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #f97316 70%, #fb923c 100%);
   color: white;
   padding: 120px 0;
   position: relative;
@@ -847,10 +847,7 @@ onMounted(() => {
 }
 
 .gradient-text-white {
-  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: white;
 }
 
 .cta-subtitle {
@@ -905,6 +902,25 @@ onMounted(() => {
   gap: 8px;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+// === GRADIENT BUTTON ===
+.gradient-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  
+  &:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #ea580c 100%) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 // === ANIMATIONS ===

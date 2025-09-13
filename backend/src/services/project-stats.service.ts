@@ -42,14 +42,10 @@ export class ProjectStatsService {
    * Recalcula as estatísticas de todos os projetos de forma eficiente
    */
   async updateAllProjectsStats(): Promise<void> {
-    console.log('📊 Iniciando atualização em lote das estatísticas...')
-    
     const projects = await prisma.project.findMany({
       where: { deletedAt: null },
       select: { id: true, title: true }
     })
-
-    console.log(`🔍 Encontrados ${projects.length} projetos para atualizar`)
 
     // Processar projetos em lotes para melhor performance
     const batchSize = 5
@@ -59,7 +55,6 @@ export class ProjectStatsService {
       const promises = batch.map(async (project) => {
         try {
           const stats = await this.updateProjectStats(project.id)
-          console.log(`✅ ${project.title}: R$ ${(stats.raisedCents / 100).toFixed(2)} - ${stats.supportersCount} apoiadores`)
           return stats
         } catch (error) {
           console.error(`❌ Erro ao atualizar ${project.title}:`, error)
@@ -69,8 +64,6 @@ export class ProjectStatsService {
 
       await Promise.all(promises)
     }
-
-    console.log('🎉 Atualização em lote concluída!')
   }
 
   /**

@@ -251,7 +251,7 @@ async function subscribeNewsletter() {
 .brand-name {
   font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -283,8 +283,8 @@ async function subscribeNewsletter() {
   transition: all var(--transition-base);
   
   &:hover {
-    background: rgba(99, 102, 241, 0.2);
-    color: #6366f1;
+    background: rgba(30, 64, 175, 0.2);
+    color: #1e40af;
     transform: translateY(-2px);
   }
 }
@@ -321,7 +321,7 @@ async function subscribeNewsletter() {
   display: inline-block;
   
   &:hover {
-    color: #6366f1;
+    color: #1e40af;
     transform: translateX(4px);
   }
 }
@@ -351,7 +351,7 @@ async function subscribeNewsletter() {
     border-radius: 12px;
     
     &:hover {
-      border-color: rgba(99, 102, 241, 0.5);
+      border-color: rgba(30, 64, 175, 0.5);
     }
   }
   
@@ -365,10 +365,10 @@ async function subscribeNewsletter() {
 }
 
 .newsletter-btn {
-  color: #6366f1;
+  color: #1e40af;
   
   &:hover {
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(30, 64, 175, 0.1);
   }
 }
 
@@ -434,7 +434,7 @@ async function subscribeNewsletter() {
   transition: color var(--transition-fast);
   
   &:hover {
-    color: #6366f1;
+    color: #1e40af;
   }
 }
 

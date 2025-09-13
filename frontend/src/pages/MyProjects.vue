@@ -297,7 +297,7 @@ onMounted(fetchMyProjects)
                   </div>
 
                   <q-badge 
-                    :color="isPast(project.deadline) ? 'grey-6' : 'positive'" 
+                    :color="isPast(project.deadline) ? 'grey-6' : 'green'" 
                     :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
                     class="q-mt-sm"
                   />
@@ -401,11 +401,11 @@ onMounted(fetchMyProjects)
   font-weight: 600;
   border-radius: 12px;
   padding: 12px 24px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 20px rgba(30, 64, 175, 0.4);
   }
 }
 
@@ -485,7 +485,7 @@ onMounted(fetchMyProjects)
   transition: color 0.2s ease;
   
   &:hover {
-    color: #3b82f6;
+    color: #1e40af;
   }
 }
 
@@ -518,7 +518,7 @@ onMounted(fetchMyProjects)
     font-weight: 500;
     
     &:hover {
-      background: rgba(59, 130, 246, 0.1);
+      background: rgba(30, 64, 175, 0.1);
     }
     
     &[color="negative"]:hover {

@@ -138,9 +138,7 @@ export class ProjectsController {
 
   async updateAllStats(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log('🔄 Atualizando estatísticas de todos os projetos...')
       await projectStatsService.updateAllProjectsStats()
-      console.log('✅ Estatísticas atualizadas com sucesso!')
       
       return res.json({ 
         message: 'Estatísticas atualizadas com sucesso',

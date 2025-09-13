@@ -105,7 +105,7 @@ withDefaults(defineProps<Props>(), {
 .logo-icon {
   position: relative;
   z-index: 3;
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(30, 64, 175, 0.3));
 }
 
 .logo-rings {
@@ -118,7 +118,7 @@ withDefaults(defineProps<Props>(), {
 
 .ring {
   position: absolute;
-  border: 2px solid rgba(99, 102, 241, 0.2);
+  border: 2px solid rgba(30, 64, 175, 0.2);
   border-radius: 50%;
   animation: ripple 2s ease-out infinite;
   
@@ -178,7 +178,7 @@ withDefaults(defineProps<Props>(), {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
   position: relative;
@@ -211,7 +211,7 @@ withDefaults(defineProps<Props>(), {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
   animation: bounce 1.4s ease-in-out infinite both;
   
   &.dot-1 {
@@ -233,7 +233,7 @@ withDefaults(defineProps<Props>(), {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(30, 64, 175, 0.1) 0%, transparent 70%);
   z-index: 1;
 }
 

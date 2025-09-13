@@ -376,7 +376,7 @@ onMounted(() => {
 
 // === HEADER SECTION ===
 .dashboard-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -448,9 +448,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 200px;
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(30, 64, 175, 0.05);
   border-radius: 12px;
-  border: 2px dashed rgba(99, 102, 241, 0.2);
+  border: 2px dashed rgba(30, 64, 175, 0.2);
 }
 
 .chart-text {
@@ -550,7 +550,7 @@ onMounted(() => {
   border-radius: 50%;
   
   &--online {
-    background: #10b981;
+    background: #1e40af;
   }
   
   &--warning {

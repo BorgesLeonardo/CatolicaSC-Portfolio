@@ -307,7 +307,7 @@ onMounted(() => {
           <!-- Status overlay -->
           <div class="hero-overlay">
             <q-badge
-              :color="isExpired ? 'grey-8' : 'positive'"
+              :color="isExpired ? 'grey-8' : 'green'"
               :label="isExpired ? 'Campanha Encerrada' : 'Campanha Ativa'"
               class="status-badge"
             />
@@ -424,7 +424,7 @@ onMounted(() => {
                   <!-- Botão de contribuir (para não-donos) -->
                   <q-btn
                     v-if="!isOwner"
-                    :color="isExpired ? 'grey-5' : 'primary'"
+                    :color="isExpired ? 'grey-5' : 'info'"
                     :label="isExpired ? 'Campanha Encerrada' : 'Contribuir Agora'"
                     :icon="isExpired ? 'block' : 'favorite'"
                     :disable="isExpired"
@@ -653,7 +653,7 @@ onMounted(() => {
   .stat-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #059669;
+    color: #1e40af;
     margin-bottom: 0.25rem;
   }
   
@@ -712,7 +712,7 @@ onMounted(() => {
   .goal-amount {
     font-size: 2rem;
     font-weight: 700;
-    color: #059669;
+    color: #1e40af;
     margin-bottom: 0.25rem;
   }
   
@@ -735,13 +735,13 @@ onMounted(() => {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 10px rgba(30, 64, 175, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 0 rgba(30, 64, 175, 0);
   }
 }
 
@@ -830,10 +830,10 @@ onMounted(() => {
     
     // Estilo específico para botão de editar
     &.q-btn--standard:not(.q-btn--outline) {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
       
       &:hover {
-        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #ea580c 100%);
       }
     }
     

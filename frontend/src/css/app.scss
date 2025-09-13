@@ -30,8 +30,8 @@ html {
   border-radius: 16px !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(229, 231, 235, 0.3) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(30, 64, 175, 0.1) !important;
+  box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.05), 0 2px 4px -1px rgba(30, 64, 175, 0.03) !important;
   transition: all var(--transition-base) !important;
   position: relative;
   overflow: hidden;
@@ -50,8 +50,8 @@ html {
 
   &:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 8px 16px -4px rgba(0, 0, 0, 0.1) !important;
-    border-color: rgba(99, 102, 241, 0.2) !important;
+    box-shadow: 0 20px 40px -12px rgba(30, 64, 175, 0.15), 0 8px 16px -4px rgba(30, 64, 175, 0.1) !important;
+    border-color: rgba(30, 64, 175, 0.2) !important;
   }
 
   &--elevated {
@@ -155,7 +155,7 @@ html {
     
     .progress-fill {
       height: 100%;
-      background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+      background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
       border-radius: 6px;
       transition: width var(--transition-slow);
       position: relative;
@@ -209,7 +209,7 @@ html {
 
 // === HERO SECTION ===
 .hero-section {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #a855f7 60%, #06b6d4 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #f97316 70%, #fb923c 100%);
   color: white;
   padding: 120px 0;
   text-align: center;
@@ -238,7 +238,7 @@ html {
     margin-bottom: 24px;
     line-height: 1.1;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 50%, #e0f2fe 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -498,10 +498,7 @@ html {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: white;
 }
 
 .text-shadow {
@@ -598,8 +595,22 @@ html {
 // === FOCUS STATES ===
 .q-btn:focus-visible,
 .q-field--focused .q-field__control {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #1e40af;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+}
+
+// === 2025 MODERN EFFECTS ===
+.modern-glow {
+  box-shadow: 0 0 20px rgba(30, 64, 175, 0.1), 0 0 40px rgba(30, 64, 175, 0.05);
+}
+
+.accent-glow {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), 0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+.energy-glow {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), 0 0 40px rgba(249, 115, 22, 0.1);
 }
 
 // === RESPONSIVE DESIGN ===

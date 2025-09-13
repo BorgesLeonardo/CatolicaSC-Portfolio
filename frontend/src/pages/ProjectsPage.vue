@@ -415,7 +415,7 @@ function openProject(id: string) {
 
 // === PROJECTS HEADER ===
 .projects-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #f97316 70%, #fb923c 100%);
   color: white;
   padding: 100px 0 80px;
   position: relative;
@@ -537,9 +537,9 @@ function openProject(id: string) {
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 20% 50%, rgba(30, 64, 175, 0.05) 0%, transparent 50%),
       radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 40% 80%, rgba(245, 101, 101, 0.05) 0%, transparent 50%);
+      radial-gradient(circle at 40% 80%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
     pointer-events: none;
   }
   
@@ -762,7 +762,7 @@ function openProject(id: string) {
     font-weight: 600;
     
     &.q-btn--active {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
       color: white;
     }
   }

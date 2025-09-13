@@ -478,8 +478,8 @@ watch(selectedQuickFilters, () => {
   }
   
   &--focused {
-    border-color: #6366f1;
-    box-shadow: 0 12px 48px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.1);
+    border-color: #1e40af;
+    box-shadow: 0 12px 48px rgba(30, 64, 175, 0.25), 0 0 0 1px rgba(30, 64, 175, 0.1);
     transform: translateY(-4px) scale(1.02);
     
     &::before {

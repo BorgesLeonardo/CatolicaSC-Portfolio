@@ -40,7 +40,7 @@
         <!-- Status Badge -->
         <div class="badge-container badge-container--top-right">
           <q-badge 
-            :color="isPast(project.deadline) ? 'grey-7' : 'positive'" 
+            :color="isPast(project.deadline) ? 'grey-7' : 'green'" 
             :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
             class="status-badge"
           />
@@ -151,7 +151,7 @@
         <div class="footer-actions">
           <q-btn
             unelevated
-            color="primary"
+            color="info"
             label="Ver Detalhes"
             size="sm"
             class="details-btn"
@@ -245,7 +245,7 @@ function toggleFavorite() {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
       z-index: 1;
       pointer-events: none;
     }
@@ -421,7 +421,7 @@ function toggleFavorite() {
 .progress-percentage {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #10b981;
+  color: #059669;
   line-height: 1;
 }
 
@@ -466,7 +466,7 @@ function toggleFavorite() {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
   transition: width var(--transition-slow);
   position: relative;
   border-radius: 8px;
@@ -556,7 +556,7 @@ function toggleFavorite() {
   
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.15);
   }
 }
 

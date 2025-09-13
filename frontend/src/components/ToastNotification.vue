@@ -308,7 +308,7 @@ defineExpose({
   
   // Type variants
   &--success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   }
   
   &--error {

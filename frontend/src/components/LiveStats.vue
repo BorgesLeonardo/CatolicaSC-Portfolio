@@ -164,8 +164,8 @@ function getVariantColor(variant?: string): string {
 function getVariantGradient(variant?: string): string {
   const gradients = {
     primary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-    secondary: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    success: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+    secondary: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    success: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     danger: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
     info: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
@@ -224,13 +224,13 @@ function formatChange(change: number): string {
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-    border-color: rgba(99, 102, 241, 0.3);
+    border-color: rgba(30, 64, 175, 0.3);
   }
   
   // Variant styles
   &--primary {
-    border-color: rgba(99, 102, 241, 0.2);
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-color: rgba(30, 64, 175, 0.2);
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
   }
   
   &--secondary {
@@ -279,7 +279,7 @@ function formatChange(change: number): string {
   border-radius: 16px;
   margin-bottom: 16px;
   
-  &--primary { background: rgba(99, 102, 241, 0.1); }
+  &--primary { background: rgba(30, 64, 175, 0.1); }
   &--secondary { background: rgba(16, 185, 129, 0.1); }
   &--success { background: rgba(34, 197, 94, 0.1); }
   &--warning { background: rgba(245, 158, 11, 0.1); }
@@ -297,7 +297,7 @@ function formatChange(change: number): string {
   border-radius: 18px;
   animation: pulse 2s infinite;
   
-  &--primary { background: rgba(99, 102, 241, 0.3); }
+  &--primary { background: rgba(30, 64, 175, 0.3); }
   &--secondary { background: rgba(16, 185, 129, 0.3); }
   &--success { background: rgba(34, 197, 94, 0.3); }
   &--warning { background: rgba(245, 158, 11, 0.3); }
@@ -325,7 +325,7 @@ function formatChange(change: number): string {
   transition: all 0.3s ease;
   
   &--updating {
-    color: #6366f1;
+    color: #1e40af;
     animation: pulse 1s infinite;
   }
 }
@@ -340,8 +340,8 @@ function formatChange(change: number): string {
   border-radius: 12px;
   
   &--positive {
-    color: #059669;
-    background: rgba(16, 185, 129, 0.1);
+    color: #1e40af;
+    background: rgba(30, 64, 175, 0.1);
   }
   
   &--negative {

@@ -27,19 +27,19 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       case 'checkout.session.completed':
         const session = event.data.object
         await createContributionFromCheckoutSession(session)
-        console.log('Contribution processed successfully for session:', session.id)
         break
       
       case 'payment_intent.succeeded':
-        console.log('Payment succeeded:', event.data.object.id)
+        // Payment succeeded - no action needed
         break
       
       case 'payment_intent.payment_failed':
-        console.log('Payment failed:', event.data.object.id)
+        // Payment failed - no action needed
         break
       
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        // Unhandled event type - no action needed
+        break
     }
 
     return res.json({ received: true })
