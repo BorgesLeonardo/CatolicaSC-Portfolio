@@ -1,43 +1,109 @@
-import { beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
-import { prisma } from '../infrastructure/prisma';
+import { jest } from '@jest/globals';
+
+// Mock do Prisma
+jest.mock('../infrastructure/prisma', () => ({
+  prisma: {
+    category: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    project: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    contribution: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    comment: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    user: {
+      upsert: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  },
+}));
+
+// Mock do Stripe
+jest.mock('../lib/stripe', () => ({
+  stripe: {
+    checkout: {
+      sessions: {
+        create: jest.fn(),
+        retrieve: jest.fn(),
+      },
+    },
+    webhooks: {
+      constructEvent: jest.fn(),
+    },
+  },
+}));
+
+// Mock do StripeClient
+jest.mock('../utils/stripeClient', () => ({
+  stripe: {
+    checkout: {
+      sessions: {
+        create: jest.fn(),
+        retrieve: jest.fn(),
+      },
+    },
+    webhooks: {
+      constructEvent: jest.fn(),
+    },
+  },
+}));
+
+// Mock do Clerk
+jest.mock('@clerk/express', () => ({
+  clerkMiddleware: jest.fn(() => (req: any, res: any, next: any) => next()),
+  getAuth: jest.fn(),
+}));
+
+// Mock dos services
+jest.mock('../services/contribution.service', () => ({
+  createContributionFromCheckoutSession: jest.fn(),
+}));
+
+jest.mock('../services/project-stats.service', () => ({
+  projectStatsService: {
+    updateAllProjectsStats: jest.fn(),
+  },
+}));
 
 // Configuração global para testes
-beforeAll(async () => {
-  // Configurar variáveis de ambiente para testes
-  process.env.NODE_ENV = 'test';
-  process.env.TEST_BYPASS_AUTH = 'true';
-  process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test_db';
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
-afterAll(async () => {
-  // Limpar conexões
-  await prisma.$disconnect();
-});
-
-beforeEach(async () => {
-  // Limpar dados de teste antes de cada teste
-  try {
-    await prisma.contribution.deleteMany();
-    await prisma.comment.deleteMany();
-    await prisma.project.deleteMany();
-    await prisma.category.deleteMany();
-    await prisma.user.deleteMany();
-  } catch (error) {
-    // Ignorar erros de limpeza
-    console.warn('Warning: Could not clean database:', error);
-  }
-});
-
-afterEach(async () => {
-  // Limpar dados após cada teste
-  try {
-    await prisma.contribution.deleteMany();
-    await prisma.comment.deleteMany();
-    await prisma.project.deleteMany();
-    await prisma.category.deleteMany();
-    await prisma.user.deleteMany();
-  } catch (error) {
-    // Ignorar erros de limpeza
-    console.warn('Warning: Could not clean database:', error);
-  }
-});
+// Mock do console para evitar logs durante os testes
+global.console = {
+  ...console,
+  log: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};

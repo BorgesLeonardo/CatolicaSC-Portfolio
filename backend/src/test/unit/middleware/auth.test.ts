@@ -1,14 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { requireApiAuth, requireAuth } from '../../middleware/auth';
-import { AppError } from '../../utils/AppError';
+import { getAuth } from '@clerk/express';
+import { requireApiAuth, requireAuth } from '../../../middleware/auth';
+import { AppError } from '../../../utils/AppError';
 
 // Mock do Clerk
-jest.mock('@clerk/express', () => ({
-  getAuth: jest.fn()
-}));
-
-import { getAuth } from '@clerk/express';
-const mockGetAuth = getAuth as jest.MockedFunction<typeof getAuth>;
+jest.mock('@clerk/express');
 
 describe('Auth Middleware', () => {
   let mockRequest: Partial<Request>;
@@ -18,108 +14,203 @@ describe('Auth Middleware', () => {
   beforeEach(() => {
     mockRequest = {
       header: jest.fn(),
-      headers: {}
     };
     mockResponse = {};
     mockNext = jest.fn();
-    
-    // Reset environment
-    process.env.NODE_ENV = 'test';
-    process.env.TEST_BYPASS_AUTH = 'true';
-    
     jest.clearAllMocks();
   });
 
   describe('requireApiAuth', () => {
     it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', () => {
-      mockRequest.header = jest.fn()
-        .mockReturnValueOnce('true') // x-test-auth-bypass
-        .mockReturnValueOnce('test-user-123'); // x-test-user-id
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
+
+      (mockRequest.header as jest.Mock).mockImplementation((headerName: string) => {
+        if (headerName === 'x-test-user-id') return 'test_user_123';
+        if (headerName === 'x-test-user-role') return 'admin';
+        return undefined;
+      });
 
       requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect((mockRequest as any).authUserId).toBe('test_user_123');
+      expect((mockRequest as any).authRole).toBe('admin');
       expect(mockNext).toHaveBeenCalled();
-      expect((mockRequest as any).authUserId).toBe('test-user-123');
+
+      process.env = originalEnv;
     });
 
     it('should not bypass auth when x-test-auth-bypass is false', () => {
-      mockRequest.header = jest.fn()
-        .mockReturnValueOnce('false') // x-test-auth-bypass
-        .mockReturnValueOnce('test-user-123'); // x-test-user-id
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
-      mockGetAuth.mockReturnValue({ userId: 'clerk-user-123' } as any);
+      (mockRequest.header as jest.Mock).mockImplementation((headerName: string) => {
+        if (headerName === 'x-test-auth-bypass') return 'false';
+        return undefined;
+      });
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
       requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
-      expect((mockRequest as any).authUserId).toBe('clerk-user-123');
+
+      process.env = originalEnv;
     });
 
-    it('should use default test user when no x-test-user-id provided', () => {
-      mockRequest.header = jest.fn()
-        .mockReturnValueOnce('true') // x-test-auth-bypass
-        .mockReturnValueOnce(undefined); // x-test-user-id
+    it('should use default test user when no test headers provided', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
+
+      (mockRequest.header as jest.Mock).mockReturnValue(undefined);
 
       requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalled();
       expect((mockRequest as any).authUserId).toBe('user_test_id');
+      expect((mockRequest as any).authRole).toBe('user');
+      expect(mockNext).toHaveBeenCalled();
+
+      process.env = originalEnv;
     });
 
-    it('should use Clerk auth in production environment', () => {
-      process.env.NODE_ENV = 'production';
-      mockGetAuth.mockReturnValue({ userId: 'clerk-user-123' } as any);
+    it('should authenticate with Clerk when not in test environment', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
       requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
-      expect((mockRequest as any).authUserId).toBe('clerk-user-123');
+
+      process.env = originalEnv;
     });
 
-    it('should throw AppError when Clerk auth fails', () => {
-      process.env.NODE_ENV = 'production';
-      mockGetAuth.mockImplementation(() => {
-        throw new Error('Auth failed');
+    it('should throw AppError when Clerk returns no userId', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: null });
+
+      expect(() => {
+        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      }).toThrow(new AppError('Unauthorized', 401));
+
+      process.env = originalEnv;
+    });
+
+    it('should throw AppError when Clerk throws an error', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockImplementation(() => {
+        throw new Error('Clerk error');
       });
 
       expect(() => {
         requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(AppError);
-    });
+      }).toThrow(new AppError('Unauthorized', 401));
 
-    it('should throw AppError when no userId from Clerk', () => {
-      process.env.NODE_ENV = 'production';
-      mockGetAuth.mockReturnValue({ userId: null } as any);
-
-      expect(() => {
-        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(AppError);
+      process.env = originalEnv;
     });
   });
 
   describe('requireAuth', () => {
-    it('should work identically to requireApiAuth', () => {
-      mockRequest.header = jest.fn()
-        .mockReturnValueOnce('true') // x-test-auth-bypass
-        .mockReturnValueOnce('test-user-456'); // x-test-user-id
+    it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
+
+      (mockRequest.header as jest.Mock).mockImplementation((headerName: string) => {
+        if (headerName === 'x-test-user-id') return 'test_user_123';
+        if (headerName === 'x-test-user-role') return 'admin';
+        return undefined;
+      });
 
       requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect((mockRequest as any).authUserId).toBe('test_user_123');
+      expect((mockRequest as any).authRole).toBe('admin');
       expect(mockNext).toHaveBeenCalled();
-      expect((mockRequest as any).authUserId).toBe('test-user-456');
+
+      process.env = originalEnv;
     });
 
-    it('should handle role from test headers', () => {
-      mockRequest.header = jest.fn()
-        .mockReturnValueOnce('true') // x-test-auth-bypass
-        .mockReturnValueOnce('test-user-789') // x-test-user-id
-        .mockReturnValueOnce('admin'); // x-test-user-role
+    it('should not bypass auth when x-test-auth-bypass is false', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
+
+      (mockRequest.header as jest.Mock).mockImplementation((headerName: string) => {
+        if (headerName === 'x-test-auth-bypass') return 'false';
+        return undefined;
+      });
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
       requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
-      expect((mockRequest as any).authUserId).toBe('test-user-789');
-      expect((mockRequest as any).authRole).toBe('admin');
+
+      process.env = originalEnv;
+    });
+
+    it('should use default test user when no test headers provided', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
+
+      (mockRequest.header as jest.Mock).mockReturnValue(undefined);
+
+      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect((mockRequest as any).authUserId).toBe('user_test_id');
+      expect((mockRequest as any).authRole).toBe('user');
+      expect(mockNext).toHaveBeenCalled();
+
+      process.env = originalEnv;
+    });
+
+    it('should authenticate with Clerk when not in test environment', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
+
+      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect((mockRequest as any).authUserId).toBe('real_user_123');
+      expect(mockNext).toHaveBeenCalled();
+
+      process.env = originalEnv;
+    });
+
+    it('should throw AppError when Clerk returns no userId', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockReturnValue({ userId: null });
+
+      expect(() => {
+        requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      }).toThrow(new AppError('Unauthorized', 401));
+
+      process.env = originalEnv;
+    });
+
+    it('should throw AppError when Clerk throws an error', () => {
+      const originalEnv = process.env;
+      process.env = { ...originalEnv, NODE_ENV: 'production' };
+
+      (getAuth as jest.Mock).mockImplementation(() => {
+        throw new Error('Clerk error');
+      });
+
+      expect(() => {
+        requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      }).toThrow(new AppError('Unauthorized', 401));
+
+      process.env = originalEnv;
     });
   });
 });

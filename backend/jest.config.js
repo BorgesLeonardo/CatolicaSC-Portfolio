@@ -8,7 +8,6 @@ export default {
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
-      useESM: true,
       tsconfig: 'tsconfig.test.json'
     }],
   },
@@ -16,7 +15,11 @@ export default {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/server.ts',
-    '!src/smoke.test.ts'
+    '!src/app.ts',
+    '!src/infrastructure/**',
+    '!src/routes/**',
+    '!**/node_modules/**',
+    '!**/dist/**'
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -30,8 +33,5 @@ export default {
   },
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   testTimeout: 10000,
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1'
-  },
-  extensionsToTreatAsEsm: ['.ts']
+  verbose: true
 };

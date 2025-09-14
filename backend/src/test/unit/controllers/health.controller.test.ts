@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HealthController } from '../../controllers/health.controller';
+import { HealthController } from '../../../controllers/health.controller';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -10,15 +10,21 @@ describe('HealthController', () => {
     controller = new HealthController();
     mockRequest = {};
     mockResponse = {
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
   });
 
   describe('alive', () => {
-    it('should return health status', async () => {
+    it('should return ok: true', async () => {
       await controller.alive(mockRequest as Request, mockResponse as Response);
-
+      
       expect(mockResponse.json).toHaveBeenCalledWith({ ok: true });
+    });
+
+    it('should be async and return a promise', () => {
+      const result = controller.alive(mockRequest as Request, mockResponse as Response);
+      
+      expect(result).toBeInstanceOf(Promise);
     });
   });
 });

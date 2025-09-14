@@ -1,27 +1,25 @@
-import { ProjectsService, CreateProjectData, UpdateProjectData, ProjectFilters } from '../../services/projects.service';
-import { prisma } from '../../infrastructure/prisma';
-import { AppError } from '../../utils/AppError';
+import { ProjectsService, CreateProjectData, UpdateProjectData, ProjectFilters } from '../../../services/projects.service';
+import { prisma } from '../../../infrastructure/prisma';
+import { AppError } from '../../../utils/AppError';
 
 // Mock do Prisma
-jest.mock('../../infrastructure/prisma', () => ({
+jest.mock('../../../infrastructure/prisma', () => ({
   prisma: {
     user: {
-      upsert: jest.fn()
+      upsert: jest.fn(),
     },
     category: {
-      findFirst: jest.fn()
+      findFirst: jest.fn(),
     },
     project: {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      update: jest.fn(),
       count: jest.fn(),
-      update: jest.fn()
-    }
-  }
+    },
+  },
 }));
-
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -32,124 +30,112 @@ describe('ProjectsService', () => {
   });
 
   describe('create', () => {
-    const mockCreateData: CreateProjectData = {
+    const validProjectData: CreateProjectData = {
       title: 'Test Project',
-      description: 'A test project description',
-      goalCents: 10000,
+      description: 'This is a test project description',
+      goalCents: 100000,
       deadline: '2024-12-31T23:59:59Z',
       imageUrl: 'https://example.com/image.jpg',
-      categoryId: 'cat1'
+      categoryId: 'cm12345678901234567890',
     };
 
     it('should create project successfully', async () => {
-      const mockCategory = { id: 'cat1', isActive: true };
-      const mockProject = {
-        id: 'proj1',
-        ...mockCreateData,
-        ownerId: 'user1',
-        deadline: new Date(mockCreateData.deadline),
-        category: mockCategory
-      };
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const mockProject = { id: 'proj1', ...validProjectData, category: mockCategory };
 
-      mockPrisma.user.upsert.mockResolvedValue({ id: 'user1' } as any);
-      mockPrisma.category.findFirst.mockResolvedValue(mockCategory as any);
-      mockPrisma.project.create.mockResolvedValue(mockProject as any);
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+      (prisma.project.create as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await service.create(mockCreateData, 'user1');
+      const result = await service.create(validProjectData, 'user123');
 
-      expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
-        where: { id: 'user1' },
+      expect(prisma.user.upsert).toHaveBeenCalledWith({
+        where: { id: 'user123' },
         update: {},
-        create: { id: 'user1' }
+        create: { id: 'user123' }
       });
-
-      expect(mockPrisma.category.findFirst).toHaveBeenCalledWith({
-        where: { id: 'cat1', isActive: true }
+      expect(prisma.category.findFirst).toHaveBeenCalledWith({
+        where: { id: validProjectData.categoryId, isActive: true }
       });
-
-      expect(mockPrisma.project.create).toHaveBeenCalledWith({
+      expect(prisma.project.create).toHaveBeenCalledWith({
         data: {
-          ownerId: 'user1',
-          title: mockCreateData.title,
-          description: mockCreateData.description,
-          goalCents: mockCreateData.goalCents,
-          deadline: new Date(mockCreateData.deadline),
-          imageUrl: mockCreateData.imageUrl,
-          categoryId: mockCreateData.categoryId
+          ownerId: 'user123',
+          title: validProjectData.title,
+          description: validProjectData.description,
+          goalCents: validProjectData.goalCents,
+          deadline: new Date(validProjectData.deadline),
+          imageUrl: validProjectData.imageUrl,
+          categoryId: validProjectData.categoryId,
         },
         include: {
           category: true
         }
       });
-
       expect(result).toEqual(mockProject);
     });
 
-    it('should throw error when category not found', async () => {
-      mockPrisma.user.upsert.mockResolvedValue({ id: 'user1' } as any);
-      mockPrisma.category.findFirst.mockResolvedValue(null);
+    it('should create project without imageUrl', async () => {
+      const projectDataWithoutImage = { ...validProjectData };
+      delete projectDataWithoutImage.imageUrl;
 
-      await expect(service.create(mockCreateData, 'user1'))
-        .rejects
-        .toThrow(AppError);
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const mockProject = { id: 'proj1', ...projectDataWithoutImage, category: mockCategory };
 
-      await expect(service.create(mockCreateData, 'user1'))
-        .rejects
-        .toThrow('Category not found or inactive');
-    });
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+      (prisma.project.create as jest.Mock).mockResolvedValue(mockProject);
 
-    it('should handle optional imageUrl', async () => {
-      const dataWithoutImage = { ...mockCreateData };
-      delete dataWithoutImage.imageUrl;
+      const result = await service.create(projectDataWithoutImage, 'user123');
 
-      const mockCategory = { id: 'cat1', isActive: true };
-      const mockProject = {
-        id: 'proj1',
-        ...dataWithoutImage,
-        ownerId: 'user1',
-        deadline: new Date(dataWithoutImage.deadline),
-        imageUrl: null,
-        category: mockCategory
-      };
-
-      mockPrisma.user.upsert.mockResolvedValue({ id: 'user1' } as any);
-      mockPrisma.category.findFirst.mockResolvedValue(mockCategory as any);
-      mockPrisma.project.create.mockResolvedValue(mockProject as any);
-
-      const result = await service.create(dataWithoutImage, 'user1');
-
-      expect(mockPrisma.project.create).toHaveBeenCalledWith({
+      expect(prisma.project.create).toHaveBeenCalledWith({
         data: {
-          ownerId: 'user1',
-          title: dataWithoutImage.title,
-          description: dataWithoutImage.description,
-          goalCents: dataWithoutImage.goalCents,
-          deadline: new Date(dataWithoutImage.deadline),
+          ownerId: 'user123',
+          title: projectDataWithoutImage.title,
+          description: projectDataWithoutImage.description,
+          goalCents: projectDataWithoutImage.goalCents,
+          deadline: new Date(projectDataWithoutImage.deadline),
           imageUrl: null,
-          categoryId: dataWithoutImage.categoryId
+          categoryId: projectDataWithoutImage.categoryId,
         },
         include: {
           category: true
         }
       });
-
       expect(result).toEqual(mockProject);
+    });
+
+    it('should throw AppError when category not found', async () => {
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.create(validProjectData, 'user123'))
+        .rejects.toThrow(new AppError('Category not found or inactive', 400));
+
+      expect(prisma.project.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw AppError when category is inactive', async () => {
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.create(validProjectData, 'user123'))
+        .rejects.toThrow(new AppError('Category not found or inactive', 400));
     });
   });
 
   describe('list', () => {
     it('should list projects with default filters', async () => {
       const mockProjects = [
-        { id: 'proj1', title: 'Project 1', category: { id: 'cat1', name: 'Tech' } },
-        { id: 'proj2', title: 'Project 2', category: { id: 'cat2', name: 'Art' } }
+        { id: 'proj1', title: 'Project 1', category: { name: 'Tech' } },
+        { id: 'proj2', title: 'Project 2', category: { name: 'Art' } }
       ];
 
-      mockPrisma.project.findMany.mockResolvedValue(mockProjects as any);
-      mockPrisma.project.count.mockResolvedValue(2);
+      (prisma.project.findMany as jest.Mock).mockResolvedValue(mockProjects);
+      (prisma.project.count as jest.Mock).mockResolvedValue(2);
 
       const result = await service.list();
 
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+      expect(prisma.project.findMany).toHaveBeenCalledWith({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
         skip: 0,
@@ -158,7 +144,6 @@ describe('ProjectsService', () => {
           category: true
         }
       });
-
       expect(result).toEqual({
         page: 1,
         pageSize: 10,
@@ -167,99 +152,31 @@ describe('ProjectsService', () => {
       });
     });
 
-    it('should apply search filter', async () => {
-      const filters: ProjectFilters = { q: 'test' };
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
+    it('should list projects with custom filters', async () => {
+      const filters: ProjectFilters = {
+        page: 2,
+        pageSize: 5,
+        q: 'test',
+        ownerId: 'user123',
+        categoryId: 'cat1',
+        active: true
+      };
 
-      await service.list(filters);
+      const mockProjects = [{ id: 'proj1', title: 'Test Project' }];
 
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { 
+      (prisma.project.findMany as jest.Mock).mockResolvedValue(mockProjects);
+      (prisma.project.count as jest.Mock).mockResolvedValue(1);
+
+      const result = await service.list(filters);
+
+      expect(prisma.project.findMany).toHaveBeenCalledWith({
+        where: {
           deletedAt: null,
-          title: { contains: 'test', mode: 'insensitive' }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 10,
-        include: {
-          category: true
-        }
-      });
-    });
-
-    it('should apply owner filter', async () => {
-      const filters: ProjectFilters = { ownerId: 'user1' };
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
-
-      await service.list(filters);
-
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { 
-          deletedAt: null,
-          ownerId: 'user1'
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 10,
-        include: {
-          category: true
-        }
-      });
-    });
-
-    it('should apply category filter', async () => {
-      const filters: ProjectFilters = { categoryId: 'cat1' };
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
-
-      await service.list(filters);
-
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { 
-          deletedAt: null,
-          categoryId: 'cat1'
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 10,
-        include: {
-          category: true
-        }
-      });
-    });
-
-    it('should apply active filter', async () => {
-      const filters: ProjectFilters = { active: true };
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
-
-      await service.list(filters);
-
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { 
-          deletedAt: null,
+          title: { contains: 'test', mode: 'insensitive' },
+          ownerId: 'user123',
+          categoryId: 'cat1',
           deadline: { gte: expect.any(Date) }
         },
-        orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 10,
-        include: {
-          category: true
-        }
-      });
-    });
-
-    it('should handle pagination', async () => {
-      const filters: ProjectFilters = { page: 2, pageSize: 5 };
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
-
-      await service.list(filters);
-
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
         skip: 5, // (page - 1) * pageSize
         take: 5,
@@ -267,20 +184,30 @@ describe('ProjectsService', () => {
           category: true
         }
       });
+      expect(result).toEqual({
+        page: 2,
+        pageSize: 5,
+        total: 1,
+        items: mockProjects
+      });
     });
 
-    it('should enforce page size limits', async () => {
-      const filters: ProjectFilters = { pageSize: 100 }; // > 50
-      mockPrisma.project.findMany.mockResolvedValue([]);
-      mockPrisma.project.count.mockResolvedValue(0);
+    it('should clamp page and pageSize values', async () => {
+      const filters: ProjectFilters = {
+        page: -1,
+        pageSize: 100
+      };
+
+      (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.project.count as jest.Mock).mockResolvedValue(0);
 
       await service.list(filters);
 
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+      expect(prisma.project.findMany).toHaveBeenCalledWith({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 50, // Should be limited to 50
+        skip: 0, // Clamped to 1, so (1-1)*10 = 0
+        take: 50, // Clamped to 50
         include: {
           category: true
         }
@@ -289,151 +216,136 @@ describe('ProjectsService', () => {
   });
 
   describe('getById', () => {
-    it('should return project by id', async () => {
+    it('should return project when found', async () => {
       const mockProject = {
         id: 'proj1',
         title: 'Test Project',
-        category: { id: 'cat1', name: 'Tech' }
+        deletedAt: null,
+        category: { name: 'Tech' }
       };
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue(mockProject);
 
       const result = await service.getById('proj1');
 
-      expect(mockPrisma.project.findUnique).toHaveBeenCalledWith({
+      expect(prisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         include: {
           category: true
         }
       });
-
       expect(result).toEqual(mockProject);
     });
 
-    it('should throw error when project not found', async () => {
-      mockPrisma.project.findUnique.mockResolvedValue(null);
+    it('should throw AppError when project not found', async () => {
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(service.getById('nonexistent'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.getById('nonexistent'))
-        .rejects
-        .toThrow('Project not found');
+        .rejects.toThrow(new AppError('Project not found', 404));
     });
 
-    it('should throw error when project is deleted', async () => {
+    it('should throw AppError when project is deleted', async () => {
       const deletedProject = {
         id: 'proj1',
-        deletedAt: new Date()
+        title: 'Test Project',
+        deletedAt: new Date(),
+        category: { name: 'Tech' }
       };
 
-      mockPrisma.project.findUnique.mockResolvedValue(deletedProject as any);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue(deletedProject);
 
       await expect(service.getById('proj1'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.getById('proj1'))
-        .rejects
-        .toThrow('Project not found');
+        .rejects.toThrow(new AppError('Project not found', 404));
     });
   });
 
   describe('getByOwner', () => {
     it('should return projects by owner', async () => {
       const mockProjects = [
-        { id: 'proj1', title: 'Project 1', category: { id: 'cat1', name: 'Tech' } },
-        { id: 'proj2', title: 'Project 2', category: { id: 'cat2', name: 'Art' } }
+        { id: 'proj1', title: 'Project 1', category: { name: 'Tech' } },
+        { id: 'proj2', title: 'Project 2', category: { name: 'Art' } }
       ];
 
-      mockPrisma.project.findMany.mockResolvedValue(mockProjects as any);
+      (prisma.project.findMany as jest.Mock).mockResolvedValue(mockProjects);
 
-      const result = await service.getByOwner('user1');
+      const result = await service.getByOwner('user123');
 
-      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
-        where: { ownerId: 'user1', deletedAt: null },
+      expect(prisma.project.findMany).toHaveBeenCalledWith({
+        where: { ownerId: 'user123', deletedAt: null },
         orderBy: { createdAt: 'desc' },
         include: {
           category: true
         }
       });
-
       expect(result).toEqual({ items: mockProjects });
     });
   });
 
   describe('update', () => {
+    const updateData: UpdateProjectData = {
+      title: 'Updated Title',
+      description: 'Updated description'
+    };
+
     it('should update project successfully', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'user1' };
-      const updateData: UpdateProjectData = { title: 'Updated Title' };
-      const updatedProject = { ...mockProject, ...updateData, category: { id: 'cat1' } };
+      const mockProject = { id: 'proj1', ownerId: 'user123', ...updateData };
+      const mockCategory = { id: 'cat1', isActive: true };
 
-      // Mock assertOwnerOrThrow by mocking the private method indirectly
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-      mockPrisma.project.update.mockResolvedValue(updatedProject as any);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: null });
+      (prisma.project.update as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await service.update('proj1', updateData, 'user1');
+      const result = await service.update('proj1', updateData, 'user123');
 
-      expect(mockPrisma.project.update).toHaveBeenCalledWith({
+      expect(prisma.project.update).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         data: updateData,
         include: {
           category: true
         }
       });
-
-      expect(result).toEqual(updatedProject);
+      expect(result).toEqual(mockProject);
     });
 
     it('should validate category when provided', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'user1' };
-      const updateData: UpdateProjectData = { categoryId: 'cat1' };
+      const updateDataWithCategory = { ...updateData, categoryId: 'cat1' };
+      const mockProject = { id: 'proj1', ownerId: 'user123', ...updateDataWithCategory };
       const mockCategory = { id: 'cat1', isActive: true };
-      const updatedProject = { ...mockProject, ...updateData, category: mockCategory };
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-      mockPrisma.category.findFirst.mockResolvedValue(mockCategory as any);
-      mockPrisma.project.update.mockResolvedValue(updatedProject as any);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: null });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+      (prisma.project.update as jest.Mock).mockResolvedValue(mockProject);
 
-      await service.update('proj1', updateData, 'user1');
+      const result = await service.update('proj1', updateDataWithCategory, 'user123');
 
-      expect(mockPrisma.category.findFirst).toHaveBeenCalledWith({
+      expect(prisma.category.findFirst).toHaveBeenCalledWith({
         where: { id: 'cat1', isActive: true }
       });
+      expect(result).toEqual(mockProject);
     });
 
-    it('should throw error when category not found during update', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'user1' };
-      const updateData: UpdateProjectData = { categoryId: 'nonexistent' };
+    it('should throw AppError when category not found', async () => {
+      const updateDataWithCategory = { ...updateData, categoryId: 'cat1' };
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-      mockPrisma.category.findFirst.mockResolvedValue(null);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: null });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.update('proj1', updateData, 'user1'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.update('proj1', updateData, 'user1'))
-        .rejects
-        .toThrow('Category not found or inactive');
+      await expect(service.update('proj1', updateDataWithCategory, 'user123'))
+        .rejects.toThrow(new AppError('Category not found or inactive', 400));
     });
 
     it('should convert deadline string to Date', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'user1' };
-      const updateData: UpdateProjectData = { 
-        deadline: '2024-12-31T23:59:59Z' 
-      };
-      const updatedProject = { ...mockProject, ...updateData, category: { id: 'cat1' } };
+      const updateDataWithDeadline = { ...updateData, deadline: '2024-12-31T23:59:59Z' };
+      const mockProject = { id: 'proj1', ownerId: 'user123', ...updateDataWithDeadline };
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-      mockPrisma.project.update.mockResolvedValue(updatedProject as any);
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: null });
+      (prisma.project.update as jest.Mock).mockResolvedValue(mockProject);
 
-      await service.update('proj1', updateData, 'user1');
+      await service.update('proj1', updateDataWithDeadline, 'user123');
 
-      expect(mockPrisma.project.update).toHaveBeenCalledWith({
+      expect(prisma.project.update).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         data: {
+          ...updateDataWithDeadline,
           deadline: new Date('2024-12-31T23:59:59Z')
         },
         include: {
@@ -444,15 +356,13 @@ describe('ProjectsService', () => {
   });
 
   describe('delete', () => {
-    it('should soft delete project', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'user1' };
+    it('should soft delete project successfully', async () => {
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: null });
+      (prisma.project.update as jest.Mock).mockResolvedValue(undefined);
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-      mockPrisma.project.update.mockResolvedValue({} as any);
+      await service.delete('proj1', 'user123');
 
-      await service.delete('proj1', 'user1');
-
-      expect(mockPrisma.project.update).toHaveBeenCalledWith({
+      expect(prisma.project.update).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         data: { deletedAt: expect.any(Date) }
       });
@@ -460,44 +370,25 @@ describe('ProjectsService', () => {
   });
 
   describe('assertOwnerOrThrow', () => {
-    it('should throw error when project not found', async () => {
-      mockPrisma.project.findUnique.mockResolvedValue(null);
+    it('should throw AppError when project not found', async () => {
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', {}, 'user1'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.update('nonexistent', {}, 'user1'))
-        .rejects
-        .toThrow('Project not found');
+      await expect(service.update('nonexistent', {}, 'user123'))
+        .rejects.toThrow(new AppError('Project not found', 404));
     });
 
-    it('should throw error when project is deleted', async () => {
-      const deletedProject = { id: 'proj1', ownerId: 'user1', deletedAt: new Date() };
+    it('should throw AppError when project is deleted', async () => {
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'user123', deletedAt: new Date() });
 
-      mockPrisma.project.findUnique.mockResolvedValue(deletedProject as any);
-
-      await expect(service.update('proj1', {}, 'user1'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.update('proj1', {}, 'user1'))
-        .rejects
-        .toThrow('Project not found');
+      await expect(service.update('proj1', {}, 'user123'))
+        .rejects.toThrow(new AppError('Project not found', 404));
     });
 
-    it('should throw error when user is not owner', async () => {
-      const mockProject = { id: 'proj1', ownerId: 'other-user' };
+    it('should throw AppError when user is not owner', async () => {
+      (prisma.project.findUnique as jest.Mock).mockResolvedValue({ id: 'proj1', ownerId: 'other-user', deletedAt: null });
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any);
-
-      await expect(service.update('proj1', {}, 'user1'))
-        .rejects
-        .toThrow(AppError);
-
-      await expect(service.update('proj1', {}, 'user1'))
-        .rejects
-        .toThrow('Forbidden');
+      await expect(service.update('proj1', {}, 'user123'))
+        .rejects.toThrow(new AppError('Forbidden', 403));
     });
   });
 });
