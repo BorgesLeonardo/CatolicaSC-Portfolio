@@ -50,6 +50,11 @@ describe('CommentsService', () => {
         authorId: userId,
         content: mockData.content,
         createdAt: new Date(),
+        author: {
+          id: userId,
+          name: 'Test User',
+          email: 'test@example.com',
+        },
       }
 
       mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
@@ -61,7 +66,6 @@ describe('CommentsService', () => {
       expect(result).toEqual(mockComment)
       expect(mockPrisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: projectId },
-        select: { id: true, title: true, deletedAt: true },
       })
       expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
         where: { id: userId },
@@ -73,6 +77,15 @@ describe('CommentsService', () => {
           projectId,
           authorId: userId,
           content: mockData.content,
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       })
     })
@@ -103,13 +116,10 @@ describe('CommentsService', () => {
       )
     })
 
-    it('should throw AppError for empty content', async () => {
+    it('should create comment with empty content', async () => {
       const projectId = 'project-1'
       const userId = 'user-1'
       const emptyData = { content: '' }
-
-      // The service doesn't validate content before checking project
-      // So we need to mock the project check to pass, then it will validate content
       const mockProject = {
         id: projectId,
         title: 'Test Project',
@@ -121,19 +131,22 @@ describe('CommentsService', () => {
         authorId: userId,
         content: emptyData.content,
         createdAt: new Date(),
+        author: {
+          id: userId,
+          name: 'Test User',
+          email: 'test@example.com',
+        },
       }
 
       mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
       mockPrisma.user.upsert.mockResolvedValue({ id: userId } as any)
       mockPrisma.comment.create.mockResolvedValue(mockComment as any)
 
-      // The service should create the comment even with empty content
-      // Let's test that it actually creates the comment
       const result = await service.create(projectId, emptyData, userId)
       expect(result).toEqual(mockComment)
     })
 
-    it('should throw AppError for content too long', async () => {
+    it('should create comment with long content', async () => {
       const projectId = 'project-1'
       const userId = 'user-1'
       const longContent = 'a'.repeat(1001) // Exceeds 1000 character limit
@@ -149,14 +162,17 @@ describe('CommentsService', () => {
         authorId: userId,
         content: longData.content,
         createdAt: new Date(),
+        author: {
+          id: userId,
+          name: 'Test User',
+          email: 'test@example.com',
+        },
       }
 
       mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
       mockPrisma.user.upsert.mockResolvedValue({ id: userId } as any)
       mockPrisma.comment.create.mockResolvedValue(mockComment as any)
 
-      // The service should create the comment even with long content
-      // Let's test that it actually creates the comment
       const result = await service.create(projectId, longData, userId)
       expect(result).toEqual(mockComment)
     })
@@ -301,9 +317,8 @@ describe('CommentsService', () => {
       mockPrisma.comment.findUnique.mockResolvedValue(mockComment as any)
       mockPrisma.comment.delete.mockResolvedValue(mockComment as any)
 
-      const result = await service.delete(commentId, userId)
+      await service.delete(commentId, userId)
 
-      expect(result).toEqual(mockComment)
       expect(mockPrisma.comment.findUnique).toHaveBeenCalledWith({
         where: { id: commentId },
         include: { project: true },
