@@ -1,0 +1,101 @@
+name: CI & SonarQube
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-test:
+    name: Install • Lint • Test • Build (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [frontend, backend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # recomendado pelo Sonar (blame/PR decoration)
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - name: Install
+        working-directory: ${{ matrix.dir }}
+        run: npm ci
+
+      - name: Lint (se existir)
+        working-directory: ${{ matrix.dir }}
+        run: npm run lint --if-present
+
+      - name: Test com cobertura (se existir)
+        working-directory: ${{ matrix.dir }}
+        run: npm run --if-present test -- --ci --coverage
+
+      - name: Build (se existir)
+        working-directory: ${{ matrix.dir }}
+        run: npm run build --if-present
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.dir }}-coverage
+          path: ${{ matrix.dir }}/coverage/lcov.info
+          if-no-files-found: ignore
+
+  sonar:
+    name: SonarQube Scan & Quality Gate
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-coverage"
+          merge-multiple: true
+
+      - name: Posicionar lcov onde o Sonar espera
+        run: |
+          mkdir -p backend/coverage frontend/coverage
+          if [ -f backend-coverage/lcov.info ]; then mv backend-coverage/lcov.info backend/coverage/lcov.info; fi
+          if [ -f frontend-coverage/lcov.info ]; then mv frontend-coverage/lcov.info frontend/coverage/lcov.info; fi
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.3.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }} # ou use secrets.SONAR_HOST_URL
+        with:
+          # Exemplo: habilitar logs verbosos (opcional)
+          args: >
+            -Dsonar.verbose=true
+
+      - name: Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          pollingTimeoutSec: 600
