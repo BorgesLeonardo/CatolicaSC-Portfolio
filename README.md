@@ -21,3 +21,8 @@ Objetivo final do projeto é:
 - Desenvolver uma aplicação web que possibilite o cadastro, a visualização e o apoio financeiro a projetos de forma simples e acessível;
 - Implementar funcionalidades essenciais, como autenticação de usuários, listagem e detalhamento de projetos, registro de apoios e integração com um sistema de pagamento confiável;
 - Criar uma interface moderna, clara e responsiva, garantindo uma experiência de uso intuitiva em diferentes dispositivos e tamanhos de tela.
+
+## Documentação adicional:
+- [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Descri%C3%A7%C3%A3o-Projeto)
+- [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
+- [Próximos Passos](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Pr%C3%B3ximos-Passos)
