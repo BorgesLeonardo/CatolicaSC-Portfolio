@@ -127,6 +127,26 @@ jobs:
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+          SONAR_HOST_URL: https://sonarcloud.io
         with:
-          pollingTimeoutSec: 600
+          pollingTimeoutSec: 300
+
+      - name: Quality Gate Status
+        if: ${{ env.SONAR_TOKEN }}
+        continue-on-error: true
+        run: |
+          if [ -f ".scannerwork/report-task.txt" ]; then
+            echo "📊 SonarQube Analysis Report:"
+            cat .scannerwork/report-task.txt
+            
+            # Extract the task URL
+            TASK_URL=$(grep "ceTaskUrl" .scannerwork/report-task.txt | cut -d'=' -f2-)
+            DASHBOARD_URL=$(grep "dashboardUrl" .scannerwork/report-task.txt | cut -d'=' -f2-)
+            
+            echo ""
+            echo "🔗 Links úteis:"
+            echo "Dashboard: $DASHBOARD_URL"
+            echo "Task: $TASK_URL"
+          else
+            echo "❌ Arquivo report-task.txt não encontrado"
+          fi
