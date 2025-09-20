@@ -283,7 +283,7 @@ describe('ContributionsService', () => {
 
     it('should handle negative page values', async () => {
       const projectId = 'project-1'
-      const mockContributions = []
+      const mockContributions: any[] = []
       const mockCount = 0
 
       mockPrisma.contribution.findMany.mockResolvedValue(mockContributions as any)
