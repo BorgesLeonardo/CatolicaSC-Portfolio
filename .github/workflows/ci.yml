@@ -107,17 +107,6 @@ jobs:
           if [ -f backend-coverage/lcov.info ]; then mv backend-coverage/lcov.info backend/coverage/lcov.info; fi
           if [ -f frontend-coverage/lcov.info ]; then mv frontend-coverage/lcov.info frontend/coverage/lcov.info; fi
 
-      - name: Debug SonarQube Configuration
-        if: ${{ vars.SONAR_HOST_URL }}
-        env:
-          SONAR_HOST_URL_DEBUG: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
-        run: |
-          echo "SONAR_HOST_URL will be: $SONAR_HOST_URL_DEBUG"
-          echo "Project structure:"
-          ls -la
-          echo "Coverage files:"
-          find . -name "lcov.info" -type f || echo "No lcov.info files found"
-
       - name: SonarQube Scan
         if: ${{ env.SONAR_TOKEN }}
         id: sonar-scan
@@ -129,8 +118,8 @@ jobs:
         with:
           args: >
             -Dsonar.verbose=true
-            -Dsonar.projectKey=borgesleonardo_CatolicaSC-Portfolio
-            -Dsonar.organization=borgesleonardo
+            -Dsonar.projectKey=BorgesLeonardo_CatolicaSC-Portfolio
+            -Dsonar.organization=catolicasc-portfolio
 
       - name: Quality Gate
         if: ${{ env.SONAR_TOKEN && steps.sonar-scan.outcome == 'success' }}
