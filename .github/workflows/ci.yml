@@ -129,8 +129,9 @@ jobs:
         with:
           args: >
             -Dsonar.verbose=true
-            -Dsonar.projectKey=borgesleonardo_CatolicaSC-Portfolio
-            -Dsonar.organization=borgesleonardo
+            -Dsonar.projectKey=BorgesLeonardo_CatolicaSC-Portfolio
+            -Dsonar.organization=catolicasc-portfolio
+            -Dsonar.typescript.ignoreParseErrors=true
 
       - name: Quality Gate
         if: ${{ env.SONAR_TOKEN && steps.sonar-scan.outcome == 'success' }}
