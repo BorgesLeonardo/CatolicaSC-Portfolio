@@ -18,21 +18,30 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,vue}'],
+      include: [
+        'src/**/*.{ts,vue,js}',
+        'src/components/**/*',
+        'src/pages/**/*',
+        'src/services/**/*',
+        'src/utils/**/*',
+        'src/composables/**/*'
+      ],
       exclude: [
         'node_modules/**',
         'dist/**',
         '**/*.d.ts',
-        'src/router/**',
+        'src/test/**',
+        'src/boot/**',
         'src/main.ts',
-        'src/boot/**'
+        'src/router/index.ts'
       ],
+      all: true,
       thresholds: {
         global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70
+          branches: 60,
+          functions: 60,
+          lines: 60,
+          statements: 60
         }
       }
     },

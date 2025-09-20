@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/utils/format.ts</title>
+    <title>Code coverage report for src/router/routes.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/utils</a> format.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/router</a> routes.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/37</span>
+                <span class='fraction'>0/33</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/37</span>
+                <span class='fraction'>0/33</span>
             </div>
         
             
@@ -96,10 +96,7 @@
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
 <a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a>
-<a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -132,46 +129,40 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >export function formatMoneyBRL(cents: number | null | undefined): string {<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
-<span class="cstat-no" title="statement not covered" >  if (cents == null) return '—'</span>
-<span class="cstat-no" title="statement not covered" >  const v = Number(cents) / 100</span>
-<span class="cstat-no" title="statement not covered" >  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import type { RouteRecordRaw } from 'vue-router';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function formatDateTimeBR(iso: string | Date): string {</span>
-<span class="cstat-no" title="statement not covered" >  const d = typeof iso === 'string' ? new Date(iso) : iso</span>
-<span class="cstat-no" title="statement not covered" >  return new Intl.DateTimeFormat('pt-BR', {</span>
-<span class="cstat-no" title="statement not covered" >    dateStyle: 'medium',</span>
-<span class="cstat-no" title="statement not covered" >    timeStyle: 'short'</span>
-<span class="cstat-no" title="statement not covered" >  }).format(d)</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" >const routes: RouteRecordRaw[] = [</span>
+<span class="cstat-no" title="statement not covered" >  {</span>
+<span class="cstat-no" title="statement not covered" >    path: '/',</span>
+<span class="cstat-no" title="statement not covered" >    component: () =&gt; import('layouts/MainLayout.vue'),</span>
+<span class="cstat-no" title="statement not covered" >    children: [</span>
+<span class="cstat-no" title="statement not covered" >      { path: '', component: () =&gt; import('pages/IndexPage.vue') },</span>
+<span class="cstat-no" title="statement not covered" >      { path: 'projects', component: () =&gt; import('pages/ProjectsPage.vue') },</span>
+<span class="cstat-no" title="statement not covered" >      { path: 'me', component: () =&gt; import('pages/MyProjects.vue') },</span>
+<span class="cstat-no" title="statement not covered" >      { path: 'dashboard', component: () =&gt; import('pages/AdminDashboard.vue') },</span>
+<span class="cstat-no" title="statement not covered" >      { path: 'projects/new', component: () =&gt; import('pages/NewProject.vue') },</span>
+<span class="cstat-no" title="statement not covered" >      { path: 'projects/:id', component: () =&gt; import('pages/ProjectDetail.vue') },</span>
+<span class="cstat-no" title="statement not covered" >    ],</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >  {</span>
+<span class="cstat-no" title="statement not covered" >    path: '/sign-in',</span>
+<span class="cstat-no" title="statement not covered" >    component: () =&gt; import('pages/AuthSignIn.vue'),</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >  {</span>
+<span class="cstat-no" title="statement not covered" >    path: '/sign-up',</span>
+<span class="cstat-no" title="statement not covered" >    component: () =&gt; import('pages/AuthSignUp.vue'),</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function isPast(iso: string | Date): boolean {</span>
-<span class="cstat-no" title="statement not covered" >  const d = typeof iso === 'string' ? new Date(iso) : iso</span>
-<span class="cstat-no" title="statement not covered" >  return d.getTime() &lt; Date.now()</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" >  // Always leave this as last one,</span>
+<span class="cstat-no" title="statement not covered" >  // but you can also remove it</span>
+<span class="cstat-no" title="statement not covered" >  {</span>
+<span class="cstat-no" title="statement not covered" >    path: '/:catchAll(.*)*',</span>
+<span class="cstat-no" title="statement not covered" >    component: () =&gt; import('pages/ErrorNotFound.vue'),</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >];</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function formatNumber(num: number | null | undefined): string {</span>
-<span class="cstat-no" title="statement not covered" >  if (num == null) return '0'</span>
-<span class="cstat-no" title="statement not covered" >  return new Intl.NumberFormat('pt-BR').format(num)</span>
-<span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function formatProgressPercentage(raised: number, goal: number): number {</span>
-<span class="cstat-no" title="statement not covered" >  if (!goal || goal === 0) return 0</span>
-<span class="cstat-no" title="statement not covered" >  const percentage = Math.floor((raised / goal) * 100)</span>
-<span class="cstat-no" title="statement not covered" >  return Math.min(percentage, 100) // Cap at 100% for display</span>
-<span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function calculateDaysLeft(deadline: string | Date): number {</span>
-<span class="cstat-no" title="statement not covered" >  const deadlineDate = typeof deadline === 'string' ? new Date(deadline) : deadline</span>
-<span class="cstat-no" title="statement not covered" >  const now = new Date()</span>
-<span class="cstat-no" title="statement not covered" >  const diffTime = deadlineDate.getTime() - now.getTime()</span>
-<span class="cstat-no" title="statement not covered" >  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))</span>
-<span class="cstat-no" title="statement not covered" >  return Math.max(0, diffDays)</span>
-<span class="cstat-no" title="statement not covered" >}</span></pre></td></tr></table></pre>
+<span class="cstat-no" title="statement not covered" >export default routes;</span>
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
