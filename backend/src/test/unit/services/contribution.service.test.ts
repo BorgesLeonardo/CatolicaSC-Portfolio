@@ -56,7 +56,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
@@ -97,7 +97,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
@@ -151,7 +151,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
@@ -188,7 +188,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
@@ -225,7 +225,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
@@ -265,7 +265,7 @@ describe.skip('contribution.service', () => {
         updatedAt: new Date(),
       }
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
             upsert: jest.fn().mockResolvedValue(mockContribution),
