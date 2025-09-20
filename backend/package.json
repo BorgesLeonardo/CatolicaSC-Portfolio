@@ -6,7 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc",
     "start": "node dist/server.js",
     "lint": "echo 'Lint disabled for CI/CD'",
     "typecheck": "tsc --noEmit",
