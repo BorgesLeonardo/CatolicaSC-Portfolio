@@ -8,21 +8,39 @@ Data de Entrega: 29/11/2025.
 
 ## Resumo
 
-Este documento apresenta os fundamentos teóricos e técnicos para o desenvolvimento de uma aplicação web de crowdfunding. O objetivo principal é oferecer uma plataforma intuitiva e acessível, permitindo que usuários registrem seus próprios projetos e contribuam financeiramente com iniciativas de terceiros.
+Este documento apresenta o desenvolvimento de uma plataforma web de crowdfunding que permite aos usuários criarem campanhas de financiamento coletivo e apoiar projetos de terceiros. A solução combina tecnologias modernas como Vue.js (Quasar), Node.js, PostgreSQL e integração com Stripe para pagamentos, oferecendo uma experiência intuitiva e segura para criadores e apoiadores. O projeto demonstra a aplicação prática de princípios de Engenharia de Software, incluindo arquitetura escalável, segurança da informação, design responsivo e integração com serviços externos.
 
-## Introdução
+## 1. Introdução
 
-O crowdfunding é uma técnica de financiamento coletivo que permite a colaboração voluntária de pessoas em projetos através de doações financeiras.  Com o progresso tecnológico e o aumento da conectividade digital, este modelo tornou-se popular globalmente, sobretudo por meio de plataformas digitais que simplificam a interação entre os idealizadores e os apoiadores.
+**Contexto**
 
-Neste contexto, a criação de uma plataforma web de crowdfunding representa uma ótima chance de utilizar, na prática, os princípios básicos da Engenharia de Software.  Este tipo de sistema requer a aplicação de princípios cruciais como arquitetura de software, segurança da informação, administração e armazenamento de dados, design responsivo e experiência do usuário, além de favorecer a integração com serviços externos, tais como métodos de pagamento.
+O crowdfunding emergiu como uma técnica revolucionária de financiamento coletivo, permitindo que indivíduos e organizações obtenham recursos financeiros através da colaboração voluntária de uma comunidade online. Com o avanço tecnológico e a crescente conectividade digital, este modelo se consolidou globalmente, democratizando o acesso ao financiamento para projetos inovadores, causas sociais e empreendimento criativos.
 
-Objetivo final do projeto é:
+**Justificativa**
 
-- Desenvolver uma aplicação web que possibilite o cadastro, a visualização e o apoio financeiro a projetos de forma simples e acessível;
-- Implementar funcionalidades essenciais, como autenticação de usuários, listagem e detalhamento de projetos, registro de apoios e integração com um sistema de pagamento confiável;
-- Criar uma interface moderna, clara e responsiva, garantindo uma experiência de uso intuitiva em diferentes dispositivos e tamanhos de tela.
+A criação de uma plataforma web de crowdfunding representa uma excelente oportunidade para aplicar na prática os fundamentos da Engenharia de Software. Este tipo de sistema exige a integração de diversos conceitos técnicos essenciais: arquitetura de software robusta, segurança da informação, gerenciamento eficiente de dados, design responsivo focado na experiência do usuário, e integração confiável com serviços externos como gateways de pagamento. Além disso, o projeto permite explorar aspectos de escalabilidade, performance e conformidade com regulamentações de proteção de dados.
+
+**Objetivos**
+
+**Objetivo Principal:**
+
+* Desenvolver uma aplicação web completa que facilite o cadastro, visualização e apoio financeiro a projetos de forma simples, segura e acessível.
+
+Objetivos Específicos:
+
+* Implementar sistema de autenticação seguro com gerenciamento de usuários via Clerk
+* Criar interface moderna e responsiva utilizando Quasar Framework (Vue.js)
+* Desenvolver API RESTful robusta com Node.js e Express
+* Integrar sistema de pagamentos confiável através do Stripe
+* Implementar funcionalidades de comentários e interação social
+* Garantir persistência segura de dados com PostgreSQL
+* Estabelecer pipeline de CI/CD com testes automatizados
+
 
 ## Documentação adicional:
 - [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Descri%C3%A7%C3%A3o-Projeto)
 - [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
 - [Próximos Passos](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Pr%C3%B3ximos-Passos)
+
+
+
