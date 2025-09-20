@@ -86,6 +86,8 @@ jobs:
     name: SonarQube Scan & Quality Gate
     needs: build-test
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
@@ -106,30 +108,32 @@ jobs:
           if [ -f frontend-coverage/lcov.info ]; then mv frontend-coverage/lcov.info frontend/coverage/lcov.info; fi
 
       - name: Debug SonarQube Configuration
-        if: ${{ secrets.SONAR_TOKEN }}
+        if: ${{ vars.SONAR_HOST_URL }}
+        env:
+          SONAR_HOST_URL_DEBUG: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
         run: |
-          echo "SONAR_HOST_URL will be: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}"
+          echo "SONAR_HOST_URL will be: $SONAR_HOST_URL_DEBUG"
           echo "Project structure:"
           ls -la
           echo "Coverage files:"
           find . -name "lcov.info" -type f || echo "No lcov.info files found"
 
       - name: SonarQube Scan
-        if: ${{ secrets.SONAR_TOKEN }}
+        if: ${{ env.SONAR_TOKEN }}
         uses: SonarSource/sonarqube-scan-action@v5.3.1
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
         with:
           # Exemplo: habilitar logs verbosos (opcional)
           args: >
             -Dsonar.verbose=true
 
       - name: Quality Gate
-        if: ${{ secrets.SONAR_TOKEN }}
+        if: ${{ env.SONAR_TOKEN }}
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
         with:
           pollingTimeoutSec: 600
