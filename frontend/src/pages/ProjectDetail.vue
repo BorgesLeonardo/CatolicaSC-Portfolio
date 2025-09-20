@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@clerk/vue'
 import { http, setAuthToken } from 'src/utils/http'
 import { formatMoneyBRL, formatDateTimeBR, isPast, formatProgressPercentage, calculateDaysLeft } from 'src/utils/format'
+import { getImageUrl as buildImageUrl } from 'src/config/api'
 import ContributeDialog from 'src/components/ContributeDialog.vue'
 import CommentsSection from 'src/components/CommentsSection.vue'
 import EditProjectDialog from 'src/components/EditProjectDialog.vue'
@@ -24,6 +25,15 @@ const deleteLoading = ref(false)
 const dialogRef = ref<InstanceType<typeof ContributeDialog> | null>(null)
 const editDialogRef = ref<InstanceType<typeof EditProjectDialog> | null>(null)
 const { updateStatsIfNeeded } = useProjectStats()
+
+// Removed image gallery state - using single image now
+
+// Interface para imagens
+interface ProjectImage {
+  id: string
+  url: string
+  originalName: string
+}
 
 // Edit dialog state
 const editDialogOpen = ref(false)
@@ -46,6 +56,72 @@ const daysLeft = computed(() => {
   if (!project.value) return 0
   return calculateDaysLeft(project.value.deadline)
 })
+
+// Image management
+const hasImages = computed(() => {
+  if (!project.value) return false
+  return (project.value.images && project.value.images.length > 0) || !!project.value.imageUrl
+})
+
+const displayImages = computed(() => {
+  if (!project.value) return []
+  
+  // Priorizar novas imagens (array images) sobre imageUrl legacy
+  if (project.value.images && project.value.images.length > 0) {
+    return project.value.images
+  }
+  
+  // Fallback para imageUrl legacy
+  if (project.value.imageUrl) {
+    return [{
+      id: 'legacy',
+      url: project.value.imageUrl,
+      originalName: 'Imagem da campanha'
+    }]
+  }
+  
+  return []
+})
+
+function getImageUrl(image: ProjectImage | string): string {
+  // Se for uma string (imageUrl legacy)
+  if (typeof image === 'string') {
+    return buildImageUrl(image)
+  }
+  
+  // Se for uma imagem nova do sistema de upload
+  if (image && image.url) {
+    return buildImageUrl(image.url)
+  }
+  
+  return ''
+}
+
+const firstImageUrl = computed(() => {
+  const images = displayImages.value
+  if (images.length > 0) {
+    return getImageUrl(images[0])
+  }
+  return ''
+})
+
+// Image loading callbacks for debug
+function onImageLoad() {
+  console.log('✅ Image loaded successfully:', firstImageUrl.value)
+}
+
+function onImageError(error: Event) {
+  console.error('❌ Image failed to load:', firstImageUrl.value, error)
+}
+
+function openImageLightbox() {
+  if (firstImageUrl.value) {
+    // Abrir imagem em nova aba para visualização completa
+    window.open(firstImageUrl.value, '_blank')
+  }
+}
+
+// Simplified gallery - removed complex interactions
 
 const backersCount = computed(() => {
   return project.value?.supportersCount ?? 0
@@ -275,45 +351,6 @@ onMounted(() => {
 
     <!-- Conteúdo principal -->
     <div v-else-if="project" class="project-content">
-      <!-- Hero Section -->
-      <div class="hero-section">
-        <div class="hero-image">
-          <q-img 
-            v-if="project.imageUrl" 
-            :src="project.imageUrl" 
-            ratio="16/9"
-            fit="cover"
-            loading="lazy"
-            class="hero-img"
-          >
-            <template v-slot:error>
-              <div class="hero-placeholder">
-                <q-icon name="broken_image" size="4rem" color="grey-4" />
-                <div class="text-body2 text-grey-5 q-mt-md">Erro ao carregar imagem</div>
-              </div>
-            </template>
-            <template v-slot:loading>
-              <div class="hero-placeholder">
-                <q-spinner size="3rem" color="grey-4" />
-                <div class="text-body2 text-grey-5 q-mt-md">Carregando...</div>
-              </div>
-            </template>
-          </q-img>
-          <div v-else class="hero-placeholder">
-            <q-icon name="campaign" size="4rem" color="grey-4" />
-            <div class="text-body2 text-grey-5 q-mt-md">Imagem da campanha</div>
-          </div>
-
-          <!-- Status overlay -->
-          <div class="hero-overlay">
-            <q-badge
-              :color="isExpired ? 'grey-8' : 'green'"
-              :label="isExpired ? 'Campanha Encerrada' : 'Campanha Ativa'"
-              class="status-badge"
-            />
-          </div>
-        </div>
-      </div>
 
       <!-- Main Content Grid -->
       <div v-if="project" class="content-grid q-pa-md">
@@ -343,6 +380,34 @@ onMounted(() => {
                     </div>
                   </div>
                   <h1 class="project-title">{{ project.title }}</h1>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modern Campaign Image Gallery -->
+            <div v-if="hasImages" class="modern-image-gallery q-mb-lg">
+              <div class="gallery-container" @click="openImageLightbox">
+                <div class="image-frame">
+                  <img 
+                    v-if="firstImageUrl"
+                    :src="firstImageUrl" 
+                    alt="Imagem da campanha"
+                    class="gallery-hero-image"
+                    @load="onImageLoad"
+                    @error="onImageError"
+                  />
+                  <div v-else class="modern-placeholder">
+                    <q-icon name="image" size="4rem" color="grey-4" />
+                    <div class="text-h6 text-grey-5 q-mt-md">Imagem da Campanha</div>
+                  </div>
+                  
+                  <!-- Elegant hover overlay -->
+                  <div class="modern-overlay">
+                    <div class="overlay-content">
+                      <q-icon name="zoom_in" size="xl" color="white" />
+                      <div class="overlay-text">Ver em tamanho real</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -561,6 +626,26 @@ onMounted(() => {
   justify-content: center;
 }
 
+.hero-section-simple {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 2rem 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
+.hero-content {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
+.status-overlay {
+  display: flex;
+  justify-content: center;
+}
+
 .hero-section {
   position: relative;
   margin-bottom: 2rem;
@@ -574,9 +659,684 @@ onMounted(() => {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+.hero-gallery {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-carousel {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  
+  :deep(.q-carousel__slides-container) {
+    border-radius: 16px;
+  }
+  
+  :deep(.q-carousel__slide) {
+    padding: 0;
+  }
+  
+  :deep(.q-carousel__arrow) {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+  }
+  
+  :deep(.q-carousel__arrow--left) {
+    left: 20px;
+  }
+  
+  :deep(.q-carousel__arrow--right) {
+    right: 20px;
+  }
+}
+
+.hero-slide {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .hero-img {
   width: 100%;
   border-radius: 16px;
+}
+
+.hero-image-counter {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.hero-counter-badge {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hero-thumbnails {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  max-width: 90%;
+}
+
+.thumbnails-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  &--active {
+    border-color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+// === MODERN IMAGE GALLERY ===
+.modern-image-gallery {
+  position: relative;
+}
+
+.gallery-container {
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  
+  &:hover {
+    transform: translateY(-4px);
+    
+    .image-frame {
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 12px 24px -8px rgba(30, 64, 175, 0.15);
+    }
+    
+    .gallery-hero-image {
+      transform: scale(1.03);
+    }
+    
+    .modern-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.image-frame {
+  position: relative;
+  height: 450px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 
+    0 10px 30px -5px rgba(0, 0, 0, 0.15),
+    0 4px 12px -2px rgba(30, 64, 175, 0.08);
+  transition: all var(--transition-slow);
+  
+  // Subtle border for definition
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+.gallery-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+  border-radius: 24px;
+}
+
+.modern-placeholder {
+  height: 450px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  transition: all var(--transition-base);
+  
+  &:hover {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  }
+}
+
+.modern-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 64, 175, 0.8) 0%,
+    rgba(59, 130, 246, 0.6) 50%,
+    rgba(249, 115, 22, 0.8) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  border-radius: 24px;
+  backdrop-filter: blur(8px);
+}
+
+.overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform var(--transition-base);
+  
+  .modern-overlay:hover & {
+    transform: translateY(0);
+  }
+}
+
+.overlay-text {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+// === RESPONSIVE DESIGN ===
+@media (max-width: 768px) {
+  .modern-image-gallery {
+    margin: 0 -16px;
+  }
+  
+  .image-frame {
+    height: 350px;
+    border-radius: 20px;
+    
+    &::before {
+      border-radius: 20px;
+    }
+  }
+  
+  .gallery-hero-image {
+    border-radius: 20px;
+  }
+  
+  .modern-placeholder {
+    height: 350px;
+    border-radius: 20px;
+  }
+  
+  .modern-overlay {
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-frame {
+    height: 280px;
+    border-radius: 16px;
+    
+    &::before {
+      border-radius: 16px;
+    }
+  }
+  
+  .gallery-hero-image {
+    border-radius: 16px;
+  }
+  
+  .modern-placeholder {
+    height: 280px;
+    border-radius: 16px;
+  }
+  
+  .modern-overlay {
+    border-radius: 16px;
+  }
+  
+  .overlay-content {
+    gap: 8px;
+    
+    .q-icon {
+      font-size: 2rem !important;
+    }
+  }
+  
+  .overlay-text {
+    font-size: 0.875rem;
+  }
+}
+
+// Removed old carousel styles
+
+.gallery-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.gallery-img {
+  border-radius: 0;
+}
+
+.gallery-placeholder {
+  height: 400px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-navigation {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.gallery-counter {
+  display: flex;
+  justify-content: center;
+}
+
+.gallery-counter-badge {
+  background: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.gallery-thumbnails {
+  overflow: hidden;
+}
+
+.thumbnails-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+    
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+.thumbnail-item {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+  
+  &--active {
+    border-color: #3b82f6;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+
+// === ENHANCED THUMBNAIL NAVIGATION ===
+.thumbnail-navigation {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 20px;
+}
+
+.thumbnails-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.thumbnail-nav-btn {
+  background: #f1f5f9;
+  color: #64748b;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #e2e8f0;
+    color: #475569;
+    transform: scale(1.1);
+  }
+}
+
+.thumbnails-track {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 3px;
+    
+    &:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+  }
+}
+
+.enhanced-thumbnail {
+  flex-shrink: 0;
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    transform: translateY(-4px) scale(1.05);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  &--active {
+    border-color: #3b82f6;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 
+      0 8px 25px rgba(59, 130, 246, 0.3),
+      0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  &--hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+.thumbnail-img-enhanced {
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  transition: all 0.3s ease;
+}
+
+.thumbnail-overlay {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  
+  .enhanced-thumbnail--active & {
+    opacity: 1;
+  }
+}
+
+.thumbnail-number {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+}
+
+// === IMAGE INFO SECTION ===
+.image-info {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px solid #e2e8f0;
+}
+
+// === AUTOPLAY CONTROLS ===
+.autoplay-controls {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.autoplay-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.autoplay-progress {
+  width: 60px;
+  border-radius: 2px;
+}
+
+// === RESPONSIVE DESIGN ===
+@media (max-width: 768px) {
+  .gallery-header {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .main-image-container {
+    min-height: 300px;
+  }
+  
+  .image-wrapper {
+    height: 300px;
+  }
+  
+  .image-error-state,
+  .image-loading-state {
+    height: 300px;
+  }
+  
+  .zoom-btn {
+    right: 60px;
+    top: 16px;
+  }
+  
+  .fullscreen-btn {
+    right: 16px;
+    top: 16px;
+  }
+  
+  .enhanced-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .thumbnail-navigation {
+    padding: 16px;
+  }
+  
+  .thumbnails-container {
+    gap: 12px;
+  }
+  
+  .nav-btn {
+    transform: scale(0.9);
+  }
+  
+  .progress-dots {
+    bottom: 16px;
+    gap: 8px;
+    padding: 6px 12px;
+  }
+  
+  .progress-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-header {
+    padding: 12px 16px;
+  }
+  
+  .main-image-container {
+    min-height: 250px;
+  }
+  
+  .image-wrapper {
+    height: 250px;
+  }
+  
+  .image-error-state,
+  .image-loading-state {
+    height: 250px;
+  }
+  
+  .enhanced-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .thumbnail-number {
+    font-size: 0.625rem;
+    padding: 1px 4px;
+  }
+  
+  .gallery-title {
+    font-size: 0.875rem;
+  }
+  
+  .counter-chip {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+  
+  .image-overlay-controls {
+    padding: 12px;
+  }
+  
+  .zoom-btn,
+  .fullscreen-btn {
+    display: none; // Hide on very small screens
+  }
+}
+
+// === ACCESSIBILITY ===
+@media (prefers-reduced-motion: reduce) {
+  .enhanced-thumbnail,
+  .main-gallery-img,
+  .nav-btn,
+  .progress-dot,
+  .gallery-card {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .image-wrapper:hover .main-gallery-img {
+    transform: none !important;
+  }
 }
 
 .hero-placeholder {

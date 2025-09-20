@@ -5,6 +5,7 @@ import { http, setAuthToken } from 'src/utils/http'
 import { useAuth } from '@clerk/vue'
 import { Notify, Dialog } from 'quasar'
 import { formatMoneyBRL, formatDateTimeBR, isPast } from 'src/utils/format'
+import { getImageUrl as buildImageUrl } from 'src/config/api'
 import type { Project, ProjectResponse } from 'src/components/models'
 import EditProjectDialog from 'src/components/EditProjectDialog.vue'
 import { contributionsService } from 'src/services/contributions'
@@ -163,6 +164,29 @@ function createNewProject() {
   void router.push('/projects/new')
 }
 
+function getFirstImage(project: Project): string {
+  console.log('🔍 MyProjects - Getting image for:', project.title)
+  console.log('📸 Project images:', project.images)
+  console.log('📸 Project imageUrl:', project.imageUrl)
+  
+  // Priorizar novas imagens (array images) sobre imageUrl legacy
+  if (project.images && project.images.length > 0) {
+    const url = buildImageUrl(project.images[0].url)
+    console.log('✅ Using new images system, URL:', url)
+    return url
+  }
+  
+  // Fallback para imageUrl legacy
+  if (project.imageUrl) {
+    const url = buildImageUrl(project.imageUrl)
+    console.log('✅ Using legacy imageUrl, URL:', url)
+    return url
+  }
+  
+  console.log('❌ No image found for project:', project.title)
+  return ''
+}
+
 function handleProjectUpdated(updatedProject: Project) {
   // Atualiza o projeto na lista
   const index = items.value.findIndex(p => p.id === updatedProject.id)
@@ -265,18 +289,26 @@ onMounted(fetchMyProjects)
               :key="project.id"
               class="col-12 col-md-6 col-lg-4"
             >
-              <q-card class="campaign-card" :class="{ 'expired-campaign': isPast(project.deadline) }">
-                <!-- Image -->
-                <q-img
-                  v-if="project.imageUrl"
-                  :src="project.imageUrl"
-                  ratio="16/9"
-                  fit="cover"
-                  class="cursor-pointer"
-                  @click="viewProject(project)"
-                />
-                <div v-else class="image-placeholder" @click="viewProject(project)">
-                  <q-icon name="campaign" size="2rem" color="grey-4" />
+              <q-card class="campaign-card modern-card" :class="{ 'expired-campaign': isPast(project.deadline) }">
+                <!-- Modern Image Section -->
+                <div class="card-image-section" @click="viewProject(project)">
+                  <div class="card-image-frame">
+                    <img
+                      v-if="getFirstImage(project)"
+                      :src="getFirstImage(project)"
+                      :alt="`Imagem da campanha ${project.title}`"
+                      class="card-hero-image"
+                    />
+                    <div v-else class="card-image-placeholder">
+                      <q-icon name="image" size="2.5rem" color="grey-4" />
+                      <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+                    </div>
+                    
+                    <!-- Hover overlay -->
+                    <div class="card-hover-overlay">
+                      <q-icon name="visibility" size="lg" color="white" />
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Content -->
@@ -440,40 +472,86 @@ onMounted(fetchMyProjects)
   }
 }
 
-// Campaign Cards
+// === MODERN CAMPAIGN CARDS ===
 .campaign-card {
-  border-radius: 16px;
+  // Inherits modern-card styles from global CSS
   overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-  }
   
   &.expired-campaign {
-    opacity: 0.8;
+    opacity: 0.7;
+    filter: grayscale(20%);
     
     &:hover {
-      transform: translateY(-2px);
+      opacity: 0.85;
+      transform: translateY(-2px) scale(1.01);
     }
   }
 }
 
-.image-placeholder {
-  height: 200px;
+.card-image-section {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card-image-frame {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  transition: all var(--transition-base);
+  
+  &:hover {
+    .card-hero-image {
+      transform: scale(1.08);
+    }
+    
+    .card-hover-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.card-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card-image-placeholder {
+  height: 220px;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   
   &:hover {
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    transform: scale(1.02);
   }
+}
+
+.card-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 64, 175, 0.85) 0%,
+    rgba(59, 130, 246, 0.75) 50%,
+    rgba(249, 115, 22, 0.85) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  backdrop-filter: blur(4px);
 }
 
 .campaign-title {
@@ -590,3 +668,4 @@ onMounted(fetchMyProjects)
   transition: all 0.2s ease;
 }
 </style>
+

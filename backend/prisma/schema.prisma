@@ -41,7 +41,7 @@ model Project {
   description     String?
   goalCents       Int
   deadline        DateTime
-  imageUrl        String?
+  imageUrl        String?        // Mantido para compatibilidade, será removido futuramente
   raisedCents     Int            @default(0)
   supportersCount Int            @default(0)
   createdAt       DateTime       @default(now())
@@ -51,9 +51,28 @@ model Project {
   category        Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   contributions   Contribution[]
   comments        Comment[]
+  images          ProjectImage[] // Nova relação com imagens
 
   @@index([ownerId])
   @@index([categoryId])
+}
+
+/// Imagens de Projeto
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String
+  filename  String   // Nome do arquivo salvo no servidor
+  originalName String // Nome original do arquivo
+  url       String   // URL pública da imagem
+  size      Int      // Tamanho do arquivo em bytes
+  mimeType  String   // Tipo MIME (image/jpeg, image/png, etc.)
+  order     Int      @default(0) // Ordem de exibição (0 = primeira)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@unique([projectId, order]) // Garante ordem única por projeto
 }
 
 /// Contribuição/Doação

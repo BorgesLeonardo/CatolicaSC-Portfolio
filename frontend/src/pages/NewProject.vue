@@ -119,45 +119,83 @@
             </div>
 
             <div class="col-12">
-              <q-input
-                v-model="form.imageUrl"
-                label="Imagem (URL, opcional)"
-                :rules="[rules.imageUrl]"
-                :error="!!fieldErrors.imageUrl"
-                :error-message="fieldErrors.imageUrl"
-                dense
+              <div class="text-subtitle2 q-mb-sm">
+                <q-icon name="image" class="q-mr-xs" />
+                Imagens da Campanha (máximo 5)
+              </div>
+              
+              <q-file
+                v-model="selectedImages"
+                multiple
+                accept="image/*"
+                max-files="5"
+                max-file-size="5242880"
+                :error="!!fieldErrors.images"
+                :error-message="fieldErrors.images"
                 filled
-                lazy-rules
-                placeholder="https://exemplo.com/imagem.jpg"
-                hint="Cole aqui o link de uma imagem da sua campanha. Exemplos: picsum.photos/800/600 ou imgur.com"
+                counter
+                @rejected="onImageRejected"
               >
                 <template v-slot:prepend>
-                  <q-icon name="image" />
+                  <q-icon name="attach_file" />
                 </template>
-              </q-input>
+                <template v-slot:append>
+                  <q-icon name="add" />
+                </template>
+              </q-file>
               
-              <!-- Preview da imagem -->
-              <div v-if="form.imageUrl && form.imageUrl.length > 10" class="q-mt-sm">
-                <div class="text-caption text-grey-6 q-mb-xs">Preview da imagem:</div>
-                <q-img 
-                  :src="form.imageUrl" 
-                  style="max-width: 200px; max-height: 120px; border-radius: 8px;"
-                  fit="cover"
-                  loading="lazy"
-                >
-                  <template v-slot:error>
-                    <div class="text-negative text-caption">
-                      <q-icon name="error" class="q-mr-xs" />
-                      URL inválida ou imagem não encontrada
+              <div class="text-caption text-grey-6 q-mt-xs">
+                Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB por imagem.
+              </div>
+              
+              <!-- Preview das imagens selecionadas -->
+              <div v-if="selectedImages && selectedImages.length > 0" class="q-mt-md">
+                <div class="text-caption text-grey-6 q-mb-sm">Preview das imagens:</div>
+                <div class="row q-col-gutter-sm">
+                  <div 
+                    v-for="(image, index) in selectedImages" 
+                    :key="index"
+                    class="col-6 col-sm-4 col-md-3"
+                  >
+                    <div class="relative-position">
+                      <q-img 
+                        :src="getImagePreview(image)" 
+                        style="height: 120px; border-radius: 8px;"
+                        fit="cover"
+                        loading="lazy"
+                      >
+                        <template v-slot:error>
+                          <div class="text-negative text-caption text-center">
+                            <q-icon name="error" class="q-mr-xs" />
+                            Erro ao carregar
+                          </div>
+                        </template>
+                        <template v-slot:loading>
+                          <div class="text-grey-6 text-caption text-center">
+                            <q-spinner size="sm" class="q-mr-xs" />
+                            Carregando...
+                          </div>
+                        </template>
+                      </q-img>
+                      
+                      <!-- Botão para remover imagem -->
+                      <q-btn
+                        round
+                        dense
+                        color="negative"
+                        icon="close"
+                        size="sm"
+                        class="absolute-top-right q-ma-xs"
+                        @click="removeImage(index)"
+                      />
+                      
+                      <!-- Nome do arquivo -->
+                      <div class="text-caption text-center q-mt-xs text-grey-7">
+                        {{ image.name }}
+                      </div>
                     </div>
-                  </template>
-                  <template v-slot:loading>
-                    <div class="text-grey-6 text-caption">
-                      <q-spinner size="sm" class="q-mr-xs" />
-                      Carregando imagem...
-                    </div>
-                  </template>
-                </q-img>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -165,11 +203,16 @@
           <div class="q-mt-lg flex items-center">
             <q-btn
               color="primary"
-              label="Criar campanha"
+              :label="getSubmitButtonLabel()"
               type="submit"
-              :loading="loading"
+              :loading="loading || uploadingImages"
             />
-            <q-spinner v-if="loading" class="q-ml-md" />
+            <div v-if="loading || uploadingImages" class="q-ml-md">
+              <q-spinner class="q-mr-sm" />
+              <span class="text-caption text-grey-6">
+                {{ uploadingImages ? 'Enviando imagens...' : 'Criando campanha...' }}
+              </span>
+            </div>
           </div>
         </q-form>
       </q-card>
@@ -186,6 +229,7 @@ import { Notify } from 'quasar'
 import { reaisToCents } from 'src/utils/money'
 import { mergeDateTimeToISO } from 'src/utils/datetime'
 import { categoriesService } from 'src/services/categories'
+import { projectImagesService } from 'src/services/project-images'
 import type { Category } from 'src/components/models'
 
 const router = useRouter()
@@ -204,9 +248,12 @@ const form = reactive({
   goalReais: '',     // usuário digita em reais (ex.: 50,00)
   date: '',          // YYYY-MM-DD (QDate)
   time: '23:59',     // HH:mm (QTime) - default
-  imageUrl: '',
   categoryId: ''     // ID da categoria selecionada
 })
+
+// imagens selecionadas
+const selectedImages = ref<File[]>([])
+const uploadingImages = ref(false)
 
 // erros por campo (vindos do backend)
 const fieldErrors = reactive<Record<string, string>>({})
@@ -227,6 +274,45 @@ onMounted(async () => {
   }
 })
 
+// funções para manipular imagens
+function getImagePreview(file: File): string {
+  return URL.createObjectURL(file)
+}
+
+function removeImage(index: number) {
+  selectedImages.value.splice(index, 1)
+}
+
+function onImageRejected(rejectedEntries: { file: File; failedPropValidation: string }[]) {
+  const reasons = rejectedEntries.map(entry => {
+    if (entry.failedPropValidation === 'max-file-size') {
+      return `${entry.file.name}: arquivo muito grande (máximo 5MB)`
+    }
+    if (entry.failedPropValidation === 'accept') {
+      return `${entry.file.name}: formato não aceito`
+    }
+    if (entry.failedPropValidation === 'max-files') {
+      return 'Máximo de 5 imagens permitidas'
+    }
+    return `${entry.file.name}: arquivo rejeitado`
+  })
+  
+  Notify.create({
+    type: 'negative',
+    message: reasons.join(', '),
+    timeout: 5000
+  })
+}
+
+function getSubmitButtonLabel(): string {
+  if (uploadingImages.value) {
+    return 'Enviando imagens...'
+  }
+  if (loading.value) {
+    return 'Criando...'
+  }
+  return 'Criar campanha'
+}
 
 // regras simples (frontend)
 const rules = {
@@ -245,21 +331,17 @@ const rules = {
     today.setHours(0, 0, 0, 0)
     return selectedDate >= today || 'Data deve ser hoje ou no futuro'
   },
-  imageUrl: (v: string) => {
-    if (!v) return true // Campo opcional
+  images: (files: File[]) => {
+    if (!files || files.length === 0) return true // Campo opcional
+    if (files.length > 5) return 'Máximo de 5 imagens permitidas'
     
-    // Se não começar com http/https, não valida ainda (pode estar digitando)
-    if (!v.startsWith('http://') && !v.startsWith('https://')) {
-      return true // Permite continuar digitando
-    }
-    
-    // Só valida URL se parecer completa
-    if (v.length > 10) {
-      try {
-        new URL(v)
-        return true
-      } catch {
-        return 'URL inválida. Use http:// ou https://'
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        return `Arquivo ${file.name} excede o limite de 5MB`
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        return `Arquivo ${file.name} não é uma imagem válida`
       }
     }
     
@@ -274,7 +356,7 @@ async function submit() {
   fieldErrors.description = ''
   fieldErrors.goalCents = ''
   fieldErrors.deadline = ''
-  fieldErrors.imageUrl = ''
+  fieldErrors.images = ''
   fieldErrors.categoryId = ''
 
   // validação mínima frontend
@@ -337,21 +419,45 @@ async function submit() {
     description: form.description,
     goalCents,
     deadline,
-    imageUrl: form.imageUrl || undefined,
     categoryId: form.categoryId,
+    imagesCount: selectedImages.value.length,
   })
   
   try {
+    // Primeiro, cria o projeto sem imagens
     const response = await http.post('/api/projects', {
       title: form.title,
       description: form.description,
       goalCents,
       deadline,
-      imageUrl: form.imageUrl || undefined,
       categoryId: form.categoryId,
     }, {
       headers: { Authorization: `Bearer ${token}` }
     })
+    
+    // Se houver imagens selecionadas, fazer upload delas
+    if (selectedImages.value.length > 0) {
+      console.log('📸 Fazendo upload de', selectedImages.value.length, 'imagens...')
+      uploadingImages.value = true
+      
+      try {
+        await projectImagesService.uploadImages(
+          response.data.id, 
+          selectedImages.value, 
+          token
+        )
+        console.log('✅ Imagens enviadas com sucesso!')
+      } catch (uploadError) {
+        console.error('❌ Erro ao fazer upload das imagens:', uploadError)
+        Notify.create({
+          type: 'warning',
+          message: 'Campanha criada, mas houve erro no upload das imagens.',
+          timeout: 3000
+        })
+      } finally {
+        uploadingImages.value = false
+      }
+    }
 
     const createdProject = response.data
     console.log('✅ Resposta do backend:', response)
@@ -394,8 +500,8 @@ async function submit() {
     form.goalReais = ''
     form.date = ''
     form.time = '23:59'
-    form.imageUrl = ''
     form.categoryId = ''
+    selectedImages.value = []
     
     // Redireciona para a página "Minhas Campanhas"
     console.log('🔄 Redirecionando para Minhas Campanhas: /me')
