@@ -56,7 +56,10 @@ export class ProjectsService {
         categoryId: data.categoryId,
       },
       include: {
-        category: true
+        category: true,
+        images: {
+          orderBy: { order: 'asc' }
+        }
       }
     });
 
@@ -92,7 +95,10 @@ export class ProjectsService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          category: true
+          category: true,
+          images: {
+            orderBy: { order: 'asc' }
+          }
         }
       }),
       prisma.project.count({ where }),
@@ -105,7 +111,10 @@ export class ProjectsService {
     const project = await prisma.project.findUnique({ 
       where: { id },
       include: {
-        category: true
+        category: true,
+        images: {
+          orderBy: { order: 'asc' }
+        }
       }
     });
     
@@ -121,7 +130,10 @@ export class ProjectsService {
       where: { ownerId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: {
-        category: true
+        category: true,
+        images: {
+          orderBy: { order: 'asc' }
+        }
       }
     });
 
@@ -150,7 +162,10 @@ export class ProjectsService {
       where: { id }, 
       data: updateData,
       include: {
-        category: true
+        category: true,
+        images: {
+          orderBy: { order: 'asc' }
+        }
       }
     });
 

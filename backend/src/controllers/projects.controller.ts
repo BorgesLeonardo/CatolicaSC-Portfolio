@@ -20,7 +20,6 @@ export class ProjectsController {
     description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres'),
     goalCents: z.number().int().positive('Meta deve ser um valor positivo'),
     deadline: z.string().datetime('Data limite deve ser uma data válida'),
-    imageUrl: z.string().url('URL da imagem deve ser válida').optional(),
     categoryId: z.string().cuid('Categoria deve ser selecionada'),
   });
 

@@ -8,31 +8,22 @@
   >
     <!-- Image Section -->
     <div class="campaign-image relative-position">
-      <q-img 
-        v-if="project.imageUrl" 
-        :src="project.imageUrl" 
-        ratio="16/9"
-        class="cursor-pointer campaign-img"
-        fit="cover"
-        loading="lazy"
-        :img-style="{ objectFit: 'cover' }"
-      >
-        <template v-slot:error>
-          <div class="campaign-placeholder">
-            <q-icon name="broken_image" size="xl" color="grey-5" />
-            <div class="text-caption text-grey-5 q-mt-sm">Erro ao carregar imagem</div>
-          </div>
-        </template>
-        <template v-slot:loading>
-          <div class="campaign-placeholder animate-pulse">
-            <q-spinner size="xl" color="grey-5" />
-            <div class="text-caption text-grey-5 q-mt-sm">Carregando...</div>
-          </div>
-        </template>
-      </q-img>
-      <div v-else class="campaign-placeholder">
-        <q-icon name="campaign" size="xl" color="grey-5" />
-        <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+      <div class="card-image-wrapper">
+        <img 
+          v-if="hasImages && getImageUrl(displayImages[0])" 
+          :src="getImageUrl(displayImages[0])" 
+          alt="Imagem da campanha"
+          class="card-hero-image"
+        />
+        <div v-else class="campaign-placeholder">
+          <q-icon name="campaign" size="xl" color="grey-5" />
+          <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+        </div>
+        
+        <!-- Subtle overlay for depth -->
+        <div class="card-image-overlay">
+          <div class="card-overlay-gradient"></div>
+        </div>
       </div>
 
       <!-- Image Overlay -->
@@ -166,7 +157,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatMoneyBRL, isPast, formatNumber, formatProgressPercentage, calculateDaysLeft } from 'src/utils/format'
+import { getImageUrl as buildImageUrl } from 'src/config/api'
 import type { Project } from 'src/components/models'
+
+// Interface para imagens
+interface ProjectImage {
+  id: string
+  url: string
+  originalName: string
+}
 
 interface Props {
   project: Project
@@ -200,6 +199,44 @@ const progressPercentage = computed(() => {
 const daysLeft = computed(() => {
   return calculateDaysLeft(props.project.deadline)
 })
+
+// Image management
+const hasImages = computed(() => {
+  return (props.project.images && props.project.images.length > 0) || !!props.project.imageUrl
+})
+
+const displayImages = computed(() => {
+  // Priorizar novas imagens (array images) sobre imageUrl legacy
+  if (props.project.images && props.project.images.length > 0) {
+    return props.project.images
+  }
+  
+  // Fallback para imageUrl legacy
+  if (props.project.imageUrl) {
+    return [{
+      id: 'legacy',
+      url: props.project.imageUrl,
+      originalName: 'Imagem da campanha'
+    }]
+  }
+  
+  return []
+})
+
+function getImageUrl(image: ProjectImage | string): string {
+  // Se for uma string (imageUrl legacy)
+  if (typeof image === 'string') {
+    return buildImageUrl(image)
+  }
+  
+  // Se for uma imagem nova do sistema de upload
+  if (image.url) {
+    return buildImageUrl(image.url)
+  }
+  
+  // Fallback
+  return ''
+}
 
 function formatDateBR(dateString: string): string {
   return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -263,6 +300,71 @@ function toggleFavorite() {
   overflow: hidden;
   height: 240px;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+// === MODERN CARD IMAGE STYLES ===
+.card-image-wrapper {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+  transition: all var(--transition-base);
+  
+  &:hover {
+    .card-hero-image {
+      transform: scale(1.06);
+    }
+    
+    .card-overlay-gradient {
+      opacity: 0.8;
+    }
+  }
+}
+
+.card-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-overlay-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 64, 175, 0.8) 0%,
+    rgba(59, 130, 246, 0.6) 50%,
+    rgba(249, 115, 22, 0.8) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  backdrop-filter: blur(4px);
+  
+  &::after {
+    content: '👁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .campaign-img {
@@ -365,6 +467,8 @@ function toggleFavorite() {
     transform: scale(1.2);
   }
 }
+
+// Removed carousel-specific styles
 
 // === CONTENT SECTION ===
 .campaign-content {

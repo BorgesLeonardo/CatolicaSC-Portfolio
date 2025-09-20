@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error';
 import { HealthController } from './controllers/health.controller';
 
 import projectsRouter from './routes/projects';
+import projectImagesRouter from './routes/project-images';
 import contributionsRouter from './routes/contributions';
 import commentsRouter from './routes/comments';
 import checkoutRouter from './routes/checkout';
@@ -29,6 +30,9 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 app.use(express.json());
 app.use(clerkMiddleware());
 
+/** ---------- Servir arquivos estáticos ---------- */
+app.use('/uploads', express.static('uploads'));
+
 // Health check endpoint
 const healthController = new HealthController();
 app.get('/api/health', healthController.alive.bind(healthController));
@@ -36,6 +40,7 @@ app.get('/health', healthController.alive.bind(healthController));
 
 /** ---------- Rotas ---------- */
 app.use('/api/projects', projectsRouter);
+app.use('/api/projects', projectImagesRouter);
 app.use('/api/contributions', contributionsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api', commentsRouter);
