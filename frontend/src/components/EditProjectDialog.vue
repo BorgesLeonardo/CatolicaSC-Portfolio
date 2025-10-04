@@ -42,9 +42,10 @@
               </h3>
               
               <div class="image-upload-section">
-                <div class="current-image" v-if="formData.imageUrl">
+                <!-- Current Image -->
+                <div v-if="currentImages.length > 0" class="current-image">
                   <q-img 
-                    :src="formData.imageUrl" 
+                    :src="getImageUrl(currentImages[0].url)" 
                     ratio="16/9" 
                     fit="cover"
                     class="preview-image"
@@ -55,33 +56,42 @@
                       round 
                       icon="delete" 
                       color="negative"
-                      @click="removeImage"
+                      @click="removeImage(currentImages[0].id)"
                       class="remove-image-btn"
                     />
                   </div>
                 </div>
                 
+                <!-- Placeholder when no image -->
                 <div v-else class="image-placeholder">
                   <q-icon name="add_photo_alternate" size="3rem" color="grey-5" />
                   <p class="placeholder-text">Nenhuma imagem selecionada</p>
                 </div>
                 
+                <!-- Upload Actions -->
                 <div class="image-actions">
                   <q-btn 
                     outline 
                     color="primary" 
                     icon="upload"
-                    label="Alterar Imagem"
+                    :label="currentImages.length > 0 ? 'Alterar Imagem' : 'Adicionar Imagem'"
                     @click="triggerImageUpload"
+                    :loading="uploadingImages"
+                    :disable="uploadingImages"
                     class="upload-btn"
-                  />
-                  <input 
-                    ref="imageInput"
-                    type="file" 
-                    accept="image/*" 
-                    @change="handleImageUpload"
-                    style="display: none"
-                  />
+                  >
+                    <template #loading>
+                      <q-spinner-hourglass class="on-left" />
+                      Enviando...
+                    </template>
+                  </q-btn>
+                <input
+                  ref="imageInput"
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageUpload"
+                  style="display: none"
+                />
                 </div>
               </div>
             </div>
@@ -260,9 +270,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { Notify } from 'quasar'
+import { useAuth } from '@clerk/vue'
+import { setAuthToken } from 'src/utils/http'
 import { projectsService } from 'src/services/projects'
+import { projectImagesService } from 'src/services/project-images'
 import { categoriesService } from 'src/services/categories'
-import type { Project, Category } from 'src/components/models'
+import type { Project, Category, ProjectImage } from 'src/components/models'
 
 interface Props {
   modelValue: boolean
@@ -289,9 +302,14 @@ const formData = ref({
   description: '',
   goalCents: 0,
   deadline: '',
-  imageUrl: '',
   categoryId: ''
 })
+
+const currentImages = ref<ProjectImage[]>([])
+const uploadingImages = ref(false)
+
+// Auth
+const { getToken } = useAuth()
 
 // ===== Helpers de moeda (pt-BR) =====
 function formatBRL(value: number): string {
@@ -341,12 +359,25 @@ const minDate = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  return formData.value.title.trim().length > 0 &&
+  const valid = formData.value.title.trim().length > 0 &&
          formData.value.goalCents > 0 &&
          formData.value.deadline &&
          formData.value.categoryId &&
          formData.value.categoryId.trim().length > 0 &&
          new Date(formData.value.deadline) > new Date()
+  
+  // Debug logs
+  if (!valid) {
+    console.log('❌ Form validation failed:', {
+      title: formData.value.title.trim().length > 0,
+      goalCents: formData.value.goalCents > 0,
+      deadline: !!formData.value.deadline,
+      categoryId: !!formData.value.categoryId,
+      deadlineFuture: formData.value.deadline ? new Date(formData.value.deadline) > new Date() : false
+    })
+  }
+  
+  return valid
 })
 
 const formatLastUpdate = computed(() => {
@@ -385,9 +416,11 @@ function initializeForm() {
     description: props.project.description || '',
     goalCents: props.project.goalCents,
     deadline: new Date(props.project.deadline).toISOString().slice(0, 16),
-    imageUrl: props.project.imageUrl || '',
     categoryId: props.project.categoryId || ''
   }
+
+  // Carregar imagens existentes
+  currentImages.value = props.project.images || []
 
   // normaliza exibição da meta já na abertura
   normalizeGoalAmount()
@@ -397,44 +430,158 @@ function triggerImageUpload() {
   imageInput.value?.click()
 }
 
-function handleImageUpload(event: Event) {
+async function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
+  const files = target.files
   
-  if (file) {
-    if (file.size > 5 * 1024 * 1024) { // 5MB
-      Notify.create({
-        type: 'negative',
-        message: 'A imagem deve ter no máximo 5MB'
-      })
-      return
+  if (!files || files.length === 0) return
+  
+  // Limitar a apenas 1 arquivo
+  const file = files[0]
+  
+  // Validar arquivo
+  if (file.size > 5 * 1024 * 1024) { // 5MB
+    Notify.create({
+      type: 'negative',
+      message: 'A imagem deve ter no máximo 5MB'
+    })
+    return
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    Notify.create({
+      type: 'negative',
+      message: 'O arquivo selecionado não é uma imagem válida'
+    })
+    return
+  }
+  
+  if (!props.project) {
+    Notify.create({
+      type: 'negative',
+      message: 'Projeto não encontrado'
+    })
+    return
+  }
+  
+  uploadingImages.value = true
+  
+  try {
+    console.log('📤 Uploading image:', file.name)
+    
+    // Configurar token
+    const token = await getToken.value?.()
+    if (token) {
+      setAuthToken(token)
     }
     
-    if (!file.type.startsWith('image/')) {
-      Notify.create({
-        type: 'negative',
-        message: 'Apenas arquivos de imagem são permitidos'
-      })
-      return
+    // Se já existe uma imagem, remover a antiga primeiro
+    if (currentImages.value.length > 0) {
+      await removeExistingImages()
     }
     
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      formData.value.imageUrl = e.target?.result as string
+    const response = await projectImagesService.uploadImages(
+      props.project.id, 
+      [file]
+    )
+    
+    console.log('✅ Image uploaded:', response.images)
+    
+    // Substituir a imagem atual (sempre apenas 1)
+    currentImages.value = response.images
+    
+    Notify.create({
+      type: 'positive',
+      message: 'Imagem carregada com sucesso!'
+    })
+    
+  } catch (error: unknown) {
+    console.error('❌ Upload error:', error)
+    
+    let errorMessage = 'Erro ao fazer upload da imagem'
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string } } }
+      if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message
+      }
     }
-    reader.readAsDataURL(file)
+    
+    Notify.create({
+      type: 'negative',
+      message: errorMessage
+    })
+  } finally {
+    uploadingImages.value = false
+    // Limpar input
+    if (imageInput.value) {
+      imageInput.value.value = ''
+    }
   }
 }
 
-function removeImage() {
-  formData.value.imageUrl = ''
-  if (imageInput.value) {
-    imageInput.value.value = ''
+async function removeExistingImages() {
+  if (!props.project) return
+  
+  // Configurar token
+  const token = await getToken.value?.()
+  if (token) {
+    setAuthToken(token)
+  }
+  
+  for (const image of currentImages.value) {
+    try {
+      await projectImagesService.deleteImage(props.project.id, image.id)
+    } catch (error) {
+      console.warn('⚠️ Could not remove existing image:', error)
+    }
+  }
+}
+
+async function removeImage(imageId: string) {
+  if (!props.project) return
+  
+  try {
+    console.log('🗑️ Removing image:', imageId)
+    
+    // Configurar token
+    const token = await getToken.value?.()
+    if (token) {
+      setAuthToken(token)
+    }
+    
+    await projectImagesService.deleteImage(props.project.id, imageId)
+    
+    // Limpar a lista (sempre apenas 1 imagem)
+    currentImages.value = []
+    
+    Notify.create({
+      type: 'positive',
+      message: 'Imagem removida com sucesso!'
+    })
+    
+  } catch (error: unknown) {
+    console.error('❌ Remove image error:', error)
+    
+    let errorMessage = 'Erro ao remover a imagem'
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string } } }
+      if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message
+      }
+    }
+    
+    Notify.create({
+      type: 'negative',
+      message: errorMessage
+    })
   }
 }
 
 async function handleSubmit() {
-  if (!props.project || !isFormValid.value) return
+  if (!props.project || !isFormValid.value) {
+    console.warn('⚠️ Form validation failed or project not available')
+    return
+  }
   
   saving.value = true
   
@@ -448,21 +595,38 @@ async function handleSubmit() {
     deadline: formData.value.deadline
       ? new Date(formData.value.deadline).toISOString()
       : undefined,
-    imageUrl: formData.value.imageUrl && formData.value.imageUrl.trim() && 
-      (formData.value.imageUrl.startsWith('http://') || 
-       formData.value.imageUrl.startsWith('https://') || 
-       formData.value.imageUrl.startsWith('data:'))
-      ? formData.value.imageUrl.trim() 
-      : undefined,
     categoryId: formData.value.categoryId && formData.value.categoryId.trim() 
       ? formData.value.categoryId.trim() 
       : undefined
   }
   
-  console.log('Sending goalCents:', updateData.goalCents)
+  console.log('📤 Sending update data:', updateData)
+  console.log('📤 Project ID:', props.project.id)
   
   try {
+    // Configurar token
+    const token = await getToken.value?.()
+    if (token) {
+      setAuthToken(token)
+    }
+    
     const updatedProject = await projectsService.update(props.project.id, updateData)
+    console.log('✅ Update successful:', updatedProject)
+    
+    // Buscar as imagens atualizadas para incluir no projeto
+    try {
+      const imagesResponse = await projectImagesService.getProjectImages(props.project.id)
+      const projectWithImages = {
+        ...updatedProject,
+        images: imagesResponse.images
+      }
+      console.log('✅ Project with updated images:', projectWithImages)
+      
+      emit('projectUpdated', projectWithImages)
+    } catch (imageError) {
+      console.warn('⚠️ Could not fetch updated images, using project without images:', imageError)
+      emit('projectUpdated', updatedProject)
+    }
     
     Notify.create({
       type: 'positive',
@@ -470,30 +634,59 @@ async function handleSubmit() {
       icon: 'check_circle'
     })
     
-    emit('projectUpdated', updatedProject)
     closeDialog()
     
   } catch (error: unknown) {
+    console.error('❌ Update error:', error)
+    
     let errorMessage = 'Erro ao atualizar a campanha. Tente novamente.'
     
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { data?: { message?: string; details?: unknown } } }
+      const axiosError = error as { 
+        response?: { 
+          status?: number
+          data?: { 
+            message?: string
+            details?: unknown
+            fieldErrors?: Record<string, string[]>
+          } 
+        } 
+      }
+      
+      console.error('❌ Axios error details:', axiosError.response)
       
       if (axiosError.response?.data?.message) {
         errorMessage = axiosError.response.data.message
       } else if (axiosError.response?.data?.details) {
         errorMessage = `Erro de validação: ${JSON.stringify(axiosError.response.data.details)}`
+      } else if (axiosError.response?.data?.fieldErrors) {
+        const fieldErrors = Object.entries(axiosError.response.data.fieldErrors)
+          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+          .join('; ')
+        errorMessage = `Erro de validação: ${fieldErrors}`
       }
     }
     
     Notify.create({
       type: 'negative',
       message: errorMessage,
-      icon: 'error'
+      icon: 'error',
+      timeout: 5000
     })
   } finally {
     saving.value = false
   }
+}
+
+function getImageUrl(url: string): string {
+  // Se é uma URL relativa, adicionar o base URL do backend
+  if (url.startsWith('/uploads/')) {
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? '' // Em produção, usar URL relativa
+      : 'http://localhost:3333' // Em desenvolvimento
+    return `${backendUrl}${url}`
+  }
+  return url
 }
 
 function closeDialog() {
@@ -610,6 +803,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 16px;
 }
+
 
 .current-image {
   position: relative;

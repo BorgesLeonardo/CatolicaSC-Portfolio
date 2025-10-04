@@ -16,6 +16,19 @@ export interface Category {
   projectsCount?: number;
 }
 
+export interface ProjectImage {
+  id: string;
+  projectId: string;
+  filename: string;
+  originalName: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Project {
   id: string;
   ownerId: string;
@@ -24,7 +37,8 @@ export interface Project {
   description?: string;
   goalCents: number;
   deadline: string;
-  imageUrl?: string;
+  imageUrl?: string;           // Mantido para compatibilidade
+  images?: ProjectImage[];     // Novo sistema de imagens
   raisedCents?: number;        // Valor arrecadado em centavos
   supportersCount?: number;    // Número de apoiadores únicos
   createdAt: string;

@@ -3,7 +3,7 @@ import { handleStripeWebhook } from '../controllers/webhook.controller'
 
 const router = Router()
 
-// POST /api/webhooks/stripe
-router.post('/webhooks/stripe', handleStripeWebhook)
+// POST /api/webhooks/stripe (app mounts this router at /api/webhooks)
+router.post('/stripe', handleStripeWebhook)
 
 export default router

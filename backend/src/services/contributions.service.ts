@@ -58,6 +58,7 @@ export class ContributionsService {
         contributionId: contribution.id,
         projectId: project.id,
         ownerId: project.ownerId,
+        userId,
       },
       success_url: data.successUrl ?? `${process.env.APP_BASE_URL}/contrib/success?c=${contribution.id}`,
       cancel_url: data.cancelUrl ?? `${process.env.APP_BASE_URL}/contrib/cancel?c=${contribution.id}`,

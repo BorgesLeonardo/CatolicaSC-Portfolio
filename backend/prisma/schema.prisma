@@ -40,13 +40,18 @@ model Project {
   title           String
   description     String?
   goalCents       Int
-  deadline        DateTime
+  minContributionCents Int?      // mínimo sugerido
+  slug            String?        @unique
+  status          ProjectStatus  @default(PUBLISHED)
+  startsAt        DateTime?      // default: now
+  deadline        DateTime       // usado como endsAt
   imageUrl        String?        // Mantido para compatibilidade, será removido futuramente
   raisedCents     Int            @default(0)
   supportersCount Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?
+  version         Int            @default(1)
   owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   category        Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   contributions   Contribution[]
@@ -55,6 +60,7 @@ model Project {
 
   @@index([ownerId])
   @@index([categoryId])
+  @@index([status, deadline])
 }
 
 /// Imagens de Projeto
@@ -107,4 +113,23 @@ model Comment {
 
   @@index([projectId])
   @@index([authorId])
+}
+
+/// Idempotency keys storage
+model IdempotencyKey {
+  key           String   @id
+  endpoint      String
+  requestHash   String
+  responseStatus Int?
+  responseBody  String?
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+}
+
+// Withdrawals models removed
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }

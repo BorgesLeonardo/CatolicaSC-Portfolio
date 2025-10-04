@@ -36,7 +36,7 @@ async function fetchMyProjects() {
     // Atualiza estatísticas se necessário (silenciosamente)
     await updateStatsIfNeeded()
     
-    const token = await getToken.value()
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
     setAuthToken(token)
     
     const { data } = await http.get<ProjectResponse>('/api/projects/mine')
@@ -128,7 +128,7 @@ async function performDelete(project: Project) {
   deleteLoading.value = project.id
   
   try {
-    const token = await getToken.value()
+    const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
     setAuthToken(token)
     
     await http.delete(`/api/projects/${project.id}`)
@@ -188,10 +188,16 @@ function getFirstImage(project: Project): string {
 }
 
 function handleProjectUpdated(updatedProject: Project) {
+  console.log('🔄 MyProjects - Updating project:', updatedProject.title)
+  console.log('🔄 Updated project images:', updatedProject.images)
+  
   // Atualiza o projeto na lista
   const index = items.value.findIndex(p => p.id === updatedProject.id)
   if (index !== -1) {
     items.value[index] = updatedProject
+    console.log('✅ Project updated in list at index:', index)
+  } else {
+    console.warn('⚠️ Project not found in list:', updatedProject.id)
   }
   
   // Fecha o dialog

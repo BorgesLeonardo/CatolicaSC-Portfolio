@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { clerkMiddleware } from '@clerk/express';
 import { stripe } from './lib/stripe';
 import { prisma } from './infrastructure/prisma';
+import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error';
 import { HealthController } from './controllers/health.controller';
 
@@ -14,6 +15,7 @@ import commentsRouter from './routes/comments';
 import checkoutRouter from './routes/checkout';
 import webhookRouter from './routes/webhook';
 import categoriesRouter from './routes/categories';
+import meRouter from './routes/me.routes'
 
 const app = express();
 
@@ -29,6 +31,10 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 /** ---------- Demais middlewares ---------- */
 app.use(express.json());
 app.use(clerkMiddleware());
+app.use((req, _res, next) => {
+  (req as any).log = logger.child({ path: req.path, method: req.method, requestId: req.header('x-request-id') });
+  next();
+});
 
 /** ---------- Servir arquivos estáticos ---------- */
 app.use('/uploads', express.static('uploads'));
@@ -45,6 +51,7 @@ app.use('/api/contributions', contributionsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api', commentsRouter);
 app.use('/api', checkoutRouter);
+app.use('/api', meRouter)
 
 /** ---------- Error Handler ---------- */
 app.use(errorHandler);

@@ -121,19 +121,16 @@
             <div class="col-12">
               <div class="text-subtitle2 q-mb-sm">
                 <q-icon name="image" class="q-mr-xs" />
-                Imagens da Campanha (máximo 5)
+                Imagem da Campanha
               </div>
               
               <q-file
-                v-model="selectedImages"
-                multiple
+                v-model="selectedImage"
                 accept="image/*"
-                max-files="5"
                 max-file-size="5242880"
-                :error="!!fieldErrors.images"
-                :error-message="fieldErrors.images"
+                :error="!!fieldErrors.image"
+                :error-message="fieldErrors.image"
                 filled
-                counter
                 @rejected="onImageRejected"
               >
                 <template v-slot:prepend>
@@ -145,22 +142,18 @@
               </q-file>
               
               <div class="text-caption text-grey-6 q-mt-xs">
-                Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB por imagem.
+                Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB.
               </div>
               
-              <!-- Preview das imagens selecionadas -->
-              <div v-if="selectedImages && selectedImages.length > 0" class="q-mt-md">
-                <div class="text-caption text-grey-6 q-mb-sm">Preview das imagens:</div>
-                <div class="row q-col-gutter-sm">
-                  <div 
-                    v-for="(image, index) in selectedImages" 
-                    :key="index"
-                    class="col-6 col-sm-4 col-md-3"
-                  >
+              <!-- Preview da imagem selecionada -->
+              <div v-if="selectedImage" class="q-mt-md">
+                <div class="text-caption text-grey-6 q-mb-sm">Preview da imagem:</div>
+                <div class="row justify-center">
+                  <div class="col-6 col-sm-4 col-md-3">
                     <div class="relative-position">
                       <q-img 
-                        :src="getImagePreview(image)" 
-                        style="height: 120px; border-radius: 8px;"
+                        :src="getImagePreview(selectedImage)" 
+                        style="height: 200px; border-radius: 8px;"
                         fit="cover"
                         loading="lazy"
                       >
@@ -186,12 +179,12 @@
                         icon="close"
                         size="sm"
                         class="absolute-top-right q-ma-xs"
-                        @click="removeImage(index)"
+                        @click="removeImage()"
                       />
                       
                       <!-- Nome do arquivo -->
                       <div class="text-caption text-center q-mt-xs text-grey-7">
-                        {{ image.name }}
+                        {{ selectedImage.name }}
                       </div>
                     </div>
                   </div>
@@ -210,7 +203,7 @@
             <div v-if="loading || uploadingImages" class="q-ml-md">
               <q-spinner class="q-mr-sm" />
               <span class="text-caption text-grey-6">
-                {{ uploadingImages ? 'Enviando imagens...' : 'Criando campanha...' }}
+                {{ uploadingImages ? 'Enviando imagem...' : 'Criando campanha...' }}
               </span>
             </div>
           </div>
@@ -224,7 +217,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/vue'
-import { http } from 'src/utils/http'
+import { http, setAuthToken } from 'src/utils/http'
 import { Notify } from 'quasar'
 import { reaisToCents } from 'src/utils/money'
 import { mergeDateTimeToISO } from 'src/utils/datetime'
@@ -251,8 +244,8 @@ const form = reactive({
   categoryId: ''     // ID da categoria selecionada
 })
 
-// imagens selecionadas
-const selectedImages = ref<File[]>([])
+// imagem selecionada
+const selectedImage = ref<File | null>(null)
 const uploadingImages = ref(false)
 
 // erros por campo (vindos do backend)
@@ -279,8 +272,8 @@ function getImagePreview(file: File): string {
   return URL.createObjectURL(file)
 }
 
-function removeImage(index: number) {
-  selectedImages.value.splice(index, 1)
+function removeImage() {
+  selectedImage.value = null
 }
 
 function onImageRejected(rejectedEntries: { file: File; failedPropValidation: string }[]) {
@@ -306,7 +299,7 @@ function onImageRejected(rejectedEntries: { file: File; failedPropValidation: st
 
 function getSubmitButtonLabel(): string {
   if (uploadingImages.value) {
-    return 'Enviando imagens...'
+    return 'Enviando imagem...'
   }
   if (loading.value) {
     return 'Criando...'
@@ -331,18 +324,14 @@ const rules = {
     today.setHours(0, 0, 0, 0)
     return selectedDate >= today || 'Data deve ser hoje ou no futuro'
   },
-  images: (files: File[]) => {
-    if (!files || files.length === 0) return true // Campo opcional
-    if (files.length > 5) return 'Máximo de 5 imagens permitidas'
+  image: (file: File | null) => {
+    if (!file) return true // Campo opcional
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      return `Arquivo ${file.name} excede o limite de 5MB`
+    }
     
-    for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        return `Arquivo ${file.name} excede o limite de 5MB`
-      }
-      
-      if (!file.type.startsWith('image/')) {
-        return `Arquivo ${file.name} não é uma imagem válida`
-      }
+    if (!file.type.startsWith('image/')) {
+      return `Arquivo ${file.name} não é uma imagem válida`
     }
     
     return true
@@ -356,7 +345,7 @@ async function submit() {
   fieldErrors.description = ''
   fieldErrors.goalCents = ''
   fieldErrors.deadline = ''
-  fieldErrors.images = ''
+  fieldErrors.image = ''
   fieldErrors.categoryId = ''
 
   // validação mínima frontend
@@ -420,8 +409,11 @@ async function submit() {
     goalCents,
     deadline,
     categoryId: form.categoryId,
-    imagesCount: selectedImages.value.length,
+    hasImage: !!selectedImage.value,
   })
+  
+  // Configurar token globalmente
+  setAuthToken(token)
   
   try {
     // Primeiro, cria o projeto sem imagens
@@ -431,27 +423,24 @@ async function submit() {
       goalCents,
       deadline,
       categoryId: form.categoryId,
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
     })
     
-    // Se houver imagens selecionadas, fazer upload delas
-    if (selectedImages.value.length > 0) {
-      console.log('📸 Fazendo upload de', selectedImages.value.length, 'imagens...')
+    // Se houver imagem selecionada, fazer upload dela
+    if (selectedImage.value) {
+      console.log('📸 Fazendo upload de 1 imagem...')
       uploadingImages.value = true
       
       try {
         await projectImagesService.uploadImages(
           response.data.id, 
-          selectedImages.value, 
-          token
+          [selectedImage.value]
         )
-        console.log('✅ Imagens enviadas com sucesso!')
+        console.log('✅ Imagem enviada com sucesso!')
       } catch (uploadError) {
-        console.error('❌ Erro ao fazer upload das imagens:', uploadError)
+        console.error('❌ Erro ao fazer upload da imagem:', uploadError)
         Notify.create({
           type: 'warning',
-          message: 'Campanha criada, mas houve erro no upload das imagens.',
+          message: 'Campanha criada, mas houve erro no upload da imagem.',
           timeout: 3000
         })
       } finally {
@@ -501,7 +490,7 @@ async function submit() {
     form.date = ''
     form.time = '23:59'
     form.categoryId = ''
-    selectedImages.value = []
+    selectedImage.value = null
     
     // Redireciona para a página "Minhas Campanhas"
     console.log('🔄 Redirecionando para Minhas Campanhas: /me')
@@ -514,11 +503,18 @@ async function submit() {
       window.location.href = '/#/me'
     }
   } catch (err: unknown) {
-    const error = err as { response?: { status?: number; data?: { issues?: { fieldErrors?: Record<string, string | string[]> } } } }
+    const error = err as { response?: { status?: number; data?: { issues?: { fieldErrors?: Record<string, string | string[]> }, error?: string, message?: string } } }
     const status = error?.response?.status
     const resp = error?.response?.data
 
-    if (status === 400 && resp?.issues?.fieldErrors) {
+    if (status === 422 && resp?.details?.fieldErrors) {
+      const fe = resp.details.fieldErrors
+      for (const key of Object.keys(fe)) {
+        const msg = Array.isArray(fe[key]) ? fe[key][0] : String(fe[key])
+        fieldErrors[key] = msg
+      }
+      Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
+    } else if (status === 400 && resp?.issues?.fieldErrors) {
       // mapeia erros do Zod para os campos
       const fe = resp.issues.fieldErrors
       for (const key of Object.keys(fe)) {
@@ -527,6 +523,10 @@ async function submit() {
         fieldErrors[key] = msg
       }
       Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
+    } else if (status === 429) {
+      Notify.create({ type: 'warning', message: 'Muitas tentativas. Tente novamente em instantes.' })
+    } else if (status === 409 && resp?.error === 'IdempotencyConflict') {
+      Notify.create({ type: 'warning', message: 'Requisição duplicada com payload diferente.' })
     } else if (status === 401) {
       Notify.create({ type: 'warning', message: 'Sessão expirada. Entre novamente.' })
       void router.push('/sign-in')

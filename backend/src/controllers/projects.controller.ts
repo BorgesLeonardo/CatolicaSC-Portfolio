@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { ProjectsService } from '../services/projects.service';
 import { projectStatsService } from '../services/project-stats.service';
 import { AppError } from '../utils/AppError';
+import { createCampaignSchema } from '../schemas/campaign';
+import { sanitizeHtml } from '../utils/sanitize';
 
 // Injeção de dependência para testes
 const projectsService = (global as any).__PROJECTS_SERVICE__ || new ProjectsService();
@@ -15,33 +17,50 @@ export class ProjectsController {
     id: z.string().cuid({ message: 'id inválido' }),
   });
 
-  private createProjectSchema = z.object({
-    title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres').max(120, 'Título deve ter no máximo 120 caracteres'),
-    description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres'),
-    goalCents: z.number().int().positive('Meta deve ser um valor positivo'),
-    deadline: z.string().datetime('Data limite deve ser uma data válida'),
-    categoryId: z.string().cuid('Categoria deve ser selecionada'),
-  });
+  // Server-side strong schema
+  private createProjectSchema = createCampaignSchema;
 
   private updateProjectSchema = z.object({
     title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres').max(120, 'Título deve ter no máximo 120 caracteres').optional(),
     description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres').optional(),
     goalCents: z.number().int().positive('Meta deve ser um valor positivo').optional(),
     deadline: z.string().datetime('Data limite deve ser uma data válida').optional(),
-    imageUrl: z.string().url('URL da imagem deve ser válida').optional(),
+    imageUrl: z.string().optional(),
     categoryId: z.string().cuid('Categoria deve ser válida').optional(),
   }).refine((b) => Object.values(b).some((v) => v !== undefined), {
     message: 'Envie ao menos um campo para atualização',
   });
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const parse = this.createProjectSchema.safeParse(req.body);
+      const parse = this.createProjectSchema.safeParse({
+        ...req.body,
+        // allow incoming ISO strings for endsAt
+        endsAt: req.body.deadline ? new Date(req.body.deadline) : req.body.endsAt,
+      });
       if (!parse.success) {
-        throw new AppError('ValidationError', 400, parse.error.flatten());
+        throw new AppError('ValidationError', 422, parse.error.flatten());
       }
 
       const ownerId: string = (req as any).authUserId;
-      const project = await this.service.create(parse.data, ownerId);
+      const data = parse.data as any;
+
+      // Additional server-side range enforcement
+      if (data.goalCents < 1000 || data.goalCents > 100_000_000) {
+        throw new AppError('ValidationError', 422, { fieldErrors: { goalCents: ['Meta fora da faixa permitida'] } });
+      }
+      if (typeof data.minContributionCents === 'number' && data.minContributionCents < 500) {
+        throw new AppError('ValidationError', 422, { fieldErrors: { minContributionCents: ['Mínimo de contribuição deve ser pelo menos R$ 5,00'] } });
+      }
+      const sanitizedDescription = sanitizeHtml(data.description);
+
+      const project = await this.service.create({
+        title: data.title.trim(),
+        description: sanitizedDescription,
+        goalCents: data.goalCents,
+        deadline: data.endsAt.toISOString(),
+        categoryId: data.categoryId,
+        minContributionCents: data.minContributionCents,
+      }, ownerId);
       
       return res.status(201).json(project);
     } catch (error) {
@@ -100,21 +119,33 @@ export class ProjectsController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log('📨 Update request received:', { 
+        params: req.params, 
+        body: req.body,
+        authUserId: (req as any).authUserId 
+      });
+
       const params = this.idParamSchema.safeParse(req.params);
       if (!params.success) {
+        console.error('❌ Params validation failed:', params.error.flatten());
         throw new AppError('ValidationError', 400, params.error.flatten());
       }
 
       const body = this.updateProjectSchema.safeParse(req.body);
       if (!body.success) {
+        console.error('❌ Body validation failed:', body.error.flatten());
         throw new AppError('ValidationError', 400, body.error.flatten());
       }
+
+      console.log('✅ Validation passed:', { params: params.data, body: body.data });
 
       const authUserId: string = (req as any).authUserId;
       const updated = await this.service.update(params.data.id, body.data, authUserId);
       
+      console.log('✅ Update completed successfully');
       return res.json(updated);
     } catch (error) {
+      console.error('❌ Update error:', error);
       return next(error);
     }
   }

@@ -17,7 +17,8 @@
     "prisma:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "seed:contributions": "tsx prisma/seed-contributions.ts"
   },
   "dependencies": {
     "@clerk/express": "^1.0.0",
@@ -28,6 +29,10 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "multer": "^2.0.2",
+    "pino": "^9.3.2",
+    "sanitize-html": "^2.13.0",
+    "slugify": "^1.6.6",
+    "express-rate-limit": "^7.4.0",
     "nanoid": "^5.1.5",
     "stripe": "^18.5.0",
     "zod": "^3.22.4"

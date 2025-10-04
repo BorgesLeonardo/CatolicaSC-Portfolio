@@ -1,13 +1,15 @@
 import { prisma } from '../infrastructure/prisma';
 import { AppError } from '../utils/AppError';
+import { slugify, appendNumericSuffix } from '../utils/slug';
 
 export interface CreateProjectData {
   title: string;
   description: string;
   goalCents: number;
-  deadline: string;
+  deadline: string; // endsAt
   imageUrl?: string | undefined;
   categoryId: string;
+  minContributionCents?: number | undefined;
 }
 
 export interface UpdateProjectData {
@@ -45,6 +47,10 @@ export class ProjectsService {
       throw new AppError('Category not found or inactive', 400);
     }
 
+    // Generate unique slug based on title
+    const baseSlug = slugify(data.title);
+    const slug = await this.ensureUniqueSlug(baseSlug);
+
     const project = await prisma.project.create({
       data: {
         ownerId,
@@ -52,8 +58,13 @@ export class ProjectsService {
         description: data.description,
         goalCents: data.goalCents,
         deadline: new Date(data.deadline),
+        minContributionCents: data.minContributionCents ?? null,
         imageUrl: data.imageUrl || null,
         categoryId: data.categoryId,
+        slug,
+        status: 'PUBLISHED',
+        startsAt: new Date(),
+        version: 1,
       },
       include: {
         category: true,
@@ -141,6 +152,8 @@ export class ProjectsService {
   }
 
   async update(id: string, data: UpdateProjectData, userId: string) {
+    console.log('🔄 Updating project:', { id, data, userId });
+    
     await this.assertOwnerOrThrow(id, userId);
 
     // Valida categoria se fornecida
@@ -158,6 +171,8 @@ export class ProjectsService {
       updateData.deadline = new Date(updateData.deadline);
     }
 
+    console.log('📝 Update data prepared:', updateData);
+
     const updated = await prisma.project.update({ 
       where: { id }, 
       data: updateData,
@@ -169,6 +184,7 @@ export class ProjectsService {
       }
     });
 
+    console.log('✅ Project updated successfully:', updated.id);
     return updated;
   }
 
@@ -194,5 +210,19 @@ export class ProjectsService {
     if (found.ownerId !== userId) {
       throw new AppError('Forbidden', 403);
     }
+  }
+
+  private async ensureUniqueSlug(base: string): Promise<string> {
+    let attempt = 1;
+    let slugCandidate = base;
+    // Loop with a reasonable cap
+    while (attempt <= 20) {
+      const existing = await prisma.project.findUnique({ where: { slug: slugCandidate } });
+      if (!existing) return slugCandidate;
+      attempt += 1;
+      slugCandidate = appendNumericSuffix(base, attempt);
+    }
+    // Fallback to a cuid suffix
+    return `${base}-${Math.random().toString(36).slice(2, 8)}`;
   }
 }
