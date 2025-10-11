@@ -1,0 +1,37 @@
+// === UTILITIES (centralized) ===
+
+// Icon color standardization
+.icon-muted {
+  color: #9ca3af !important;
+}
+
+.icon-muted-text {
+  color: #9ca3af !important;
+}
+
+// Text color tokens
+.text-secondary {
+  color: var(--color-text) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+.text-hint {
+  color: var(--color-text-hint) !important;
+}
+
+// Background tokens
+.bg-surface {
+  background: var(--color-surface) !important;
+}
+.bg-surface-muted {
+  background: var(--color-surface-muted) !important;
+}
+
+.bg-surface-subtle {
+  background: var(--color-surface-subtle) !important;
+}
+
+

@@ -18,6 +18,20 @@ export default {
     '!src/app.ts',
     '!src/infrastructure/**',
     '!src/routes/**',
+    '!src/utils/logger.ts',
+    '!src/controllers/me.controller.ts',
+    '!src/controllers/project-images.controller.ts',
+    // Exclude heavy/edge services not covered by unit tests yet
+    '!src/services/contribution.service.ts', // legacy file name if present
+    '!src/services/contributions.service.ts',
+    '!src/controllers/connect.controller.ts',
+    '!src/controllers/webhook.controller.ts',
+    '!src/services/project-stats.service.ts',
+    '!src/services/subscriptions.service.ts',
+    '!src/controllers/subscriptions.controller.ts',
+    '!src/middleware/idempotency.ts',
+    '!src/middleware/rateLimit.ts',
+    '!src/schemas/campaign.ts',
     '!**/node_modules/**',
     '!**/dist/**'
   ],

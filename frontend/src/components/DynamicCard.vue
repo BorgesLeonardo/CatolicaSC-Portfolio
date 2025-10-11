@@ -130,7 +130,7 @@ function handleClick(event: MouseEvent) {
 
 <style scoped lang="scss">
 .dynamic-card {
-  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: var(--color-surface);
   --card-border: rgba(226, 232, 240, 0.5);
   --card-text: #0f172a;
   --card-radius: 16px;

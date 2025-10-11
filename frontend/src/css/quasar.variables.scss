@@ -9,7 +9,8 @@ $accent: #10b981; // Emerald green - success and growth
 $tertiary: #8b5cf6; // Purple - creativity and innovation
 
 // === SEMANTIC COLORS ===
-$positive: #1e40af; // Deep blue - success states
+// Align semantics to conventional meanings for better UX/UI
+$positive: #10b981; // Emerald green - success states
 $negative: #ef4444; // Red - error states
 $info: #3b82f6; // Blue - information
 $warning: #f59e0b; // Amber - warnings
@@ -19,7 +20,7 @@ $dark: #0f172a;
 $dark-page: #020617;
 
 // === EXTENDED PALETTE ===
-$success: #1e40af;
+$success: #10b981;
 $danger: #ef4444;
 $light-bg: #f8fafc;
 $card-shadow: rgba(30, 64, 175, 0.08);

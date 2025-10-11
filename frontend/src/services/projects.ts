@@ -20,11 +20,15 @@ export interface Project {
   title: string
   description?: string
   goalCents: number
+  fundingType?: 'DIRECT' | 'RECURRING'
   deadline: string
   imageUrl?: string           // Mantido para compatibilidade
   images?: ProjectImage[]     // Novo sistema de imagens
   raisedCents?: number        // Valor arrecadado em centavos
   supportersCount?: number    // Número de apoiadores únicos
+  subscriptionEnabled?: boolean
+  subscriptionPriceCents?: number
+  subscriptionInterval?: 'MONTH' | 'YEAR'
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -40,9 +44,14 @@ export interface Project {
 export interface CreateProjectData {
   title: string
   description?: string
-  goalCents: number
+  fundingType: 'DIRECT' | 'RECURRING'
+  goalCents?: number
   deadline: string
   imageUrl?: string
+  categoryId: string
+  subscriptionEnabled?: boolean
+  subscriptionPriceCents?: number
+  subscriptionInterval?: 'MONTH' | 'YEAR'
 }
 
 export interface UpdateProjectData {

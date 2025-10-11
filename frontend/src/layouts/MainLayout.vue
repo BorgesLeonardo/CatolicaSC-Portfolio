@@ -966,7 +966,7 @@ onUnmounted(() => {
 
 // === PAGE CONTAINER ===
 .page-container {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--gradient-subtle);
   min-height: calc(100vh - 70px);
 }
 

@@ -786,11 +786,11 @@ watch(selectedQuickFilters, () => {
   transition: background-color 0.2s ease;
   
   &:hover {
-    background: #f8fafc;
+    background: var(--color-surface-muted);
   }
   
   &:not(:last-child) {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-surface-subtle);
   }
 }
 

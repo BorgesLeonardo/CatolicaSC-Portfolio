@@ -63,7 +63,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 
     return res.json({ id: session.id })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    // noop: removed debug log
     
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ message: error.message })

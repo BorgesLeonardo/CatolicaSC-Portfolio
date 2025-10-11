@@ -1,5 +1,5 @@
 <template>
-  <q-page padding>
+  <q-page padding class="bg-surface">
     <div class="row items-center q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-3">
         <q-input v-model="filterQ" dense outlined placeholder="Buscar por título" debounce="400"/>
@@ -9,6 +9,28 @@
       </div>
       <div class="col-12 col-md-3">
         <ExportCsvButton :filename="'minhas-campanhas'" :rows="tableRows" :columns="csvColumns"/>
+      </div>
+      <div class="col-12 col-md-3">
+        <div class="row items-center q-col-gutter-sm q-mb-xs">
+          <div class="col-auto" v-if="connectStatus">
+            <q-chip :color="connectStatus.connected ? 'positive' : 'negative'" text-color="white" dense>
+              {{ connectStatus.connected ? 'Conectado ao Stripe' : 'Não conectado' }}
+            </q-chip>
+          </div>
+          <div class="col-auto" v-if="connectStatus">
+            <q-chip :color="connectStatus.payoutsEnabled ? 'positive' : 'warning'" text-color="white" dense>
+              {{ connectStatus.payoutsEnabled ? 'Saques habilitados' : 'Saques pendentes' }}
+            </q-chip>
+          </div>
+        </div>
+        <div class="row items-center q-col-gutter-sm">
+          <div class="col-auto">
+            <q-btn color="primary" label="Habilitar recebimentos" @click="connectOnboard" :disable="connectStatus?.chargesEnabled === true" />
+          </div>
+          <div class="col-auto">
+            <q-btn color="secondary" label="Abrir painel Stripe" @click="openConnectDashboard" :disable="!connectStatus?.connected" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -33,11 +55,14 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useAuth } from '@clerk/vue'
 import { setAuthToken } from 'src/utils/http'
+import { connectService } from 'src/services'
 import ExportCsvButton from 'src/components/dashboard/ExportCsvButton.vue'
 import ChartCard from 'src/components/dashboard/ChartCard.vue'
 import { useDashboardStore } from 'src/stores/dashboard'
+import { useProjectStats } from 'src/composables/useProjectStats'
 
-const { getToken } = useAuth()
+const { getToken, isSignedIn } = useAuth()
+const { updateStatsIfNeeded } = useProjectStats()
 const store = useDashboardStore()
 
 const filterQ = ref('')
@@ -82,8 +107,16 @@ const tableRows = computed(() => {
   }))
 })
 
-const topLabels = computed(() => store.campaignsMetrics?.topByRaised.map(t => t.title) || [])
+function normalizeLabel(label: string): string {
+  if (!label) return ''
+  const firstLine = String(label).split(/\r?\n/)[0]
+  const trimmed = firstLine.trim()
+  return trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed
+}
+const topLabels = computed(() => store.campaignsMetrics?.topByRaised.map(t => normalizeLabel(t.title)) || [])
 const topValues = computed(() => store.campaignsMetrics?.topByRaised.map(t => t.raised) || [])
+
+const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payoutsEnabled: boolean } | null>(null)
 
 async function load() {
   const token = await getToken.value?.()
@@ -95,7 +128,21 @@ async function load() {
   if (store.campaignsList) pagination.value.rowsNumber = store.campaignsList.total
 }
 
-onMounted(() => { void load() })
+onMounted(async () => {
+  await updateStatsIfNeeded()
+  if (isSignedIn.value) {
+    void load()
+    void loadConnectStatus()
+  } else {
+    const stop = watch(isSignedIn, (signed) => {
+      if (signed) {
+        void load()
+        void loadConnectStatus()
+        stop()
+      }
+    })
+  }
+})
 
 async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
   pagination.value.page = props.pagination.page
@@ -107,6 +154,27 @@ watch([filterQ, filterStatus], async () => {
   pagination.value.page = 1
   await load()
 })
+
+async function connectOnboard() {
+  const { url } = await connectService.onboard()
+  window.location.href = url
+}
+
+async function openConnectDashboard() {
+  const { url } = await connectService.dashboardLink()
+  window.location.href = url
+}
+
+async function loadConnectStatus() {
+  const token = await getToken.value?.()
+  setAuthToken(token || null)
+  try {
+    const res = await connectService.status()
+    connectStatus.value = res
+  } catch {
+    connectStatus.value = { connected: false, chargesEnabled: false, payoutsEnabled: false }
+  }
+}
 </script>
 
 

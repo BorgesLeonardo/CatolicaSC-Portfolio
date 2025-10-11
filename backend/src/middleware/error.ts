@@ -36,9 +36,13 @@ export const errorHandler = (
   }
 
   // Erro interno do servidor
-  console.error('Internal Server Error:', error);
-  return res.status(500).json({
+  // noop: removed debug log
+  const response: Record<string, unknown> = {
     error: 'InternalError',
     message: 'Erro interno do servidor',
-  });
+  };
+  if (process.env.NODE_ENV !== 'production') {
+    response.details = error.message;
+  }
+  return res.status(500).json(response);
 };

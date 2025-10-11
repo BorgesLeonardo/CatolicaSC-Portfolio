@@ -2,10 +2,10 @@
   <q-card class="q-pa-md kpi-card">
     <div class="row items-center justify-between">
       <div>
-        <div class="text-caption text-grey-7">{{ label }}</div>
+        <div class="text-caption text-muted">{{ label }}</div>
         <div class="text-h5 q-mt-xs">
           {{ formatted }}
-          <span v-if="suffix" class="text-caption text-grey-6">{{ suffix }}</span>
+          <span v-if="suffix" class="text-caption text-muted">{{ suffix }}</span>
         </div>
       </div>
       <q-icon v-if="icon" :name="icon" :color="iconColor" size="md"/>

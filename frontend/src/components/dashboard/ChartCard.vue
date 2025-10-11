@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Bar, Line, Pie } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -79,6 +79,10 @@ const chartData = computed(() => ({
     borderRadius: props.type === 'bar' ? 8 : 0
   }]
 }))
+
+// Force re-render when labels/series change to ensure immediate visual update
+const renderKey = ref(0)
+watch(() => [props.labels, props.series], () => { renderKey.value++ }, { deep: true })
 
 function formatCurrency(value: number, compact = false) {
   try {

@@ -73,10 +73,10 @@ describe('errorHandler', () => {
       
       expect(consoleSpy).toHaveBeenCalledWith('Internal Server Error:', genericError);
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
         error: 'InternalError',
         message: 'Erro interno do servidor',
-      });
+      }));
       
       consoleSpy.mockRestore();
     });
@@ -89,12 +89,29 @@ describe('errorHandler', () => {
       
       expect(consoleSpy).toHaveBeenCalledWith('Internal Server Error:', errorWithoutMessage);
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
         error: 'InternalError',
         message: 'Erro interno do servidor',
-      });
+      }));
       
       consoleSpy.mockRestore();
     });
   });
+
+  describe('Prisma unique constraint (P2002)', () => {
+    it('should return 409 Conflict with target details', () => {
+      const prismaError: any = new Error('Unique constraint failed')
+      prismaError.code = 'P2002'
+      prismaError.meta = { target: ['slug'] }
+
+      errorHandler(prismaError, mockRequest as Request, mockResponse as Response, mockNext)
+
+      expect(mockResponse.status).toHaveBeenCalledWith(409)
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Conflict',
+        message: 'Registro já existe com os mesmos dados únicos',
+        details: { target: ['slug'] },
+      })
+    })
+  })
 });

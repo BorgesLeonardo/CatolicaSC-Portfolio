@@ -44,8 +44,8 @@ async function fetchMyProjects() {
     
     // Check which projects have contributions
     await checkProjectsContributions()
-  } catch (error) {
-    console.error('Error fetching my projects:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao carregar suas campanhas'
@@ -64,8 +64,8 @@ async function checkProjectsContributions() {
       } else {
         projectsWithContributions.value.delete(project.id)
       }
-    } catch (error) {
-      console.error(`Error checking contributions for project ${project.id}:`, error)
+    } catch {
+      // noop: removed debug log
       // Em caso de erro, assumimos que tem contribuições para ser seguro
       projectsWithContributions.value.add(project.id)
     }
@@ -144,8 +144,8 @@ async function performDelete(project: Project) {
       message: 'Campanha excluída com sucesso',
       icon: 'check_circle'
     })
-  } catch (error) {
-    console.error('Error deleting project:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao excluir campanha. Tente novamente.',
@@ -165,39 +165,36 @@ function createNewProject() {
 }
 
 function getFirstImage(project: Project): string {
-  console.log('🔍 MyProjects - Getting image for:', project.title)
-  console.log('📸 Project images:', project.images)
-  console.log('📸 Project imageUrl:', project.imageUrl)
+  // noop: removed debug log
   
   // Priorizar novas imagens (array images) sobre imageUrl legacy
   if (project.images && project.images.length > 0) {
     const url = buildImageUrl(project.images[0].url)
-    console.log('✅ Using new images system, URL:', url)
+    // noop: removed debug log
     return url
   }
   
   // Fallback para imageUrl legacy
   if (project.imageUrl) {
     const url = buildImageUrl(project.imageUrl)
-    console.log('✅ Using legacy imageUrl, URL:', url)
+    // noop: removed debug log
     return url
   }
   
-  console.log('❌ No image found for project:', project.title)
+  // noop: removed debug log
   return ''
 }
 
 function handleProjectUpdated(updatedProject: Project) {
-  console.log('🔄 MyProjects - Updating project:', updatedProject.title)
-  console.log('🔄 Updated project images:', updatedProject.images)
+  // noop: removed debug log
   
   // Atualiza o projeto na lista
   const index = items.value.findIndex(p => p.id === updatedProject.id)
   if (index !== -1) {
     items.value[index] = updatedProject
-    console.log('✅ Project updated in list at index:', index)
+    // noop: removed debug log
   } else {
-    console.warn('⚠️ Project not found in list:', updatedProject.id)
+    // noop: removed debug log
   }
   
   // Fecha o dialog
@@ -215,7 +212,7 @@ onMounted(fetchMyProjects)
 </script>
 
 <template>
-  <div class="my-projects-page">
+  <div class="my-projects-page bg-surface">
     <!-- Header Section -->
     <div class="page-header q-pa-lg">
       <div class="container">
@@ -260,7 +257,7 @@ onMounted(fetchMyProjects)
         <!-- Not Signed In State -->
         <div v-else-if="!isSignedIn" class="empty-state">
           <div class="empty-content">
-            <q-icon name="account_circle" size="4rem" color="grey-4" />
+            <q-icon name="account_circle" size="4rem" class="icon-muted" />
             <h3 class="empty-title">Faça login para continuar</h3>
             <p class="empty-description">
               Você precisa estar autenticado para ver suas campanhas
@@ -271,7 +268,7 @@ onMounted(fetchMyProjects)
         <!-- Empty State -->
         <div v-else-if="items.length === 0 && !loading" class="empty-state">
           <div class="empty-content">
-            <q-icon name="campaign" size="4rem" color="grey-4" />
+            <q-icon name="campaign" size="4rem" class="icon-muted" />
             <h3 class="empty-title">Nenhuma campanha encontrada</h3>
             <p class="empty-description">
               Você ainda não criou nenhuma campanha. Que tal começar agora?
@@ -306,8 +303,8 @@ onMounted(fetchMyProjects)
                       class="card-hero-image"
                     />
                     <div v-else class="card-image-placeholder">
-                      <q-icon name="image" size="2.5rem" color="grey-4" />
-                      <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+                      <q-icon name="image" size="2.5rem" class="icon-muted" />
+                      <div class="text-caption text-hint q-mt-sm">Sem imagem</div>
                     </div>
                     
                     <!-- Hover overlay -->
@@ -335,7 +332,7 @@ onMounted(fetchMyProjects)
                   </div>
 
                   <q-badge 
-                    :color="isPast(project.deadline) ? 'grey-6' : 'green'" 
+                    :color="isPast(project.deadline) ? 'grey-6' : 'positive'" 
                     :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
                     class="q-mt-sm"
                   />
@@ -404,7 +401,7 @@ onMounted(fetchMyProjects)
 <style scoped lang="scss">
 .my-projects-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--gradient-subtle);
 }
 
 .page-header {
@@ -504,7 +501,7 @@ onMounted(fetchMyProjects)
   position: relative;
   height: 220px;
   overflow: hidden;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   transition: all var(--transition-base);
   
   &:hover {
@@ -527,7 +524,7 @@ onMounted(fetchMyProjects)
 
 .card-image-placeholder {
   height: 220px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -535,7 +532,7 @@ onMounted(fetchMyProjects)
   transition: all var(--transition-base);
   
   &:hover {
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    background: var(--gradient-subtle);
     transform: scale(1.02);
   }
 }
@@ -563,13 +560,13 @@ onMounted(fetchMyProjects)
 .campaign-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   margin: 0 0 1rem 0;
   cursor: pointer;
   transition: color 0.2s ease;
   
   &:hover {
-    color: #1e40af;
+    color: var(--color-primary);
   }
 }
 
@@ -584,7 +581,7 @@ onMounted(fetchMyProjects)
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--color-text-muted);
     
     .q-icon {
       color: #9ca3af;

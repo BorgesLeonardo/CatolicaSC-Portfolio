@@ -64,11 +64,18 @@ describe('ProjectsService', () => {
           description: validProjectData.description,
           goalCents: validProjectData.goalCents,
           deadline: new Date(validProjectData.deadline),
+          minContributionCents: null,
           imageUrl: validProjectData.imageUrl,
+          videoUrl: null,
           categoryId: validProjectData.categoryId,
+          slug: expect.any(String),
+          status: 'PUBLISHED',
+          startsAt: expect.any(Date),
+          version: 1,
         },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -94,11 +101,18 @@ describe('ProjectsService', () => {
           description: projectDataWithoutImage.description,
           goalCents: projectDataWithoutImage.goalCents,
           deadline: new Date(projectDataWithoutImage.deadline),
+          minContributionCents: null,
           imageUrl: null,
+          videoUrl: null,
           categoryId: projectDataWithoutImage.categoryId,
+          slug: expect.any(String),
+          status: 'PUBLISHED',
+          startsAt: expect.any(Date),
+          version: 1,
         },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -141,7 +155,8 @@ describe('ProjectsService', () => {
         skip: 0,
         take: 10,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({
@@ -175,13 +190,14 @@ describe('ProjectsService', () => {
           title: { contains: 'test', mode: 'insensitive' },
           ownerId: 'user123',
           categoryId: 'cat1',
-          deadline: { gte: expect.any(Date) }
+          deadline: expect.any(Object),
         },
         orderBy: { createdAt: 'desc' },
         skip: 5, // (page - 1) * pageSize
         take: 5,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({
@@ -209,7 +225,8 @@ describe('ProjectsService', () => {
         skip: 0, // Clamped to 1, so (1-1)*10 = 0
         take: 50, // Clamped to 50
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
     });
@@ -231,7 +248,8 @@ describe('ProjectsService', () => {
       expect(prisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -274,7 +292,8 @@ describe('ProjectsService', () => {
         where: { ownerId: 'user123', deletedAt: null },
         orderBy: { createdAt: 'desc' },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({ items: mockProjects });
@@ -300,7 +319,8 @@ describe('ProjectsService', () => {
         where: { id: 'proj1' },
         data: updateData,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -349,7 +369,8 @@ describe('ProjectsService', () => {
           deadline: new Date('2024-12-31T23:59:59Z')
         },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
     });

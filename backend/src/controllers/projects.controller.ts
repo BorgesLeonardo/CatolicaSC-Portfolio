@@ -26,6 +26,7 @@ export class ProjectsController {
     goalCents: z.number().int().positive('Meta deve ser um valor positivo').optional(),
     deadline: z.string().datetime('Data limite deve ser uma data válida').optional(),
     imageUrl: z.string().optional(),
+    videoUrl: z.string().url('Informe uma URL de vídeo válida').optional(),
     categoryId: z.string().cuid('Categoria deve ser válida').optional(),
   }).refine((b) => Object.values(b).some((v) => v !== undefined), {
     message: 'Envie ao menos um campo para atualização',
@@ -44,9 +45,18 @@ export class ProjectsController {
       const ownerId: string = (req as any).authUserId;
       const data = parse.data as any;
 
-      // Additional server-side range enforcement
-      if (data.goalCents < 1000 || data.goalCents > 100_000_000) {
-        throw new AppError('ValidationError', 422, { fieldErrors: { goalCents: ['Meta fora da faixa permitida'] } });
+      // Additional server-side range enforcement by funding type
+      if (data.fundingType === 'DIRECT') {
+        if (typeof data.goalCents !== 'number' || data.goalCents < 1000 || data.goalCents > 100_000_000) {
+          throw new AppError('ValidationError', 422, { fieldErrors: { goalCents: ['Meta fora da faixa permitida'] } });
+        }
+        if (data.subscriptionEnabled) {
+          throw new AppError('ValidationError', 422, { fieldErrors: { subscriptionEnabled: ['Assinatura não é permitida para campanhas de pagamento direto'] } });
+        }
+      } else if (data.fundingType === 'RECURRING') {
+        if (!data.subscriptionPriceCents || !data.subscriptionInterval) {
+          throw new AppError('ValidationError', 422, { fieldErrors: { subscriptionPriceCents: ['Informe o preço da assinatura'], subscriptionInterval: ['Informe o intervalo da assinatura'] } });
+        }
       }
       if (typeof data.minContributionCents === 'number' && data.minContributionCents < 500) {
         throw new AppError('ValidationError', 422, { fieldErrors: { minContributionCents: ['Mínimo de contribuição deve ser pelo menos R$ 5,00'] } });
@@ -56,10 +66,14 @@ export class ProjectsController {
       const project = await this.service.create({
         title: data.title.trim(),
         description: sanitizedDescription,
-        goalCents: data.goalCents,
+        goalCents: data.fundingType === 'DIRECT' ? data.goalCents : undefined,
+        fundingType: data.fundingType,
         deadline: data.endsAt.toISOString(),
         categoryId: data.categoryId,
         minContributionCents: data.minContributionCents,
+        subscriptionEnabled: data.fundingType === 'RECURRING' ? true : false,
+        subscriptionPriceCents: data.fundingType === 'RECURRING' ? (data as any).subscriptionPriceCents : undefined,
+        subscriptionInterval: data.fundingType === 'RECURRING' ? (data as any).subscriptionInterval : undefined,
       }, ownerId);
       
       return res.status(201).json(project);
@@ -119,33 +133,30 @@ export class ProjectsController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log('📨 Update request received:', { 
-        params: req.params, 
-        body: req.body,
-        authUserId: (req as any).authUserId 
-      });
+      // noop: removed debug log
+      // removed debug payload
 
       const params = this.idParamSchema.safeParse(req.params);
       if (!params.success) {
-        console.error('❌ Params validation failed:', params.error.flatten());
+        // noop: removed debug log
         throw new AppError('ValidationError', 400, params.error.flatten());
       }
 
       const body = this.updateProjectSchema.safeParse(req.body);
       if (!body.success) {
-        console.error('❌ Body validation failed:', body.error.flatten());
+        // noop: removed debug log
         throw new AppError('ValidationError', 400, body.error.flatten());
       }
 
-      console.log('✅ Validation passed:', { params: params.data, body: body.data });
+      // noop: removed debug log
 
       const authUserId: string = (req as any).authUserId;
       const updated = await this.service.update(params.data.id, body.data, authUserId);
       
-      console.log('✅ Update completed successfully');
+      // noop: removed debug log
       return res.json(updated);
     } catch (error) {
-      console.error('❌ Update error:', error);
+      // noop: removed debug log
       return next(error);
     }
   }
@@ -175,7 +186,7 @@ export class ProjectsController {
         timestamp: new Date().toISOString()
       })
     } catch (error) {
-      console.error('❌ Erro ao atualizar estatísticas:', error)
+      // noop: removed debug log
       return next(error)
     }
   }

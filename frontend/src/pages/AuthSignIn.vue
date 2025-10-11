@@ -27,7 +27,7 @@ watch([isLoaded, isSignedIn], ([loaded, signed]) => {
 </script>
 
 <template>
-  <div class="q-pa-xl flex flex-center">
+  <div class="q-pa-xl flex flex-center bg-surface">
     <SignIn />
   </div>
   

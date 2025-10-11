@@ -38,9 +38,14 @@ export interface Project {
   goalCents: number;
   deadline: string;
   imageUrl?: string;           // Mantido para compatibilidade
+  videoUrl?: string;           // URL de vídeo opcional
   images?: ProjectImage[];     // Novo sistema de imagens
   raisedCents?: number;        // Valor arrecadado em centavos
   supportersCount?: number;    // Número de apoiadores únicos
+  // Assinaturas (recorrente)
+  subscriptionEnabled?: boolean;
+  subscriptionPriceCents?: number;
+  subscriptionInterval?: 'MONTH' | 'YEAR';
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -57,6 +62,11 @@ export interface Comment {
   id: string;
   projectId: string;
   authorId: string;
+  author?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
   content: string;
   createdAt: string;
   updatedAt: string;

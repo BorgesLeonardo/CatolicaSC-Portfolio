@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prisma';
 import { AppError } from '../utils/AppError';
+import { clerkClient } from '@clerk/express';
 
 export interface CreateCommentData {
   content: string;
@@ -15,11 +16,25 @@ export class CommentsService {
       throw new AppError('Project not found', 404);
     }
 
-    // Garante que o usuário existe
+    // Garante que o usuário existe e sincroniza nome/email do Clerk
+    let name: string | undefined;
+    let email: string | undefined;
+    try {
+      const u = await clerkClient.users.getUser(authorId);
+      const fullName = (u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ')).trim();
+      name = fullName || undefined;
+      email = (u.emailAddresses && u.emailAddresses[0]?.emailAddress) || undefined;
+    } catch {
+      // Ignora falhas ao consultar Clerk; segue apenas com o ID
+    }
+
     await prisma.user.upsert({ 
       where: { id: authorId }, 
-      update: {}, 
-      create: { id: authorId } 
+      update: {
+        ...(name ? { name } : {}),
+        ...(email ? { email } : {}),
+      }, 
+      create: { id: authorId, name: name ?? null, email: email ?? null } 
     });
 
     const comment = await prisma.comment.create({

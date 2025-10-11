@@ -1,5 +1,5 @@
 <template>
-  <q-page padding>
+  <q-page padding class="bg-surface">
     <div class="row items-center q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-3">
         <q-input v-model="filterQ" dense outlined placeholder="Buscar campanha" debounce="400"/>
@@ -36,8 +36,10 @@ import { setAuthToken } from 'src/utils/http'
 import ExportCsvButton from 'src/components/dashboard/ExportCsvButton.vue'
 import ChartCard from 'src/components/dashboard/ChartCard.vue'
 import { useDashboardStore } from 'src/stores/dashboard'
+import { useProjectStats } from 'src/composables/useProjectStats'
 
-const { getToken } = useAuth()
+const { getToken, isSignedIn } = useAuth()
+const { updateStatsIfNeeded } = useProjectStats()
 const store = useDashboardStore()
 
 const filterQ = ref('')
@@ -90,7 +92,19 @@ async function load() {
   if (store.myContributions) pagination.value.rowsNumber = store.myContributions.total
 }
 
-onMounted(() => { void load() })
+onMounted(async () => {
+  await updateStatsIfNeeded()
+  if (isSignedIn.value) {
+    void load()
+  } else {
+    const stop = watch(isSignedIn, (signed) => {
+      if (signed) {
+        void load()
+        stop()
+      }
+    })
+  }
+})
 
 async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
   pagination.value.page = props.pagination.page

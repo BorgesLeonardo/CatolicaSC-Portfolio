@@ -1,5 +1,5 @@
 <template>
-  <q-page class="dashboard-page">
+  <q-page class="dashboard-page bg-surface">
     <!-- Dashboard Header -->
     <section class="dashboard-header q-py-lg bg-gradient-to-r">
       <div class="container">
@@ -12,17 +12,7 @@
               Painel administrativo completo com métricas, análises e controles avançados
             </p>
           </div>
-          <div class="header-actions fade-in-up stagger-animation">
-            <q-btn 
-              unelevated
-              color="primary"
-              icon="refresh"
-              label="Atualizar Dados"
-              @click="refreshData"
-              :loading="refreshing"
-              class="action-btn"
-            />
-          </div>
+          
         </div>
       </div>
     </section>
@@ -55,7 +45,7 @@
             class="analytics-card"
           >
             <ChartCard type="bar" :labels="tsBarLabels" :series="tsValues" title="" :currency="true"/>
-            <div class="q-mt-sm text-caption text-grey-7">Média mensal: {{ avgMonthlyFormatted }}</div>
+            <div class="q-mt-sm text-caption text-muted">Média mensal: {{ avgMonthlyFormatted }}</div>
           </DynamicCard>
 
           <DynamicCard
@@ -72,9 +62,44 @@
             <ChartCard type="pie" :labels="catLabels" :series="catValues" title="" :currency="true" :show-legend="true"/>
           </DynamicCard>
 
+          <!-- Recebimentos (Stripe Connect) -->
+          <DynamicCard
+            variant="default"
+            size="lg"
+            :elevated="true"
+            :animated="true"
+            title="Recebimentos"
+            subtitle="Conecte sua conta e gerencie saques"
+            icon="account_balance"
+            icon-color="secondary"
+          >
+            <div class="q-pa-md">
+              <div class="row items-center q-col-gutter-sm q-mb-sm">
+                <div class="col-auto" v-if="connectStatus">
+                  <q-chip :color="connectStatus.connected ? 'positive' : 'negative'" text-color="white" dense>
+                    {{ connectStatus.connected ? 'Conectado ao Stripe' : 'Não conectado' }}
+                  </q-chip>
+                </div>
+                <div class="col-auto" v-if="connectStatus">
+                  <q-chip :color="connectStatus.payoutsEnabled ? 'positive' : 'warning'" text-color="white" dense>
+                    {{ connectStatus.payoutsEnabled ? 'Saques habilitados' : 'Saques pendentes' }}
+                  </q-chip>
+                </div>
+              </div>
+              <div class="row items-center q-col-gutter-sm">
+                <div class="col-auto">
+                  <q-btn color="primary" label="Habilitar recebimentos" @click="connectOnboard" :disable="connectStatus?.chargesEnabled === true" />
+                </div>
+                <div class="col-auto">
+                  <q-btn color="secondary" label="Abrir painel Stripe" @click="openConnectDashboard" :disable="!connectStatus?.connected" />
+                </div>
+              </div>
+            </div>
+          </DynamicCard>
+
           <!-- System Status Card -->
           
-
+          
           <!-- Quick Actions Card -->
           
         </div>
@@ -128,8 +153,12 @@ import KpiCard from 'src/components/dashboard/KpiCard.vue'
 import ChartCard from 'src/components/dashboard/ChartCard.vue'
 import { useDashboardStore } from 'src/stores/dashboard'
 import ExportCsvButton from 'src/components/dashboard/ExportCsvButton.vue'
+import { connectService } from 'src/services'
+import { useProjectStats } from 'src/composables/useProjectStats'
+import { useRealtimeDashboard } from 'src/composables/useRealtime'
 
 const refreshing = ref(false)
+const { updateStatsIfNeeded } = useProjectStats()
 const { getToken, isSignedIn } = useAuth()
 const store = useDashboardStore()
 
@@ -144,7 +173,13 @@ const tsBarLabels = computed(() => store.timeseries.map(p => {
 const tsValues = computed(() => store.timeseries.map(p => p.amount))
 const catLabels = computed(() => store.campaignsMetrics?.byCategory.map(c => c.category) || [])
 const catValues = computed(() => store.campaignsMetrics?.byCategory.map(c => c.raised) || [])
-const topLabels = computed(() => store.campaignsMetrics?.topByRaised.map(t => t.title) || [])
+function normalizeLabel(label: string): string {
+  if (!label) return ''
+  const firstLine = String(label).split(/\r?\n/)[0]
+  const trimmed = firstLine.trim()
+  return trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed
+}
+const topLabels = computed(() => store.campaignsMetrics?.topByRaised.map(t => normalizeLabel(t.title)) || [])
 const topValues = computed(() => store.campaignsMetrics?.topByRaised.map(t => t.raised) || [])
 
 // Table state
@@ -203,7 +238,34 @@ async function refreshData() {
   refreshing.value = false
 }
 
-onMounted(() => { void refreshData() })
+onMounted(async () => {
+  await updateStatsIfNeeded()
+  if (isSignedIn.value) {
+    void refreshData()
+    void loadConnectStatus()
+  } else {
+    const stop = watch(isSignedIn, (signed) => {
+      if (signed) {
+        void refreshData()
+        void loadConnectStatus()
+        stop()
+      }
+    })
+  }
+})
+
+// Realtime updates: subscribe when signed in
+if (isSignedIn.value) {
+  // Clerk's userId is available in token claims on backend; pass undefined to subscribe globally or wire later if needed
+  useRealtimeDashboard()
+} else {
+  const stopRt = watch(isSignedIn, (signed) => {
+    if (signed) {
+      useRealtimeDashboard()
+      stopRt()
+    }
+  })
+}
 
 async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
   pagination.value.page = props.pagination.page
@@ -228,17 +290,46 @@ const avgMonthlyFormatted = computed(() => {
   const avg = values.reduce((a, b) => a + b, 0) / values.length
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(avg)
 })
+
+const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payoutsEnabled: boolean } | null>(null)
+
+async function connectOnboard() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  const { url } = await connectService.onboard()
+  window.location.href = url
+}
+
+async function openConnectDashboard() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  const { url } = await connectService.dashboardLink()
+  window.location.href = url
+}
+
+async function loadConnectStatus() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  try {
+    const res = await connectService.status()
+    connectStatus.value = res
+  } catch {
+    connectStatus.value = { connected: false, chargesEnabled: false, payoutsEnabled: false }
+  }
+}
+
+onMounted(() => { void loadConnectStatus() })
 </script>
 
 <style scoped lang="scss">
 .dashboard-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--color-surface);
 }
 
 // === HEADER SECTION ===
 .dashboard-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
+  background: var(--gradient-hero);
   color: white;
   position: relative;
   overflow: hidden;
@@ -317,7 +408,7 @@ const avgMonthlyFormatted = computed(() => {
 
 .chart-text {
   margin-top: 16px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -339,12 +430,12 @@ const avgMonthlyFormatted = computed(() => {
 .metric-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-strong);
 }
 
 .metric-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin-top: 4px;
 }
 
@@ -378,12 +469,12 @@ const avgMonthlyFormatted = computed(() => {
 .stat-number {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-strong);
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 // System Card
@@ -412,15 +503,15 @@ const avgMonthlyFormatted = computed(() => {
   border-radius: 50%;
   
   &--online {
-    background: #1e40af;
+    background: var(--color-positive);
   }
   
   &--warning {
-    background: #f59e0b;
+    background: var(--color-warning);
   }
   
   &--error {
-    background: #ef4444;
+    background: var(--color-negative);
   }
 }
 

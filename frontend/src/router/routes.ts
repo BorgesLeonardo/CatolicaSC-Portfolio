@@ -13,6 +13,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'dashboard/contributions', component: () => import('pages/DashboardContributions.vue') },
       { path: 'projects/new', component: () => import('pages/NewProject.vue') },
       { path: 'projects/:id', component: () => import('pages/ProjectDetail.vue') },
+      { path: 'contrib/success', component: () => import('pages/ContribSuccess.vue') },
+      { path: 'contrib/cancel', component: () => import('pages/ContribCancel.vue') },
+      { path: 'subscribe/success', component: () => import('pages/SubscribeSuccess.vue') },
+      { path: 'subscribe/cancel', component: () => import('pages/SubscribeCancel.vue') },
     ],
   },
   {

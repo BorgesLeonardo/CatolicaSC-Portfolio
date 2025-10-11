@@ -6,7 +6,7 @@
     transition-show="slide-up"
     transition-hide="slide-down"
   >
-    <q-card class="edit-project-dialog">
+    <q-card class="edit-project-dialog bg-surface">
       <!-- Header -->
       <q-card-section class="dialog-header">
         <div class="header-content">
@@ -64,7 +64,7 @@
                 
                 <!-- Placeholder when no image -->
                 <div v-else class="image-placeholder">
-                  <q-icon name="add_photo_alternate" size="3rem" color="grey-5" />
+                  <q-icon name="add_photo_alternate" size="3rem" class="icon-muted" />
                   <p class="placeholder-text">Nenhuma imagem selecionada</p>
                 </div>
                 
@@ -236,7 +236,7 @@
       <q-card-actions class="dialog-actions">
         <div class="actions-container">
           <div class="action-info">
-            <q-icon name="edit" color="grey-6" />
+            <q-icon name="edit" class="icon-muted" />
             <span class="info-text">Última edição: {{ formatLastUpdate }}</span>
           </div>
           
@@ -368,13 +368,7 @@ const isFormValid = computed(() => {
   
   // Debug logs
   if (!valid) {
-    console.log('❌ Form validation failed:', {
-      title: formData.value.title.trim().length > 0,
-      goalCents: formData.value.goalCents > 0,
-      deadline: !!formData.value.deadline,
-      categoryId: !!formData.value.categoryId,
-      deadlineFuture: formData.value.deadline ? new Date(formData.value.deadline) > new Date() : false
-    })
+    // noop: removed debug log
   }
   
   return valid
@@ -396,8 +390,8 @@ async function loadCategories() {
   loadingCategories.value = true
   try {
     categories.value = await categoriesService.getAll()
-  } catch (error) {
-    console.error('Error loading categories:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao carregar categorias',
@@ -467,7 +461,7 @@ async function handleImageUpload(event: Event) {
   uploadingImages.value = true
   
   try {
-    console.log('📤 Uploading image:', file.name)
+    // noop: removed debug log
     
     // Configurar token
     const token = await getToken.value?.()
@@ -485,7 +479,7 @@ async function handleImageUpload(event: Event) {
       [file]
     )
     
-    console.log('✅ Image uploaded:', response.images)
+    // noop: removed debug log
     
     // Substituir a imagem atual (sempre apenas 1)
     currentImages.value = response.images
@@ -496,7 +490,7 @@ async function handleImageUpload(event: Event) {
     })
     
   } catch (error: unknown) {
-    console.error('❌ Upload error:', error)
+    // noop: removed debug log
     
     let errorMessage = 'Erro ao fazer upload da imagem'
     if (error && typeof error === 'object' && 'response' in error) {
@@ -531,8 +525,8 @@ async function removeExistingImages() {
   for (const image of currentImages.value) {
     try {
       await projectImagesService.deleteImage(props.project.id, image.id)
-    } catch (error) {
-      console.warn('⚠️ Could not remove existing image:', error)
+    } catch {
+      // noop: removed debug log
     }
   }
 }
@@ -541,7 +535,7 @@ async function removeImage(imageId: string) {
   if (!props.project) return
   
   try {
-    console.log('🗑️ Removing image:', imageId)
+    // noop: removed debug log
     
     // Configurar token
     const token = await getToken.value?.()
@@ -560,7 +554,7 @@ async function removeImage(imageId: string) {
     })
     
   } catch (error: unknown) {
-    console.error('❌ Remove image error:', error)
+    // noop: removed debug log
     
     let errorMessage = 'Erro ao remover a imagem'
     if (error && typeof error === 'object' && 'response' in error) {
@@ -579,7 +573,7 @@ async function removeImage(imageId: string) {
 
 async function handleSubmit() {
   if (!props.project || !isFormValid.value) {
-    console.warn('⚠️ Form validation failed or project not available')
+    // noop: removed debug log
     return
   }
   
@@ -600,8 +594,7 @@ async function handleSubmit() {
       : undefined
   }
   
-  console.log('📤 Sending update data:', updateData)
-  console.log('📤 Project ID:', props.project.id)
+  // noop: removed debug log
   
   try {
     // Configurar token
@@ -611,7 +604,7 @@ async function handleSubmit() {
     }
     
     const updatedProject = await projectsService.update(props.project.id, updateData)
-    console.log('✅ Update successful:', updatedProject)
+    // noop: removed debug log
     
     // Buscar as imagens atualizadas para incluir no projeto
     try {
@@ -620,11 +613,11 @@ async function handleSubmit() {
         ...updatedProject,
         images: imagesResponse.images
       }
-      console.log('✅ Project with updated images:', projectWithImages)
+      // noop: removed debug log
       
       emit('projectUpdated', projectWithImages)
-    } catch (imageError) {
-      console.warn('⚠️ Could not fetch updated images, using project without images:', imageError)
+    } catch {
+      // noop: removed debug log
       emit('projectUpdated', updatedProject)
     }
     
@@ -637,7 +630,7 @@ async function handleSubmit() {
     closeDialog()
     
   } catch (error: unknown) {
-    console.error('❌ Update error:', error)
+    // noop: removed debug log
     
     let errorMessage = 'Erro ao atualizar a campanha. Tente novamente.'
     
@@ -653,7 +646,7 @@ async function handleSubmit() {
         } 
       }
       
-      console.error('❌ Axios error details:', axiosError.response)
+      // noop: removed debug log
       
       if (axiosError.response?.data?.message) {
         errorMessage = axiosError.response.data.message
@@ -794,7 +787,7 @@ onMounted(() => {
   color: #0f172a;
   margin: 0 0 24px 0;
   padding-bottom: 12px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 /* IMAGE UPLOAD */
@@ -846,9 +839,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 48px 24px;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--color-border);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   
   .placeholder-text {
     color: #64748b;
