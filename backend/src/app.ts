@@ -105,9 +105,22 @@ if (process.env.ENFORCE_HTTPS === 'true') {
   app.use((req, res, next) => {
     const proto = req.header('x-forwarded-proto');
     if (proto && proto !== 'https' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const host = req.headers.host;
-      const url = `https://${host}${req.originalUrl}`;
-      return res.redirect(308, url);
+      const canonicalBase = (process.env.CANONICAL_BASE_URL || process.env.APP_BASE_URL || '').trim().replace(/\/+$/, '');
+      if (canonicalBase && canonicalBase.startsWith('https://')) {
+        // Normalize the original URL to a safe, same-origin path
+        let requestPath = req.originalUrl || '/';
+        // Disallow protocol-relative (//host) and absolute (scheme:) forms
+        if (requestPath.startsWith('//') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(requestPath)) {
+          requestPath = '/';
+        }
+        if (!requestPath.startsWith('/')) {
+          requestPath = `/${requestPath}`;
+        }
+        const targetUrl = `${canonicalBase}${requestPath}`;
+        return res.redirect(308, targetUrl);
+      }
+      // No canonical HTTPS base configured; avoid redirecting with user-controlled host
+      return next();
     }
     return next();
   });
