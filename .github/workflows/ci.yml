@@ -121,7 +121,9 @@ jobs:
       - name: Preparar tsconfig do Quasar (frontend)
         working-directory: frontend
         run: |
-          npm ci
+          # Workaround npm optional deps bug affecting rollup
+          rm -rf node_modules package-lock.json
+          npm install
           # garante que .quasar/tsconfig.json exista
           [ -f .quasar/tsconfig.json ] || npx quasar prepare
 
