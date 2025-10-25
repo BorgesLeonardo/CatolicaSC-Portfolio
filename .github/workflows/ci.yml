@@ -130,7 +130,6 @@ jobs:
       - name: SonarCloud Scan
         if: ${{ env.SONAR_TOKEN }}
         id: sonar-scan
-        continue-on-error: true
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -140,16 +139,7 @@ jobs:
             -Dsonar.projectKey=BorgesLeonardo_CatolicaSC-Portfolio
             -Dsonar.organization=catolicasc-portfolio
             -Dsonar.typescript.ignoreParseErrors=true
-
-      - name: Quality Gate (SonarCloud)
-        if: ${{ env.SONAR_TOKEN && steps.sonar-scan.outcome == 'success' }}
-        continue-on-error: true
-        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-        with:
-          pollingTimeoutSec: 300
+            -Dsonar.qualitygate.wait=true
 
       - name: Quality Gate Status
         if: ${{ env.SONAR_TOKEN }}
