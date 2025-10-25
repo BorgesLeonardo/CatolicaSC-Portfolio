@@ -70,11 +70,24 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="stats-section">
+    <section class="stats-section bg-surface">
       <div class="container">
+        <!-- Period Selector -->
+        <div class="row items-center justify-end q-mb-md">
+          <q-btn-toggle
+            v-model="period"
+            :options="periodOptions"
+            rounded
+            unelevated
+            color="primary"
+            toggle-color="primary"
+            text-color="primary"
+            size="sm"
+          />
+        </div>
         <div class="stats-grid">
-          <div class="stat-card modern-card--glass fade-in-up stagger-animation">
-            <div class="stat-icon">
+          <div class="stat-card modern-card hover-lift fade-in-up stagger-animation">
+            <div class="stat-badge">
               <q-icon name="campaign" size="xl" color="primary" />
             </div>
             <div class="stat-content">
@@ -84,8 +97,8 @@
             </div>
           </div>
           
-          <div class="stat-card modern-card--glass fade-in-up stagger-animation">
-            <div class="stat-icon">
+          <div class="stat-card modern-card hover-lift fade-in-up stagger-animation">
+            <div class="stat-badge">
               <q-icon name="monetization_on" size="xl" color="secondary" />
             </div>
             <div class="stat-content">
@@ -95,8 +108,8 @@
             </div>
           </div>
           
-          <div class="stat-card modern-card--glass fade-in-up stagger-animation">
-            <div class="stat-icon">
+          <div class="stat-card modern-card hover-lift fade-in-up stagger-animation">
+            <div class="stat-badge">
               <q-icon name="group" size="xl" color="accent" />
             </div>
             <div class="stat-content">
@@ -106,12 +119,12 @@
             </div>
           </div>
           
-          <div class="stat-card modern-card--glass fade-in-up stagger-animation">
-            <div class="stat-icon">
+          <div class="stat-card modern-card hover-lift fade-in-up stagger-animation">
+            <div class="stat-badge">
               <q-icon name="trending_up" size="xl" color="positive" />
             </div>
             <div class="stat-content">
-              <div class="stat-number">85%</div>
+              <div class="stat-number">{{ stats.successRatePct }}%</div>
               <div class="stat-label">Taxa de Sucesso</div>
               <div class="stat-description">Projetos que atingem suas metas</div>
             </div>
@@ -121,7 +134,7 @@
     </section>
 
     <!-- Featured Campaigns -->
-    <section class="q-py-xl bg-grey-1">
+    <section class="q-py-xl bg-surface">
       <div class="container">
         <div class="text-center q-mb-xl">
           <h2 class="section-title">Campanhas em Destaque</h2>
@@ -170,7 +183,7 @@
     </section>
 
     <!-- How It Works -->
-    <section class="how-it-works-section q-py-xl bg-white">
+    <section class="how-it-works-section q-py-xl bg-surface">
       <div class="container">
         <div class="text-center q-mb-xl">
           <div class="section-badge fade-in-up">
@@ -179,31 +192,49 @@
           </div>
           <h2 class="section-title fade-in-up">Como Funciona</h2>
           <p class="section-subtitle fade-in-up">
-            Em apenas 3 passos simples, você pode começar sua campanha e transformar suas ideias em realidade
+            Em 4 passos simples, você começa sua campanha e transforma ideias em realidade
           </p>
         </div>
 
         <div class="steps-container">
           <div class="step-item fade-in-up stagger-animation">
-            <div class="step-card modern-card hover-lift">
+            <div class="step-card modern-card hover-lift step-card--connect">
+              <div class="step-icon">
+                <q-icon name="account_balance_wallet" size="2xl" color="accent" />
+              </div>
+              <h3 class="step-title">Conecte sua Conta</h3>
+              <p class="step-description">
+                Conecte sua conta para receber pagamentos com segurança via Stripe. Verificação rápida e taxas transparentes.
+              </p>
+              <ul class="step-features">
+                <li>Stripe Connect</li>
+                <li>Saque para sua conta</li>
+                <li>Conformidade e segurança</li>
+              </ul>
+            </div>
+            <div class="step-connector"></div>
+          </div>
+
+          <div class="step-item fade-in-up stagger-animation">
+            <div class="step-card modern-card hover-lift step-card--create">
               <div class="step-icon">
                 <q-icon name="create" size="2xl" color="primary" />
               </div>
               <h3 class="step-title">Crie sua Campanha</h3>
               <p class="step-description">
-                Conte sua história de forma envolvente, defina sua meta financeira e adicione imagens atrativas para engajar seus apoiadores.
+                Conte sua história de forma envolvente, defina sua meta financeira e adicione imagens e vídeos atrativos para engajar seus apoiadores.
               </p>
               <ul class="step-features">
                 <li>Editor intuitivo</li>
                 <li>Templates profissionais</li>
-                <li>Upload de imagens</li>
+                <li>Upload de imagens e vídeos</li>
               </ul>
             </div>
             <div class="step-connector"></div>
           </div>
           
           <div class="step-item fade-in-up stagger-animation">
-            <div class="step-card modern-card hover-lift">
+            <div class="step-card modern-card hover-lift step-card--share">
               <div class="step-icon">
                 <q-icon name="share" size="2xl" color="secondary" />
               </div>
@@ -221,9 +252,9 @@
           </div>
           
           <div class="step-item fade-in-up stagger-animation">
-            <div class="step-card modern-card hover-lift">
+            <div class="step-card modern-card hover-lift step-card--receive">
               <div class="step-icon">
-                <q-icon name="monetization_on" size="2xl" color="accent" />
+                <q-icon name="payments" size="2xl" color="positive" />
               </div>
               <h3 class="step-title">Receba Apoio</h3>
               <p class="step-description">
@@ -241,7 +272,7 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section class="testimonials-section q-py-xl bg-grey-1">
+    <section class="testimonials-section q-py-xl bg-surface">
       <div class="container">
         <div class="text-center q-mb-xl">
           <div class="section-badge fade-in-up">
@@ -389,7 +420,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { http } from 'src/utils/http'
 import { formatMoneyBRL } from 'src/utils/format'
@@ -399,18 +430,28 @@ import ModernLoading from 'src/components/ModernLoading.vue'
 import DynamicGrid from 'src/components/DynamicGrid.vue'
 import ToastNotification from 'src/components/ToastNotification.vue'
 import { useProjectStats } from 'src/composables/useProjectStats'
+ 
 
 const router = useRouter()
 const loading = ref(false)
 const featuredProjects = ref<Project[]>([])
 const { updateStatsIfNeeded } = useProjectStats()
 
-// Stats mockados - em produção viriam da API
+// Estatísticas dinâmicas da plataforma (carregadas da API)
 const stats = ref({
-  totalProjects: 1250,
-  totalRaised: 2840000, // em centavos
-  totalBackers: 15670
+  totalProjects: 0,
+  totalRaised: 0, // em centavos
+  totalBackers: 0,
+  successRatePct: 0
 })
+
+// Period selector (7, 30, 90 dias)
+const period = ref<'7d' | '30d' | '90d'>('30d')
+const periodOptions = [
+  { label: '7 dias', value: '7d' },
+  { label: '30 dias', value: '30d' },
+  { label: '90 dias', value: '90d' }
+]
 
 async function fetchFeaturedProjects() {
   loading.value = true
@@ -425,8 +466,20 @@ async function fetchFeaturedProjects() {
       }
     })
     featuredProjects.value = data.items ?? []
-  } catch (error) {
-    console.error('Erro ao carregar campanhas em destaque:', error)
+    // Carrega métricas globais da plataforma
+    const to = new Date()
+    const from = new Date(to)
+    // calcular range baseado no período selecionado
+    const days = period.value === '7d' ? 7 : period.value === '30d' ? 30 : 90
+    from.setDate(from.getDate() - days)
+    const platform = await http.get('/api/stats/platform', { params: { from: from.toISOString(), to: to.toISOString() } })
+    const p = platform.data as { totalProjects: number; totalRaisedCents: number; totalRaisedBRL: number; totalBackers: number; successRatePct: number }
+    stats.value.totalProjects = p.totalProjects
+    stats.value.totalRaised = Math.round((p.totalRaisedBRL || p.totalRaisedCents / 100) * 100) // armazenado em centavos (int)
+    stats.value.totalBackers = p.totalBackers
+    stats.value.successRatePct = p.successRatePct
+  } catch {
+    // noop: removed debug log
   } finally {
     loading.value = false
   }
@@ -436,8 +489,8 @@ function openProject(id: string) {
   void router.push(`/projects/${id}`)
 }
 
-function handleFavorite(project: Project) {
-  console.log('Favorited project:', project.title)
+function handleFavorite() {
+  // noop: removed debug log
   // Implementar lógica de favoritos
 }
 
@@ -458,6 +511,26 @@ function scrollToHowItWorks() {
 
 onMounted(() => {
   void fetchFeaturedProjects()
+})
+
+watch(period, () => {
+  // Recarrega apenas as métricas quando período muda
+  void (async () => {
+    try {
+      const to = new Date()
+      const from = new Date(to)
+      const days = period.value === '7d' ? 7 : period.value === '30d' ? 30 : 90
+      from.setDate(from.getDate() - days)
+      const platform = await http.get('/api/stats/platform', { params: { from: from.toISOString(), to: to.toISOString() } })
+      const p = platform.data as { totalProjects: number; totalRaisedCents: number; totalRaisedBRL: number; totalBackers: number; successRatePct: number }
+      stats.value.totalProjects = p.totalProjects
+      stats.value.totalRaised = Math.round((p.totalRaisedBRL || p.totalRaisedCents / 100) * 100)
+      stats.value.totalBackers = p.totalBackers
+      stats.value.successRatePct = p.successRatePct
+    } catch {
+      // noop: removed debug log
+    }
+  })()
 })
 </script>
 
@@ -570,6 +643,8 @@ onMounted(() => {
   }
 }
 
+
+
 .trust-indicators {
   display: flex;
   justify-content: center;
@@ -590,42 +665,54 @@ onMounted(() => {
 // === STATS SECTION ===
 .stats-section {
   padding: 80px 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--gradient-subtle);
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 32px;
-  max-width: 1200px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1280px;
   margin: 0 auto;
+  align-items: stretch;
 }
 
 .stat-card {
-  padding: 32px 24px;
+  padding: 40px 32px;
   text-align: center;
   transition: all var(--transition-base);
-  
-  &:hover {
-    transform: translateY(-8px);
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 240px;
+  height: 100%;
 }
 
-.stat-icon {
-  margin-bottom: 20px;
+.stat-badge {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(30, 64, 175, 0.08);
+  border: 1px solid rgba(30, 64, 175, 0.15);
+  backdrop-filter: blur(6px);
 }
 
 .stat-number {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 900;
   color: #0f172a;
   margin-bottom: 8px;
   line-height: 1;
   letter-spacing: -0.025em;
+  font-feature-settings: 'tnum' 1; /* tabular numbers for better fit */
 }
 
 .stat-label {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #374151;
   margin-bottom: 8px;
@@ -635,6 +722,9 @@ onMounted(() => {
   font-size: 0.875rem;
   color: #64748b;
   line-height: 1.5;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 // === HOW IT WORKS SECTION ===
@@ -653,23 +743,29 @@ onMounted(() => {
 
 .steps-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 40px;
-  max-width: 1200px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1280px;
   margin: 0 auto;
+  align-items: stretch;
 }
 
 .step-item {
   position: relative;
+  display: flex;
+  min-width: 0; // allow grid to control width equally
 }
 
 .step-card {
   padding: 40px 32px;
   text-align: center;
   position: relative;
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 480px;
+  width: 100%;
 }
 
 
@@ -683,6 +779,27 @@ onMounted(() => {
   color: #0f172a;
   margin-bottom: 16px;
   letter-spacing: -0.025em;
+}
+
+// Prevent title wrapping on the share step for consistent heading
+.step-card--share .step-title {
+  white-space: normal;
+  word-break: break-word;
+}
+
+// Match header wrapping and consistency across all primary step cards
+.step-card--connect .step-title,
+.step-card--create .step-title {
+  white-space: nowrap;
+}
+
+.step-card--receive .step-title {
+  white-space: nowrap;
+}
+
+// Keep the first bullet of the share card on a single line
+.step-card--share .step-features li:first-child {
+  white-space: nowrap;
 }
 
 .step-description {
@@ -716,6 +833,11 @@ onMounted(() => {
   }
 }
 
+// Ensure consistent spacing in the last step to match others
+.step-card--receive .step-features {
+  margin-top: auto;
+}
+
 .step-connector {
   display: none;
 }
@@ -728,6 +850,9 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
+
+/* Unify page backgrounds to a single subtle surface tone */
+/* Revert background unification */
 
 .testimonial-card {
   padding: 32px;
@@ -940,13 +1065,18 @@ onMounted(() => {
   }
   
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
   }
   
   .steps-container {
-    grid-template-columns: 1fr;
-    gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  
+  .step-card {
+    min-height: 440px;
+    padding: 32px 24px;
   }
 }
 
@@ -975,7 +1105,8 @@ onMounted(() => {
   }
   
   .stat-card {
-    padding: 24px 20px;
+    padding: 28px 20px;
+    min-height: 220px;
   }
   
   .testimonials-grid {
@@ -1000,6 +1131,16 @@ onMounted(() => {
   .security-badges {
     gap: 20px;
   }
+  
+  .steps-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  
+  .step-card {
+    min-height: 420px;
+    padding: 28px 20px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1012,6 +1153,11 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 16px;
+  }
+  
+  .step-card {
+    min-height: 400px;
+    padding: 24px 16px;
   }
 }
 </style>

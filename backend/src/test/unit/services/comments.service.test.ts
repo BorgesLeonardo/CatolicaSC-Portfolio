@@ -70,7 +70,7 @@ describe('CommentsService', () => {
       expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
         where: { id: userId },
         update: {},
-        create: { id: userId },
+        create: { id: userId, name: null, email: null },
       })
       expect(mockPrisma.comment.create).toHaveBeenCalledWith({
         data: {

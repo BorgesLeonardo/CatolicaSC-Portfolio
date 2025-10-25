@@ -13,7 +13,7 @@ export function useProjectStats() {
    */
   async function updateAllProjectStats(silent = false): Promise<boolean> {
     if (isUpdatingStats.value) {
-      if (!silent) console.log('⏳ Atualização de estatísticas já em andamento...')
+      // noop: removed debug log
       return false
     }
 
@@ -21,14 +21,13 @@ export function useProjectStats() {
     updateError.value = null
 
     try {
-      if (!silent) console.log('🔄 Atualizando estatísticas dos projetos...')
+      // noop: removed debug log
       
       const result = await projectsService.updateAllStats()
       lastUpdateTime.value = result.timestamp
       
       if (!silent) {
-        console.log('✅ Estatísticas atualizadas com sucesso!')
-        console.log('📅 Última atualização:', new Date(result.timestamp).toLocaleString('pt-BR'))
+        // noop: removed debug log
       }
       
       return true
@@ -37,7 +36,7 @@ export function useProjectStats() {
       updateError.value = errorMessage
       
       if (!silent) {
-        console.error('❌ Erro ao atualizar estatísticas:', errorMessage)
+        // noop: removed debug log
       }
       
       return false
@@ -65,7 +64,7 @@ export function useProjectStats() {
     const diffMinutes = (now.getTime() - lastUpdate.getTime()) / (1000 * 60)
 
     if (diffMinutes > 5) {
-      console.log('🔄 Atualizando estatísticas (última atualização há', Math.round(diffMinutes), 'minutos)')
+      // noop: removed debug log
       return await updateAllProjectStats(true)
     }
 

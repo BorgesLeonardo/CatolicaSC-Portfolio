@@ -9,6 +9,7 @@ import { getImageUrl as buildImageUrl } from 'src/config/api'
 import type { Project, ProjectResponse } from 'src/components/models'
 import EditProjectDialog from 'src/components/EditProjectDialog.vue'
 import { contributionsService } from 'src/services/contributions'
+import { projectsService } from 'src/services/projects'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
 const { isSignedIn, getToken } = useAuth()
@@ -18,6 +19,8 @@ const { updateStatsIfNeeded } = useProjectStats()
 const items = ref<Project[]>([])
 const loading = ref(false)
 const deleteLoading = ref<string | null>(null)
+const deactivateLoading = ref<string | null>(null)
+const activateLoading = ref<string | null>(null)
 
 // Edit dialog state
 const editDialogOpen = ref(false)
@@ -36,7 +39,7 @@ async function fetchMyProjects() {
     // Atualiza estatísticas se necessário (silenciosamente)
     await updateStatsIfNeeded()
     
-    const token = await getToken.value()
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
     setAuthToken(token)
     
     const { data } = await http.get<ProjectResponse>('/api/projects/mine')
@@ -44,8 +47,8 @@ async function fetchMyProjects() {
     
     // Check which projects have contributions
     await checkProjectsContributions()
-  } catch (error) {
-    console.error('Error fetching my projects:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao carregar suas campanhas'
@@ -64,8 +67,8 @@ async function checkProjectsContributions() {
       } else {
         projectsWithContributions.value.delete(project.id)
       }
-    } catch (error) {
-      console.error(`Error checking contributions for project ${project.id}:`, error)
+    } catch {
+      // noop: removed debug log
       // Em caso de erro, assumimos que tem contribuições para ser seguro
       projectsWithContributions.value.add(project.id)
     }
@@ -124,11 +127,67 @@ function deleteProject(project: Project) {
   })
 }
 
+function deactivateProject(project: Project) {
+  if (project.status === 'ARCHIVED') {
+    Notify.create({ type: 'info', message: 'Campanha já está desativada' })
+    return
+  }
+
+  Dialog.create({
+    title: 'Desativar campanha',
+    message: `Deseja desativar a campanha "${project.title}"? Ela não poderá mais receber contribuições.`,
+    ok: { label: 'Desativar', color: 'warning', icon: 'pause_circle' },
+    cancel: { label: 'Cancelar', flat: true }
+  }).onOk(() => { void performDeactivate(project) })
+}
+
+async function performDeactivate(project: Project) {
+  deactivateLoading.value = project.id
+  try {
+    const updated = await projectsService.update(project.id, { status: 'ARCHIVED' })
+    const idx = items.value.findIndex(p => p.id === project.id)
+    if (idx !== -1) items.value[idx] = updated
+    Notify.create({ type: 'positive', message: 'Campanha desativada' })
+  } catch {
+    Notify.create({ type: 'negative', message: 'Erro ao desativar campanha' })
+  } finally {
+    deactivateLoading.value = null
+  }
+}
+
+function activateProject(project: Project) {
+  if (project.status === 'PUBLISHED') {
+    Notify.create({ type: 'info', message: 'Campanha já está ativa' })
+    return
+  }
+
+  Dialog.create({
+    title: 'Ativar campanha',
+    message: `Deseja reativar a campanha "${project.title}"? Ela voltará a receber contribuições até o prazo.`,
+    ok: { label: 'Ativar', color: 'positive', icon: 'play_circle' },
+    cancel: { label: 'Cancelar', flat: true }
+  }).onOk(() => { void performActivate(project) })
+}
+
+async function performActivate(project: Project) {
+  activateLoading.value = project.id
+  try {
+    const updated = await projectsService.update(project.id, { status: 'PUBLISHED' })
+    const idx = items.value.findIndex(p => p.id === project.id)
+    if (idx !== -1) items.value[idx] = updated
+    Notify.create({ type: 'positive', message: 'Campanha ativada' })
+  } catch {
+    Notify.create({ type: 'negative', message: 'Erro ao ativar campanha' })
+  } finally {
+    activateLoading.value = null
+  }
+}
+
 async function performDelete(project: Project) {
   deleteLoading.value = project.id
   
   try {
-    const token = await getToken.value()
+    const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
     setAuthToken(token)
     
     await http.delete(`/api/projects/${project.id}`)
@@ -144,8 +203,8 @@ async function performDelete(project: Project) {
       message: 'Campanha excluída com sucesso',
       icon: 'check_circle'
     })
-  } catch (error) {
-    console.error('Error deleting project:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao excluir campanha. Tente novamente.',
@@ -165,33 +224,36 @@ function createNewProject() {
 }
 
 function getFirstImage(project: Project): string {
-  console.log('🔍 MyProjects - Getting image for:', project.title)
-  console.log('📸 Project images:', project.images)
-  console.log('📸 Project imageUrl:', project.imageUrl)
+  // noop: removed debug log
   
   // Priorizar novas imagens (array images) sobre imageUrl legacy
   if (project.images && project.images.length > 0) {
     const url = buildImageUrl(project.images[0].url)
-    console.log('✅ Using new images system, URL:', url)
+    // noop: removed debug log
     return url
   }
   
   // Fallback para imageUrl legacy
   if (project.imageUrl) {
     const url = buildImageUrl(project.imageUrl)
-    console.log('✅ Using legacy imageUrl, URL:', url)
+    // noop: removed debug log
     return url
   }
   
-  console.log('❌ No image found for project:', project.title)
+  // noop: removed debug log
   return ''
 }
 
 function handleProjectUpdated(updatedProject: Project) {
+  // noop: removed debug log
+  
   // Atualiza o projeto na lista
   const index = items.value.findIndex(p => p.id === updatedProject.id)
   if (index !== -1) {
     items.value[index] = updatedProject
+    // noop: removed debug log
+  } else {
+    // noop: removed debug log
   }
   
   // Fecha o dialog
@@ -209,7 +271,7 @@ onMounted(fetchMyProjects)
 </script>
 
 <template>
-  <div class="my-projects-page">
+  <div class="my-projects-page bg-surface">
     <!-- Header Section -->
     <div class="page-header q-pa-lg">
       <div class="container">
@@ -254,7 +316,7 @@ onMounted(fetchMyProjects)
         <!-- Not Signed In State -->
         <div v-else-if="!isSignedIn" class="empty-state">
           <div class="empty-content">
-            <q-icon name="account_circle" size="4rem" color="grey-4" />
+            <q-icon name="account_circle" size="4rem" class="icon-muted" />
             <h3 class="empty-title">Faça login para continuar</h3>
             <p class="empty-description">
               Você precisa estar autenticado para ver suas campanhas
@@ -265,7 +327,7 @@ onMounted(fetchMyProjects)
         <!-- Empty State -->
         <div v-else-if="items.length === 0 && !loading" class="empty-state">
           <div class="empty-content">
-            <q-icon name="campaign" size="4rem" color="grey-4" />
+            <q-icon name="campaign" size="4rem" class="icon-muted" />
             <h3 class="empty-title">Nenhuma campanha encontrada</h3>
             <p class="empty-description">
               Você ainda não criou nenhuma campanha. Que tal começar agora?
@@ -300,8 +362,8 @@ onMounted(fetchMyProjects)
                       class="card-hero-image"
                     />
                     <div v-else class="card-image-placeholder">
-                      <q-icon name="image" size="2.5rem" color="grey-4" />
-                      <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+                      <q-icon name="image" size="2.5rem" class="icon-muted" />
+                      <div class="text-caption text-hint q-mt-sm">Sem imagem</div>
                     </div>
                     
                     <!-- Hover overlay -->
@@ -329,8 +391,8 @@ onMounted(fetchMyProjects)
                   </div>
 
                   <q-badge 
-                    :color="isPast(project.deadline) ? 'grey-6' : 'green'" 
-                    :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
+                    :color="project.status === 'ARCHIVED' ? 'warning' : (isPast(project.deadline) ? 'grey-6' : 'positive')" 
+                    :label="project.status === 'ARCHIVED' ? 'Desativada' : (isPast(project.deadline) ? 'Encerrada' : 'Ativa')"
                     class="q-mt-sm"
                   />
                 </q-card-section>
@@ -346,11 +408,33 @@ onMounted(fetchMyProjects)
                     <q-tooltip>Ver detalhes</q-tooltip>
                   </q-btn>
                   <q-btn 
+                    v-if="project.status !== 'ARCHIVED'"
+                    flat
+                    icon="pause_circle"
+                    color="warning"
+                    @click="deactivateProject(project)"
+                    :loading="deactivateLoading === project.id"
+                    class="action-btn"
+                  >
+                    <q-tooltip>Desativar campanha</q-tooltip>
+                  </q-btn>
+                  <q-btn 
+                    v-else
+                    flat
+                    icon="play_circle"
+                    color="positive"
+                    @click="activateProject(project)"
+                    :loading="activateLoading === project.id"
+                    class="action-btn"
+                  >
+                    <q-tooltip>Ativar campanha</q-tooltip>
+                  </q-btn>
+                  <q-btn 
                     flat 
                     icon="edit" 
                     @click="editProject(project)"
-                    :disable="isPast(project.deadline)"
-                    :color="isPast(project.deadline) ? 'grey-5' : 'primary'"
+                    :disable="isPast(project.deadline) || project.status === 'ARCHIVED'"
+                    :color="(isPast(project.deadline) || project.status === 'ARCHIVED') ? 'grey-5' : 'primary'"
                     class="action-btn"
                   >
                     <q-tooltip>
@@ -398,7 +482,7 @@ onMounted(fetchMyProjects)
 <style scoped lang="scss">
 .my-projects-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--gradient-subtle);
 }
 
 .page-header {
@@ -498,7 +582,7 @@ onMounted(fetchMyProjects)
   position: relative;
   height: 220px;
   overflow: hidden;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   transition: all var(--transition-base);
   
   &:hover {
@@ -521,7 +605,7 @@ onMounted(fetchMyProjects)
 
 .card-image-placeholder {
   height: 220px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -529,7 +613,7 @@ onMounted(fetchMyProjects)
   transition: all var(--transition-base);
   
   &:hover {
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    background: var(--gradient-subtle);
     transform: scale(1.02);
   }
 }
@@ -557,13 +641,13 @@ onMounted(fetchMyProjects)
 .campaign-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   margin: 0 0 1rem 0;
   cursor: pointer;
   transition: color 0.2s ease;
   
   &:hover {
-    color: #1e40af;
+    color: var(--color-primary);
   }
 }
 
@@ -578,7 +662,7 @@ onMounted(fetchMyProjects)
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--color-text-muted);
     
     .q-icon {
       color: #9ca3af;

@@ -9,8 +9,5 @@ if (!PUBLISHABLE_KEY) {
 export default boot(({ app }) => {
   app.use(clerkPlugin, {
     publishableKey: PUBLISHABLE_KEY,
-    // Redirect to "/" after login/signup
-    signInForceRedirectUrl: '/',
-    signUpForceRedirectUrl: '/',
   })
 })

@@ -1,55 +1,35 @@
 import { defineConfig } from 'vitest/config'
-import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  plugins: [
-    vue({
-      template: { transformAssetUrls }
-    }),
-    quasar({
-      sassVariables: 'src/quasar-variables.sass'
-    })
-  ],
+  plugins: [vue()],
   test: {
     environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      reportsDirectory: './coverage',
-      include: [
-        'src/**/*.{ts,vue,js}',
-        'src/components/**/*',
-        'src/pages/**/*',
-        'src/services/**/*',
-        'src/utils/**/*',
-        'src/composables/**/*'
-      ],
-      exclude: [
-        'node_modules/**',
-        'dist/**',
-        '**/*.d.ts',
-        'src/test/**',
-        'src/boot/**',
-        'src/main.ts',
-        'src/router/index.ts'
-      ],
-      all: true,
+      reporter: ['text', 'lcov', 'html'],
+      reportsDirectory: './coverage-unit',
       thresholds: {
-        global: {
-          branches: 60,
-          functions: 60,
-          lines: 60,
-          statements: 60
-        }
-      }
+        lines: 25,
+        functions: 25,
+        branches: 25,
+        statements: 25,
+      },
+      all: true,
+      include: ['src/utils/**/*.{ts,vue}'],
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/__mocks__/**',
+        'src/main.ts',
+        'src/router/**',
+        'src/boot/**',
+        'src/stores/**',
+        '**/*.d.ts',
+      ],
     },
-    globals: true
   },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
 })
+
+

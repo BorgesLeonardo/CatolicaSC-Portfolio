@@ -14,10 +14,12 @@
           :src="getImageUrl(displayImages[0])" 
           alt="Imagem da campanha"
           class="card-hero-image"
+          loading="lazy"
+          decoding="async"
         />
         <div v-else class="campaign-placeholder">
-          <q-icon name="campaign" size="xl" color="grey-5" />
-          <div class="text-caption text-grey-5 q-mt-sm">Sem imagem</div>
+          <q-icon name="campaign" size="xl" class="icon-muted" />
+          <div class="text-caption text-hint q-mt-sm">Sem imagem</div>
         </div>
         
         <!-- Subtle overlay for depth -->
@@ -31,7 +33,7 @@
         <!-- Status Badge -->
         <div class="badge-container badge-container--top-right">
           <q-badge 
-            :color="isPast(project.deadline) ? 'grey-7' : 'green'" 
+            :color="isPast(project.deadline) ? 'grey-7' : 'positive'" 
             :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
             class="status-badge"
           />
@@ -90,50 +92,85 @@
       
       <!-- Progress Section -->
       <div class="progress-section">
-        <div class="progress-header">
-          <div class="progress-stats">
-            <span class="progress-percentage">{{ progressPercentage }}%</span>
-            <span class="progress-goal">de {{ formatMoneyBRL(project.goalCents) }}</span>
+        <!-- One-time contribution mode -->
+        <template v-if="!isSubscription">
+          <div class="progress-header">
+            <div class="progress-stats">
+              <span class="progress-percentage">{{ progressPercentage }}%</span>
+              <span class="progress-goal">de {{ formatMoneyBRL(project.goalCents) }}</span>
+            </div>
+            <div class="progress-raised">
+              <span class="raised-amount">{{ formatMoneyBRL(raisedAmount) }}</span>
+              <span class="raised-label">arrecadado</span>
+            </div>
           </div>
-          <div class="progress-raised">
-            <span class="raised-amount">{{ formatMoneyBRL(raisedAmount) }}</span>
-            <span class="raised-label">arrecadado</span>
+
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              :style="{ width: progressPercentage + '%' }"
+            ></div>
           </div>
-        </div>
-        
-        <div class="progress-bar">
-          <div 
-            class="progress-fill" 
-            :style="{ width: progressPercentage + '%' }"
-          ></div>
-        </div>
-        
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value">{{ formatNumber(contributorsCount) }}</div>
-            <div class="stat-label">Apoiadores</div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">{{ formatNumber(contributorsCount) }}</div>
+              <div class="stat-label">Apoiadores</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ daysLeft }}</div>
+              <div class="stat-label">{{ daysLeft === 1 ? 'Dia restante' : 'Dias restantes' }}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ progressPercentage }}%</div>
+              <div class="stat-label">Concluído</div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ daysLeft }}</div>
-            <div class="stat-label">{{ daysLeft === 1 ? 'Dia restante' : 'Dias restantes' }}</div>
+        </template>
+
+        <!-- Subscription mode -->
+        <template v-else>
+          <div class="progress-header">
+            <div class="progress-stats">
+              <span class="raised-amount">{{ formatMoneyBRL(project.subscriptionPriceCents) }}</span>
+              <span class="progress-goal">por {{ subscriptionIntervalLabel.toLowerCase() }}</span>
+            </div>
+            <div class="progress-raised">
+              <span class="raised-amount">{{ formatMoneyBRL(raisedAmount) }}</span>
+              <span class="raised-label">arrecadado</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ progressPercentage }}%</div>
-            <div class="stat-label">Concluído</div>
+
+          <!-- No progress bar for subscriptions -->
+
+          <!-- Stats Grid (subscription) -->
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">{{ formatNumber(contributorsCount) }}</div>
+              <div class="stat-label">Assinantes</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ subscriptionIntervalLabel }}</div>
+              <div class="stat-label">Plano</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ formatNumber(daysLeft) }}</div>
+              <div class="stat-label">{{ daysLeft === 1 ? 'Dia restante' : 'Dias restantes' }}</div>
+            </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- Footer -->
       <div class="campaign-footer" v-if="showFooter">
         <div class="footer-info">
           <div class="creator-info">
-            <q-icon name="person" size="sm" color="grey-6" />
+            <q-icon name="person" size="sm" class="icon-muted" />
             <span class="creator-name">{{ project.creatorName || 'Criador' }}</span>
           </div>
           <div class="creation-date">
-            <q-icon name="schedule" size="sm" color="grey-6" />
+            <q-icon name="schedule" size="sm" class="icon-muted" />
             <span class="date-text">{{ formatDateBR(project.createdAt) }}</span>
           </div>
         </div>
@@ -198,6 +235,15 @@ const progressPercentage = computed(() => {
 
 const daysLeft = computed(() => {
   return calculateDaysLeft(props.project.deadline)
+})
+
+// Subscription helpers
+const isSubscription = computed(() => !!props.project.subscriptionEnabled)
+const subscriptionIntervalLabel = computed(() => {
+  const interval = props.project.subscriptionInterval
+  if (interval === 'MONTH') return 'Mensal'
+  if (interval === 'YEAR') return 'Anual'
+  return '—'
 })
 
 // Image management
@@ -299,7 +345,7 @@ function toggleFavorite() {
   position: relative;
   overflow: hidden;
   height: 240px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
 }
 
 // === MODERN CARD IMAGE STYLES ===
@@ -355,16 +401,7 @@ function toggleFavorite() {
   transition: opacity var(--transition-base);
   backdrop-filter: blur(4px);
   
-  &::after {
-    content: '👁';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
+  // Removed decorative icon for cleaner UX
 }
 
 .campaign-img {
@@ -560,7 +597,7 @@ function toggleFavorite() {
 .progress-bar {
   width: 100%;
   height: 12px;
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  background: var(--gradient-subtle);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -593,7 +630,7 @@ function toggleFavorite() {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   padding: 16px 0;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 
 .stat-item {
@@ -618,7 +655,7 @@ function toggleFavorite() {
 
 // === FOOTER ===
 .campaign-footer {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
   padding-top: 16px;
   display: flex;
   justify-content: space-between;

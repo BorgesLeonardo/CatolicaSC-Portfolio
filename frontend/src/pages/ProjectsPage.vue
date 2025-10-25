@@ -9,7 +9,6 @@ import CampaignCard from 'src/components/CampaignCard.vue'
 import ModernLoading from 'src/components/ModernLoading.vue'
 import DynamicGrid from 'src/components/DynamicGrid.vue'
 import AdvancedSearch from 'src/components/AdvancedSearch.vue'
-import FloatingActionMenu from 'src/components/FloatingActionMenu.vue'
 import { categoriesService } from 'src/services/categories'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
@@ -85,8 +84,8 @@ async function fetchCategories() {
   try {
     loadingCategories.value = true
     categories.value = await categoriesService.getAll()
-  } catch (error) {
-    console.error('Erro ao carregar categorias:', error)
+  } catch {
+  // noop: removed debug log
   } finally {
     loadingCategories.value = false
   }
@@ -113,37 +112,7 @@ function clearAllFilters() {
   page.value = 1
 }
 
-// Floating action menu
-const floatingActions = [
-  {
-    id: 'create-project',
-    icon: 'add_circle',
-    label: 'Nova Campanha',
-    color: 'primary',
-    action: () => router.push('/projects/new')
-  },
-  {
-    id: 'saved-projects',
-    icon: 'bookmark',
-    label: 'Projetos Salvos',
-    color: 'secondary',
-    action: () => console.log('Show saved projects')
-  },
-  {
-    id: 'share',
-    icon: 'share',
-    label: 'Compartilhar',
-    color: 'info',
-    action: () => console.log('Share projects')
-  },
-  {
-    id: 'filter',
-    icon: 'filter_alt',
-    label: 'Filtros Avançados',
-    color: 'accent',
-    action: () => console.log('Open advanced filters')
-  }
-]
+// Floating action menu removido
 
 interface AdvancedFilters {
   category?: string
@@ -202,20 +171,10 @@ function handleSuggestion(suggestion: SearchSuggestion) {
   void fetchProjects()
 }
 
-interface FloatingAction {
-  id: string
-  icon: string
-  label: string
-  color?: string
-  action?: () => void
-}
+// Handlers de ações rápidas removidos
 
-function handleFloatingAction(action: FloatingAction) {
-  console.log('Floating action:', action.id)
-}
-
-function handleFavorite(project: Project) {
-  console.log('Favorited project:', project.title)
+function handleFavorite() {
+  // noop: removed debug log
   // Implementar lógica de favoritos
 }
 
@@ -233,7 +192,7 @@ function openProject(id: string) {
 </script>
 
 <template>
-  <q-page class="bg-grey-1">
+  <q-page class="bg-surface">
     <!-- Header Section -->
     <section class="projects-header">
       <div class="header-background">
@@ -274,7 +233,7 @@ function openProject(id: string) {
     </section>
 
     <!-- Advanced Search Section -->
-    <section class="search-section-wrapper">
+    <section class="search-section-wrapper bg-surface">
       <div class="container">
         <AdvancedSearch 
           :category-options="categoryOptions"
@@ -396,13 +355,7 @@ function openProject(id: string) {
       </div>
     </section>
     
-    <!-- Floating Action Menu -->
-    <FloatingActionMenu 
-      :actions="floatingActions"
-      main-icon="add"
-      main-tooltip="Ações rápidas"
-      @action="handleFloatingAction"
-    />
+    <!-- Botão de ações rápidas removido -->
   </q-page>
 </template>
 
@@ -502,7 +455,7 @@ function openProject(id: string) {
 // === FILTERS SECTION ===
 .filters-section-wrapper {
   padding: 40px 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--gradient-subtle);
 }
 
 .filters-section {
@@ -515,8 +468,7 @@ function openProject(id: string) {
 }
 
 .search-section-wrapper {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: var(--color-surface);
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
   padding: 48px 0 64px;
   position: relative;
@@ -529,19 +481,8 @@ function openProject(id: string) {
     padding: 80px 0 96px;
   }
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 50%, rgba(30, 64, 175, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 40% 80%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-  }
+  /* Remove decorative overlay to keep flat background */
+  &::before { content: none; }
   
   .container {
     position: relative;
@@ -743,7 +684,7 @@ function openProject(id: string) {
   flex-wrap: wrap;
   gap: 20px;
   padding: 32px 0;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 
 .pagination-info {
@@ -906,8 +847,7 @@ function openProject(id: string) {
 
 // === ACCESSIBILITY IMPROVEMENTS ===
 @media (prefers-reduced-motion: reduce) {
-  .campaign-card,
-  .floating-action-menu {
+  .campaign-card {
     animation: none !important;
     transition: none !important;
   }

@@ -1,5 +1,5 @@
 <template>
-  <q-page class="dashboard-page">
+  <q-page class="dashboard-page bg-surface">
     <!-- Dashboard Header -->
     <section class="dashboard-header q-py-lg bg-gradient-to-r">
       <div class="container">
@@ -12,17 +12,7 @@
               Painel administrativo completo com métricas, análises e controles avançados
             </p>
           </div>
-          <div class="header-actions fade-in-up stagger-animation">
-            <q-btn 
-              unelevated
-              color="primary"
-              icon="refresh"
-              label="Atualizar Dados"
-              @click="refreshData"
-              :loading="refreshing"
-              class="action-btn"
-            />
-          </div>
+          
         </div>
       </div>
     </section>
@@ -33,206 +23,121 @@
         <!-- Stats Overview -->
         <div class="stats-section q-mb-xl">
           <h2 class="section-title q-mb-lg">Visão Geral</h2>
-          <LiveStats 
-            :stats="dashboardStats"
-            :animated="true"
-            layout="grid"
-            :columns="4"
-          />
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-6 col-md-3"><KpiCard label="Total apoiado" :value="metrics?.totalSupportedBRL" format="currency" icon="volunteer_activism" icon-color="primary"/></div>
+            <div class="col-12 col-sm-6 col-md-3"><KpiCard label="Arrecadado nas minhas campanhas" :value="metrics?.totalRaisedOnMyCampaignsBRL" format="currency" icon="savings" icon-color="primary"/></div>
+            <div class="col-12 col-sm-6 col-md-3"><KpiCard label="Campanhas ativas" :value="metrics?.activeCampaigns" format="int" icon="campaign" icon-color="primary"/></div>
+            <div class="col-12 col-sm-6 col-md-3"><KpiCard label="Taxa de sucesso" :value="metrics?.successRatePct" format="percent" icon="trending_up" icon-color="primary"/></div>
+          </div>
         </div>
 
         <!-- Dashboard Grid -->
         <div class="dashboard-grid">
-          <!-- Analytics Card -->
           <DynamicCard
             variant="primary"
             size="lg"
             :elevated="true"
             :animated="true"
-            title="Analytics Avançadas"
-            subtitle="Métricas detalhadas de performance"
-            icon="analytics"
+            title="Contribuições por mês"
+            subtitle="Últimos 12 meses em BRL"
+            icon="bar_chart"
             icon-color="primary"
             class="analytics-card"
           >
-            <div class="analytics-content">
-              <div class="chart-placeholder">
-                <q-icon name="show_chart" size="4xl" color="grey-4" />
-                <p class="chart-text">Gráficos de performance em tempo real</p>
-              </div>
-              <div class="analytics-metrics">
-                <div class="metric">
-                  <span class="metric-value">+23.5%</span>
-                  <span class="metric-label">Crescimento este mês</span>
-                </div>
-                <div class="metric">
-                  <span class="metric-value">R$ 45.2K</span>
-                  <span class="metric-label">Receita total</span>
-                </div>
-              </div>
-            </div>
+            <ChartCard type="bar" :labels="tsBarLabels" :series="tsValues" title="" :currency="true"/>
+            <div class="q-mt-sm text-caption text-muted">Média mensal: {{ avgMonthlyFormatted }}</div>
           </DynamicCard>
 
-          <!-- User Management Card -->
           <DynamicCard
             variant="secondary"
             size="lg"
             :elevated="true"
             :animated="true"
-            title="Gerenciamento de Usuários"
-            subtitle="Controle total de usuários e permissões"
-            icon="people"
+            title="Minhas campanhas por categoria"
+            subtitle="Distribuição por categoria"
+            icon="pie_chart"
             icon-color="secondary"
             class="users-card"
           >
-            <div class="users-content">
-              <div class="user-stats">
-                <div class="stat-item">
-                  <q-icon name="person_add" color="positive" />
-                  <div class="stat-info">
-                    <span class="stat-number">+127</span>
-                    <span class="stat-label">Novos usuários</span>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <q-icon name="verified_user" color="info" />
-                  <div class="stat-info">
-                    <span class="stat-number">98.2%</span>
-                    <span class="stat-label">Taxa de verificação</span>
-                  </div>
-                </div>
-              </div>
-              <q-btn 
-                flat 
-                color="secondary" 
-                label="Ver Todos Usuários"
-                icon="arrow_forward"
-                class="full-width q-mt-md"
-              />
-            </div>
+            <ChartCard type="pie" :labels="catLabels" :series="catValues" title="" :currency="true" :show-legend="true"/>
           </DynamicCard>
 
-          <!-- System Status Card -->
-          <DynamicCard
-            variant="success"
-            size="lg"
-            :elevated="true"
-            :animated="true"
-            title="Status do Sistema"
-            subtitle="Monitoramento em tempo real"
-            icon="monitor_heart"
-            icon-color="positive"
-            class="system-card"
-          >
-            <div class="system-content">
-              <div class="status-indicators">
-                <div class="status-item">
-                  <div class="status-dot status-dot--online"></div>
-                  <span>Servidor Principal</span>
-                  <q-chip color="positive" text-color="white" size="sm">Online</q-chip>
-                </div>
-                <div class="status-item">
-                  <div class="status-dot status-dot--online"></div>
-                  <span>Base de Dados</span>
-                  <q-chip color="positive" text-color="white" size="sm">Online</q-chip>
-                </div>
-                <div class="status-item">
-                  <div class="status-dot status-dot--warning"></div>
-                  <span>CDN</span>
-                  <q-chip color="warning" text-color="white" size="sm">Lento</q-chip>
-                </div>
-              </div>
-              <div class="system-metrics q-mt-md">
-                <div class="metric-row">
-                  <span>CPU:</span>
-                  <q-linear-progress :value="0.65" color="positive" size="md" />
-                  <span>65%</span>
-                </div>
-                <div class="metric-row">
-                  <span>RAM:</span>
-                  <q-linear-progress :value="0.42" color="info" size="md" />
-                  <span>42%</span>
-                </div>
-              </div>
-            </div>
-          </DynamicCard>
-
-          <!-- Quick Actions Card -->
-          <DynamicCard
-            variant="info"
-            size="lg"
-            :elevated="true"
-            :animated="true"
-            title="Ações Rápidas"
-            subtitle="Controles administrativos essenciais"
-            icon="admin_panel_settings"
-            icon-color="info"
-            class="actions-card"
-          >
-            <div class="actions-content">
-              <div class="action-buttons">
-                <q-btn 
-                  unelevated 
-                  color="primary" 
-                  icon="backup"
-                  label="Backup Sistema"
-                  class="full-width q-mb-sm"
-                />
-                <q-btn 
-                  unelevated 
-                  color="secondary" 
-                  icon="security"
-                  label="Logs de Segurança"
-                  class="full-width q-mb-sm"
-                />
-                <q-btn 
-                  unelevated 
-                  color="accent" 
-                  icon="settings"
-                  label="Configurações"
-                  class="full-width q-mb-sm"
-                />
-                <q-btn 
-                  unelevated 
-                  color="warning" 
-                  icon="bug_report"
-                  label="Relatório de Bugs"
-                  class="full-width"
-                />
-              </div>
-            </div>
-          </DynamicCard>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="activity-section q-mt-xl">
-          <h2 class="section-title q-mb-lg">Atividade Recente</h2>
+          <!-- Recebimentos (Stripe Connect) -->
           <DynamicCard
             variant="default"
             size="lg"
             :elevated="true"
             :animated="true"
-            class="activity-card"
+            title="Recebimentos"
+            subtitle="Conecte sua conta e gerencie saques"
+            icon="account_balance"
+            icon-color="secondary"
           >
-            <div class="activity-content">
-              <q-list separator>
-                <q-item v-for="activity in recentActivities" :key="activity.id">
-                  <q-item-section avatar>
-                    <q-avatar :color="activity.color" text-color="white">
-                      <q-icon :name="activity.icon" />
-                    </q-avatar>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ activity.title }}</q-item-label>
-                    <q-item-label caption>{{ activity.description }}</q-item-label>
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-item-label caption>{{ activity.time }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
+            <div class="q-pa-md">
+              <div class="row items-center q-col-gutter-sm q-mb-sm">
+                <div class="col-auto" v-if="connectStatus">
+                  <q-chip :color="connectStatus.connected ? 'positive' : 'negative'" text-color="white" dense>
+                    {{ connectStatus.connected ? 'Conectado ao Stripe' : 'Não conectado' }}
+                  </q-chip>
+                </div>
+                <div class="col-auto" v-if="connectStatus">
+                  <q-chip :color="connectStatus.payoutsEnabled ? 'positive' : 'warning'" text-color="white" dense>
+                    {{ connectStatus.payoutsEnabled ? 'Saques habilitados' : 'Saques pendentes' }}
+                  </q-chip>
+                </div>
+              </div>
+              <div class="row items-center q-col-gutter-sm">
+                <div class="col-auto">
+                  <q-btn color="primary" label="Habilitar recebimentos" @click="connectOnboard" :disable="connectStatus?.chargesEnabled === true" />
+                </div>
+                <div class="col-auto">
+                  <q-btn color="secondary" label="Abrir painel Stripe" @click="openConnectDashboard" :disable="!connectStatus?.connected" />
+                </div>
+              </div>
             </div>
           </DynamicCard>
+
+          <!-- System Status Card -->
+          
+          
+          <!-- Quick Actions Card -->
+          
+        </div>
+        <!-- My Campaigns Table -->
+        <div class="q-mt-xl">
+          <h2 class="section-title q-mb-lg">Minhas Campanhas</h2>
+          <DynamicCard variant="default" size="lg" :elevated="true" :animated="true">
+            <div class="q-pa-md">
+              <div class="row items-center q-col-gutter-md q-mb-md">
+                <div class="col-12 col-md-3">
+                  <q-input v-model="filterQ" dense outlined placeholder="Buscar por título" debounce="400"/>
+                </div>
+                <div class="col-12 col-md-3">
+                  <q-select v-model="filterStatus" dense outlined :options="statusOptions" emit-value map-options label="Status"/>
+                </div>
+                <div class="col-12 col-md-3">
+                  <ExportCsvButton :filename="'minhas-campanhas'" :rows="tableRows" :columns="csvColumns"/>
+                </div>
+              </div>
+
+              <q-table
+                :rows="tableRows"
+                :columns="tableColumns"
+                row-key="id"
+                :loading="store.campaignsListLoading"
+                :pagination="pagination"
+                @request="onRequest"
+                flat
+                dense
+              />
+            </div>
+          </DynamicCard>
+
+          <div class="q-mt-lg">
+            <DynamicCard variant="primary" size="lg" :elevated="true" :animated="true" title="Top 5 campanhas por arrecadação" icon="leaderboard" icon-color="primary">
+              <ChartCard type="bar" :labels="topLabels" :series="topValues" title="" :currency="true"/>
+            </DynamicCard>
+          </div>
         </div>
       </div>
     </section>
@@ -240,143 +145,191 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useAuth } from '@clerk/vue'
+import { setAuthToken } from 'src/utils/http'
 import DynamicCard from 'src/components/DynamicCard.vue'
-import LiveStats from 'src/components/LiveStats.vue'
+import KpiCard from 'src/components/dashboard/KpiCard.vue'
+import ChartCard from 'src/components/dashboard/ChartCard.vue'
+import { useDashboardStore } from 'src/stores/dashboard'
+import ExportCsvButton from 'src/components/dashboard/ExportCsvButton.vue'
+import { connectService } from 'src/services'
+import { useProjectStats } from 'src/composables/useProjectStats'
+import { useRealtimeDashboard } from 'src/composables/useRealtime'
 
-// Page state
 const refreshing = ref(false)
+const { updateStatsIfNeeded } = useProjectStats()
+const { getToken, isSignedIn } = useAuth()
+const store = useDashboardStore()
 
-// Dashboard stats
-const dashboardStats = ref([
-  {
-    id: 'total-users',
-    icon: 'people',
-    label: 'Total de Usuários',
-    value: 15670,
-    format: 'number',
-    change: 12.5,
-    variant: 'primary',
-    live: true
-  },
-  {
-    id: 'total-revenue',
-    icon: 'monetization_on',
-    label: 'Receita Total',
-    value: 284000,
-    format: 'currency',
-    change: 8.3,
-    variant: 'success',
-    live: true
-  },
-  {
-    id: 'active-campaigns',
-    icon: 'campaign',
-    label: 'Campanhas Ativas',
-    value: 1250,
-    format: 'number',
-    change: -2.1,
-    variant: 'info',
-    live: true
-  },
-  {
-    id: 'success-rate',
-    icon: 'trending_up',
-    label: 'Taxa de Sucesso',
-    value: 85,
-    format: 'percentage',
-    change: 5.2,
-    variant: 'secondary',
-    live: true,
-    progress: 85
-  }
-])
+const metrics = computed(() => store.metrics)
+const tsBarLabels = computed(() => store.timeseries.map(p => {
+  // Expecting period as YYYY-MM
+  const [year, month] = p.period.split('-').map(s => parseInt(s, 10))
+  if (!year || !month) return p.period
+  const d = new Date(year, month - 1, 1)
+  return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+}))
+const tsValues = computed(() => store.timeseries.map(p => p.amount))
+const catLabels = computed(() => store.campaignsMetrics?.byCategory.map(c => c.category) || [])
+const catValues = computed(() => store.campaignsMetrics?.byCategory.map(c => c.raised) || [])
+function normalizeLabel(label: string): string {
+  if (!label) return ''
+  const firstLine = String(label).split(/\r?\n/)[0]
+  const trimmed = firstLine.trim()
+  return trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed
+}
+const topLabels = computed(() => store.campaignsMetrics?.topByRaised.map(t => normalizeLabel(t.title)) || [])
+const topValues = computed(() => store.campaignsMetrics?.topByRaised.map(t => t.raised) || [])
 
-// Recent activities
-const recentActivities = ref([
-  {
-    id: 1,
-    icon: 'person_add',
-    title: 'Novo usuário registrado',
-    description: 'João Silva criou uma conta',
-    time: 'há 5 minutos',
-    color: 'positive'
-  },
-  {
-    id: 2,
-    icon: 'campaign',
-    title: 'Nova campanha criada',
-    description: 'Projeto "Tecnologia Sustentável" foi publicado',
-    time: 'há 15 minutos',
-    color: 'primary'
-  },
-  {
-    id: 3,
-    icon: 'payment',
-    title: 'Pagamento processado',
-    description: 'Contribuição de R$ 500,00 recebida',
-    time: 'há 32 minutos',
-    color: 'secondary'
-  },
-  {
-    id: 4,
-    icon: 'security',
-    title: 'Backup realizado',
-    description: 'Backup automático do sistema concluído',
-    time: 'há 1 hora',
-    color: 'info'
-  },
-  {
-    id: 5,
-    icon: 'warning',
-    title: 'Alerta de performance',
-    description: 'CDN apresentando lentidão',
-    time: 'há 2 horas',
-    color: 'warning'
-  }
-])
+// Table state
+const filterQ = ref('')
+const filterStatus = ref<string | null>(null)
+const statusOptions = [
+  { label: 'Todos', value: null },
+  { label: 'Rascunho', value: 'DRAFT' },
+  { label: 'Publicado', value: 'PUBLISHED' },
+  { label: 'Arquivado', value: 'ARCHIVED' },
+]
 
-// Methods
+const pagination = ref({ page: 1, rowsPerPage: 10, rowsNumber: 0 })
+
+const tableColumns = [
+  { name: 'title', label: 'Título', field: 'title', align: 'left' },
+  { name: 'status', label: 'Status', field: 'status', align: 'left' },
+  { name: 'progress', label: 'Progresso', field: 'progress', align: 'left' },
+  { name: 'contributions', label: 'Contribuições', field: 'contributions', align: 'right' },
+  { name: 'deadline', label: 'Data fim', field: 'deadline', align: 'left' },
+]
+
+const csvColumns = [
+  { name: 'title', label: 'Título' },
+  { name: 'status', label: 'Status' },
+  { name: 'raised', label: 'Arrecadado (BRL)' },
+  { name: 'goal', label: 'Meta (BRL)' },
+  { name: 'contributions', label: 'Contribuições' },
+  { name: 'deadline', label: 'Data fim' },
+]
+
+const tableRows = computed(() => {
+  const items = store.campaignsList?.items || []
+  return items.map(i => ({
+    id: i.id,
+    title: i.title,
+    status: i.status,
+    progress: `${Math.min(100, Math.floor((i.raised / Math.max(1, i.goal)) * 100))}% (${i.raised.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/${i.goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+    contributions: i.contributions,
+    deadline: new Date(i.deadline).toLocaleDateString('pt-BR')
+  }))
+})
+
 async function refreshData() {
+  if (!isSignedIn.value) return
   refreshing.value = true
-  
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 2000))
-  
-  // Update stats (simulate real-time data)
-  dashboardStats.value.forEach(stat => {
-    const randomChange = (Math.random() - 0.5) * 10
-    stat.change = parseFloat(randomChange.toFixed(1))
-    
-    if (stat.format === 'number') {
-      stat.value += Math.floor(Math.random() * 10)
-    } else if (stat.format === 'currency') {
-      stat.value += Math.floor(Math.random() * 1000)
-    }
-  })
-  
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  await Promise.all([
+    store.fetchMetrics(),
+    store.fetchTimeseries(),
+    store.fetchCampaignsMetrics(),
+    store.fetchCampaignsList({ page: pagination.value.page, pageSize: pagination.value.rowsPerPage, status: filterStatus.value || undefined, q: filterQ.value || undefined }),
+  ])
+  if (store.campaignsList) pagination.value.rowsNumber = store.campaignsList.total
   refreshing.value = false
 }
 
-onMounted(() => {
-  // Auto-refresh every 30 seconds
-  setInterval(() => {
-    if (!refreshing.value) {
-      void refreshData()
-    }
-  }, 30000)
+onMounted(async () => {
+  await updateStatsIfNeeded()
+  if (isSignedIn.value) {
+    void refreshData()
+    void loadConnectStatus()
+  } else {
+    const stop = watch(isSignedIn, (signed) => {
+      if (signed) {
+        void refreshData()
+        void loadConnectStatus()
+        stop()
+      }
+    })
+  }
 })
+
+// Realtime updates: subscribe when signed in
+if (isSignedIn.value) {
+  // Clerk's userId is available in token claims on backend; pass undefined to subscribe globally or wire later if needed
+  useRealtimeDashboard()
+} else {
+  const stopRt = watch(isSignedIn, (signed) => {
+    if (signed) {
+      useRealtimeDashboard()
+      stopRt()
+    }
+  })
+}
+
+async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value.page = props.pagination.page
+  pagination.value.rowsPerPage = props.pagination.rowsPerPage
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  await store.fetchCampaignsList({ page: pagination.value.page, pageSize: pagination.value.rowsPerPage, status: filterStatus.value || undefined, q: filterQ.value || undefined })
+  if (store.campaignsList) pagination.value.rowsNumber = store.campaignsList.total
+}
+
+watch([filterQ, filterStatus], async () => {
+  pagination.value.page = 1
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  await store.fetchCampaignsList({ page: 1, pageSize: pagination.value.rowsPerPage, status: filterStatus.value || undefined, q: filterQ.value || undefined })
+  if (store.campaignsList) pagination.value.rowsNumber = store.campaignsList.total
+})
+
+const avgMonthlyFormatted = computed(() => {
+  const values = tsValues.value
+  if (!values.length) return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(0)
+  const avg = values.reduce((a, b) => a + b, 0) / values.length
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(avg)
+})
+
+const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payoutsEnabled: boolean } | null>(null)
+
+async function connectOnboard() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  const { url } = await connectService.onboard()
+  window.location.href = url
+}
+
+async function openConnectDashboard() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  const { url } = await connectService.dashboardLink()
+  window.location.href = url
+}
+
+async function loadConnectStatus() {
+  const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
+  setAuthToken(token || null)
+  try {
+    const res = await connectService.status()
+    connectStatus.value = res
+  } catch {
+    connectStatus.value = { connected: false, chargesEnabled: false, payoutsEnabled: false }
+  }
+}
+
+onMounted(() => { void loadConnectStatus() })
 </script>
 
 <style scoped lang="scss">
 .dashboard-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--color-surface);
 }
 
 // === HEADER SECTION ===
 .dashboard-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #f97316 100%);
+  background: var(--gradient-hero);
   color: white;
   position: relative;
   overflow: hidden;
@@ -455,7 +408,7 @@ onMounted(() => {
 
 .chart-text {
   margin-top: 16px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -477,12 +430,12 @@ onMounted(() => {
 .metric-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-strong);
 }
 
 .metric-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin-top: 4px;
 }
 
@@ -516,12 +469,12 @@ onMounted(() => {
 .stat-number {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-strong);
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 // System Card
@@ -550,15 +503,15 @@ onMounted(() => {
   border-radius: 50%;
   
   &--online {
-    background: #1e40af;
+    background: var(--color-positive);
   }
   
   &--warning {
-    background: #f59e0b;
+    background: var(--color-warning);
   }
   
   &--error {
-    background: #ef4444;
+    background: var(--color-negative);
   }
 }
 

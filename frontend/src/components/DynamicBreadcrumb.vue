@@ -158,11 +158,16 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
         to: isLast ? undefined : currentPath
       })
     } else {
-      // Try to format segment as title case
-      const label = segment
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
+      // Friendly label for detail pages that use an ID in the URL
+      const isProjectDetail = route.params?.id && pathSegments[0] === 'projects' && isLast
+
+      // If it's a project detail route, don't show the raw ID in the breadcrumb
+      const label = isProjectDetail
+        ? 'Detalhes'
+        : segment
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
       
       breadcrumbs.push({
         label,

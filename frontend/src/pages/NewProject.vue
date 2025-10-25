@@ -1,4 +1,5 @@
 <template>
+  <q-page class="bg-surface">
   <div class="q-pa-md q-mx-auto" style="max-width: 760px">
     <SignedOut>
       <q-card flat bordered class="q-pa-lg">
@@ -12,7 +13,7 @@
     <SignedIn>
       <q-card flat bordered class="q-pa-lg">
         <div class="text-h6 q-mb-md">Nova Campanha</div>
-        <div class="text-body2 text-grey-6 q-mb-lg">
+        <div class="text-body2 text-muted q-mb-lg">
           <q-icon name="info" class="q-mr-xs" />
           Campos marcados com * são obrigatórios
         </div>
@@ -78,7 +79,17 @@
               </q-select>
             </div>
 
-            <div class="col-12 col-md-6">
+            <div class="col-12">
+              <q-option-group
+                v-model="form.fundingType"
+                type="radio"
+                :options="fundingTypeOptions"
+                inline
+                label="Tipo de Campanha *"
+              />
+            </div>
+
+            <div class="col-12 col-md-6" v-if="form.fundingType === 'DIRECT'">
               <q-input
                 v-model="form.goalReais"
                 label="Meta (R$) *"
@@ -94,7 +105,9 @@
               />
             </div>
 
-            <div class="col-12 col-md-3">
+            <!-- Para campanhas recorrentes não há campo de meta -->
+
+            <div class="col-12 col-md-3" v-if="form.fundingType === 'DIRECT'">
               <q-input
                 v-model="form.date"
                 label="Data limite *"
@@ -108,7 +121,7 @@
               />
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-3" v-if="form.fundingType === 'DIRECT'">
               <q-input
                 v-model="form.time"
                 label="Hora limite (opcional)"
@@ -120,82 +133,168 @@
 
             <div class="col-12">
               <div class="text-subtitle2 q-mb-sm">
-                <q-icon name="image" class="q-mr-xs" />
-                Imagens da Campanha (máximo 5)
+                <q-icon name="perm_media" class="q-mr-xs" />
+                Mídia da Campanha (Imagem ou Vídeo)
               </div>
-              
-              <q-file
-                v-model="selectedImages"
-                multiple
-                accept="image/*"
-                max-files="5"
-                max-file-size="5242880"
-                :error="!!fieldErrors.images"
-                :error-message="fieldErrors.images"
-                filled
-                counter
-                @rejected="onImageRejected"
-              >
-                <template v-slot:prepend>
-                  <q-icon name="attach_file" />
-                </template>
-                <template v-slot:append>
-                  <q-icon name="add" />
-                </template>
-              </q-file>
-              
-              <div class="text-caption text-grey-6 q-mt-xs">
-                Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB por imagem.
+
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-md-6">
+                  <q-toggle v-model="useVideo" color="primary" label="Usar vídeo em vez de imagem" />
+                </div>
               </div>
-              
-              <!-- Preview das imagens selecionadas -->
-              <div v-if="selectedImages && selectedImages.length > 0" class="q-mt-md">
-                <div class="text-caption text-grey-6 q-mb-sm">Preview das imagens:</div>
-                <div class="row q-col-gutter-sm">
-                  <div 
-                    v-for="(image, index) in selectedImages" 
-                    :key="index"
-                    class="col-6 col-sm-4 col-md-3"
-                  >
-                    <div class="relative-position">
-                      <q-img 
-                        :src="getImagePreview(image)" 
-                        style="height: 120px; border-radius: 8px;"
-                        fit="cover"
-                        loading="lazy"
-                      >
-                        <template v-slot:error>
-                          <div class="text-negative text-caption text-center">
-                            <q-icon name="error" class="q-mr-xs" />
-                            Erro ao carregar
-                          </div>
-                        </template>
-                        <template v-slot:loading>
-                          <div class="text-grey-6 text-caption text-center">
-                            <q-spinner size="sm" class="q-mr-xs" />
-                            Carregando...
-                          </div>
-                        </template>
-                      </q-img>
-                      
-                      <!-- Botão para remover imagem -->
-                      <q-btn
-                        round
-                        dense
-                        color="negative"
-                        icon="close"
-                        size="sm"
-                        class="absolute-top-right q-ma-xs"
-                        @click="removeImage(index)"
-                      />
-                      
-                      <!-- Nome do arquivo -->
-                      <div class="text-caption text-center q-mt-xs text-grey-7">
-                        {{ image.name }}
+
+              <div v-if="!useVideo">
+                <q-file
+                  v-model="selectedImage"
+                  accept="image/*"
+                  max-file-size="5242880"
+                  :error="!!fieldErrors.image"
+                  :error-message="fieldErrors.image"
+                  filled
+                  @rejected="onImageRejected"
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="attach_file" />
+                  </template>
+                  <template v-slot:append>
+                    <q-icon name="add" />
+                  </template>
+                </q-file>
+
+                <div class="text-caption text-muted q-mt-xs">
+                  Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB.
+                </div>
+
+                <!-- Preview da imagem selecionada -->
+                <div v-if="selectedImage" class="q-mt-md">
+                  <div class="text-caption text-muted q-mb-sm">Preview da imagem:</div>
+                  <div class="row justify-center">
+                    <div class="col-6 col-sm-4 col-md-3">
+                      <div class="relative-position">
+                        <q-img 
+                          :src="getImagePreview(selectedImage)" 
+                          style="height: 200px; border-radius: 8px;"
+                          fit="cover"
+                          loading="lazy"
+                        >
+                          <template v-slot:error>
+                            <div class="text-negative text-caption text-center">
+                              <q-icon name="error" class="q-mr-xs" />
+                              Erro ao carregar
+                            </div>
+                          </template>
+                          <template v-slot:loading>
+                            <div class="text-muted text-caption text-center">
+                              <q-spinner size="sm" class="q-mr-xs" />
+                              Carregando...
+                            </div>
+                          </template>
+                        </q-img>
+
+                        <!-- Botão para remover imagem -->
+                        <q-btn
+                          round
+                          dense
+                          color="negative"
+                          icon="close"
+                          size="sm"
+                          class="absolute-top-right q-ma-xs"
+                          @click="removeImage()"
+                        />
+
+                        <!-- Nome do arquivo -->
+                        <div class="text-caption text-center q-mt-xs text-muted">
+                          {{ selectedImage.name }}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div v-else>
+                <q-file
+                  v-model="selectedVideo"
+                  accept="video/*"
+                  max-file-size="104857600"
+                  :error="!!fieldErrors.video"
+                  :error-message="fieldErrors.video"
+                  filled
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="videocam" />
+                  </template>
+                </q-file>
+
+                <div class="text-caption text-muted q-mt-xs">
+                  Formatos aceitos: MP4, WebM, etc. Tamanho máximo: 100MB.
+                </div>
+
+                <div v-if="selectedVideo" class="q-mt-md">
+                  <div class="text-caption text-muted q-mb-sm">Preview do vídeo:</div>
+                  <video :src="getVideoPreview(selectedVideo)" controls style="width: 100%; max-height: 360px; border-radius: 8px;" />
+                </div>
+
+                <div class="q-mt-lg">
+                  <div class="text-subtitle2 q-mb-sm">
+                    <q-icon name="image" class="q-mr-xs" />
+                    Capa do Vídeo (opcional)
+                  </div>
+                  <q-file
+                    v-model="selectedCover"
+                    accept="image/*"
+                    max-file-size="5242880"
+                    filled
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="image" />
+                    </template>
+                  </q-file>
+                  <div v-if="selectedCover" class="q-mt-md">
+                    <q-img :src="getImagePreview(selectedCover)" style="height: 200px; border-radius: 8px;" fit="cover" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assinatura (recorrente) -->
+            <div class="col-12" v-if="form.fundingType === 'RECURRING'">
+              <q-separator class="q-my-md" />
+              <div class="text-subtitle2 q-mb-sm">
+                <q-icon name="autorenew" class="q-mr-xs" />
+                Assinatura recorrente
+              </div>
+              <div class="row q-col-gutter-md items-center">
+                <div class="col-12 col-md-4">
+                  <q-input
+                    v-model="form.subscriptionPriceReais"
+                    label="Preço mensal/anual (R$)"
+                    type="text"
+                    inputmode="decimal"
+                    :rules="[rules.required]"
+                    :error="!!fieldErrors.subscriptionPriceCents"
+                    :error-message="fieldErrors.subscriptionPriceCents"
+                    dense
+                    filled
+                  />
+                </div>
+                <div class="col-12 col-md-4">
+                  <q-select
+                    v-model="form.subscriptionInterval"
+                    :options="subscriptionIntervalOptions"
+                    label="Intervalo"
+                    emit-value
+                    map-options
+                    :rules="[rules.required]"
+                    :error="!!fieldErrors.subscriptionInterval"
+                    :error-message="fieldErrors.subscriptionInterval"
+                    dense
+                    filled
+                  />
+                </div>
+              </div>
+              <div class="text-caption text-muted q-mt-xs">
+                Defina o preço e o intervalo da assinatura.
               </div>
             </div>
           </div>
@@ -209,8 +308,8 @@
             />
             <div v-if="loading || uploadingImages" class="q-ml-md">
               <q-spinner class="q-mr-sm" />
-              <span class="text-caption text-grey-6">
-                {{ uploadingImages ? 'Enviando imagens...' : 'Criando campanha...' }}
+              <span class="text-caption text-muted">
+                {{ uploadingImages ? 'Enviando imagem...' : 'Criando campanha...' }}
               </span>
             </div>
           </div>
@@ -218,19 +317,36 @@
       </q-card>
     </SignedIn>
   </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/vue'
-import { http } from 'src/utils/http'
+import { http, setAuthToken } from 'src/utils/http'
 import { Notify } from 'quasar'
 import { reaisToCents } from 'src/utils/money'
 import { mergeDateTimeToISO } from 'src/utils/datetime'
 import { categoriesService } from 'src/services/categories'
 import { projectImagesService } from 'src/services/project-images'
+import { projectVideosService } from 'src/services/project-videos'
 import type { Category } from 'src/components/models'
+// Atualiza embedUrl quando videoUrl muda (YouTube/Vimeo)
+function computeEmbed(url: string): string {
+  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/)
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}`
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch && vimeoMatch[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+  }
+  return ''
+}
+
+// moved below after refs are declared
+
 
 const router = useRouter()
 const { getToken } = useAuth()
@@ -245,15 +361,39 @@ const categoryOptions = ref<Category[]>([])
 const form = reactive({
   title: '',
   description: '',
-  goalReais: '',     // usuário digita em reais (ex.: 50,00)
-  date: '',          // YYYY-MM-DD (QDate)
-  time: '23:59',     // HH:mm (QTime) - default
-  categoryId: ''     // ID da categoria selecionada
+  fundingType: 'DIRECT' as 'DIRECT' | 'RECURRING',
+  goalReais: '',              // para DIRECT
+  recurringGoalReais: '',     // para RECURRING
+  date: '',                  // YYYY-MM-DD (QDate)
+  time: '23:59',             // HH:mm (QTime) - default
+  categoryId: '',            // ID da categoria selecionada
+  subscriptionPriceReais: '',
+  subscriptionInterval: undefined as undefined | 'MONTH' | 'YEAR'
 })
 
-// imagens selecionadas
-const selectedImages = ref<File[]>([])
+// opções de intervalo para assinatura recorrente
+const subscriptionIntervalOptions = [
+  { label: 'Mensal', value: 'MONTH' },
+  { label: 'Anual', value: 'YEAR' },
+]
+
+const fundingTypeOptions = [
+  { label: 'Pagamento direto (doação única)', value: 'DIRECT' },
+  { label: 'Pagamento recorrente (assinaturas)', value: 'RECURRING' },
+]
+
+// mídia: imagem ou vídeo
+const selectedImage = ref<File | null>(null)
+const selectedVideo = ref<File | null>(null)
+const selectedCover = ref<File | null>(null)
 const uploadingImages = ref(false)
+const useVideo = ref(false)
+const videoUrl = ref('')
+const embedUrl = ref('')
+
+watch(videoUrl, (val) => {
+  embedUrl.value = computeEmbed(val || '')
+})
 
 // erros por campo (vindos do backend)
 const fieldErrors = reactive<Record<string, string>>({})
@@ -263,8 +403,8 @@ onMounted(async () => {
   try {
     loadingCategories.value = true
     categoryOptions.value = await categoriesService.getAll()
-  } catch (error) {
-    console.error('Erro ao carregar categorias:', error)
+  } catch {
+  // noop: removed debug log
     Notify.create({ 
       type: 'warning', 
       message: 'Não foi possível carregar as categorias' 
@@ -279,8 +419,12 @@ function getImagePreview(file: File): string {
   return URL.createObjectURL(file)
 }
 
-function removeImage(index: number) {
-  selectedImages.value.splice(index, 1)
+function removeImage() {
+  selectedImage.value = null
+}
+
+function getVideoPreview(file: File): string {
+  return URL.createObjectURL(file)
 }
 
 function onImageRejected(rejectedEntries: { file: File; failedPropValidation: string }[]) {
@@ -306,7 +450,7 @@ function onImageRejected(rejectedEntries: { file: File; failedPropValidation: st
 
 function getSubmitButtonLabel(): string {
   if (uploadingImages.value) {
-    return 'Enviando imagens...'
+    return 'Enviando imagem...'
   }
   if (loading.value) {
     return 'Criando...'
@@ -326,23 +470,39 @@ const rules = {
   },
   futureDate: (v: string) => {
     if (!v) return true
-    const selectedDate = new Date(v)
+    // Aceita 'YYYY-MM-DD' ou 'DD/MM/YYYY' e compara em horário local
+    let y: number, m: number, d: number
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      const parts = v.split('-').map(Number)
+      y = parts[0]; m = parts[1]; d = parts[2]
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+      const parts = v.split('/').map(Number)
+      d = parts[0]; m = parts[1]; y = parts[2]
+    } else {
+      return 'Data inválida'
+    }
+    const selectedDate = new Date(y, (m - 1), d)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return selectedDate >= today || 'Data deve ser hoje ou no futuro'
+
+    const cmp = selectedDate.getTime() - today.getTime()
+    if (cmp > 0) return true
+    if (cmp < 0) return 'Data deve ser hoje ou no futuro'
+
+    // mesma data: validar horário
+    const [hh, mm] = String(form.time || '23:59').split(':').map(Number)
+    const selectedDateTime = new Date(y, (m - 1), d, hh, mm, 0)
+    const now = new Date()
+    return selectedDateTime.getTime() >= now.getTime() || 'Hora deve ser no futuro'
   },
-  images: (files: File[]) => {
-    if (!files || files.length === 0) return true // Campo opcional
-    if (files.length > 5) return 'Máximo de 5 imagens permitidas'
+  image: (file: File | null) => {
+    if (!file) return true // Campo opcional
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      return `Arquivo ${file.name} excede o limite de 5MB`
+    }
     
-    for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        return `Arquivo ${file.name} excede o limite de 5MB`
-      }
-      
-      if (!file.type.startsWith('image/')) {
-        return `Arquivo ${file.name} não é uma imagem válida`
-      }
+    if (!file.type.startsWith('image/')) {
+      return `Arquivo ${file.name} não é uma imagem válida`
     }
     
     return true
@@ -350,13 +510,14 @@ const rules = {
 }
 
 async function submit() {
-  console.log('🚀 Iniciando criação de campanha...')
+  // noop: removed debug log
   
   fieldErrors.title = ''
   fieldErrors.description = ''
   fieldErrors.goalCents = ''
   fieldErrors.deadline = ''
-  fieldErrors.images = ''
+  fieldErrors.image = ''
+  fieldErrors.video = ''
   fieldErrors.categoryId = ''
 
   // validação mínima frontend
@@ -372,86 +533,124 @@ async function submit() {
     fieldErrors.categoryId = 'Selecione uma categoria'
     return 
   }
-  if (!form.goalReais) { 
-    fieldErrors.goalCents = 'Informe a meta em reais'
-    return 
+  if (form.fundingType === 'DIRECT') {
+    if (!form.goalReais) { 
+      fieldErrors.goalCents = 'Informe a meta em reais'
+      return 
+    }
+  } else {
+    if (!form.subscriptionPriceReais) {
+      fieldErrors.subscriptionPriceCents = 'Informe o preço da assinatura'
+      return
+    }
+    if (!form.subscriptionInterval) {
+      fieldErrors.subscriptionInterval = 'Selecione o intervalo da assinatura'
+      return
+    }
   }
-  if (!form.date) { 
-    fieldErrors.deadline = 'Selecione a data limite'
-    return 
+  if (form.fundingType === 'DIRECT') {
+    if (!form.date) { 
+      fieldErrors.deadline = 'Selecione a data limite'
+      return 
+    }
   }
+  // validações específicas acima por tipo
   
-  console.log('✅ Validações passaram, enviando para backend...')
+  // noop: removed debug log
   
-  // Validação de data futura
-  const selectedDate = new Date(form.date)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  if (selectedDate < today) {
-    fieldErrors.deadline = 'Data deve ser hoje ou no futuro'
-    return
+  // Validação de data futura (apenas para DIRECT)
+  if (form.fundingType === 'DIRECT' && form.date) {
+    // Parse local: aceita 'YYYY-MM-DD' ou 'DD/MM/YYYY'
+    let y: number, m: number, d: number
+    if (/^\d{4}-\d{2}-\d{2}$/.test(form.date)) {
+      const parts = form.date.split('-').map(Number)
+      y = parts[0]; m = parts[1]; d = parts[2]
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(form.date)) {
+      const parts = form.date.split('/').map(Number)
+      d = parts[0]; m = parts[1]; y = parts[2]
+    } else {
+      fieldErrors.deadline = 'Data inválida'
+      return
+    }
+    const selectedDate = new Date(y, (m - 1), d)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const cmp = selectedDate.getTime() - today.getTime()
+    if (cmp < 0) {
+      fieldErrors.deadline = 'Data deve ser hoje ou no futuro'
+      return
+    }
+    if (cmp === 0) {
+      const [hh, mm] = String(form.time || '23:59').split(':').map(Number)
+      const selectedDateTime = new Date(y, (m - 1), d, hh, mm, 0)
+      const now = new Date()
+      if (selectedDateTime.getTime() < now.getTime()) {
+        fieldErrors.deadline = 'Hora deve ser no futuro'
+        return
+      }
+    }
   }
 
-  console.log('🔐 Obtendo token de autenticação...')
+  // noop: removed debug log
   let token
   try {
     token = await getToken.value?.()
-    console.log('✅ Token obtido:', token ? 'Token válido' : 'Token nulo')
-  } catch (error) {
-    console.error('❌ Erro ao obter token:', error)
+    // noop: removed debug log
+  } catch {
+    // noop: removed debug log
     Notify.create({ type: 'negative', message: 'Erro de autenticação. Faça login novamente.' })
     return
   }
   
   if (!token) {
-    console.log('❌ Token não disponível')
+    // noop: removed debug log
     Notify.create({ type: 'warning', message: 'Faça login para criar campanhas.' })
     return
   }
 
-  const goalCents = reaisToCents(form.goalReais)
-  const deadline = mergeDateTimeToISO(form.date, form.time)
+  const goalCents = form.fundingType === 'DIRECT' ? reaisToCents(form.goalReais) : undefined
+  const subscriptionPriceCents = form.fundingType === 'RECURRING' && form.subscriptionPriceReais
+    ? reaisToCents(form.subscriptionPriceReais)
+    : undefined
+  const deadline = form.fundingType === 'DIRECT' ? mergeDateTimeToISO(form.date, form.time) : undefined
 
   loading.value = true
-  console.log('📤 Enviando requisição para o backend...')
-  console.log('📋 Dados:', {
-    title: form.title,
-    description: form.description,
-    goalCents,
-    deadline,
-    categoryId: form.categoryId,
-    imagesCount: selectedImages.value.length,
-  })
+  // noop: removed debug log
+  
+  // Configurar token globalmente
+  setAuthToken(token)
   
   try {
     // Primeiro, cria o projeto sem imagens
     const response = await http.post('/api/projects', {
       title: form.title,
       description: form.description,
+      fundingType: form.fundingType,
       goalCents,
       deadline,
       categoryId: form.categoryId,
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
+      hasImage: !useVideo.value && !!selectedImage.value,
+      hasVideo: useVideo.value && !!selectedVideo.value,
+      subscriptionPriceCents,
+      subscriptionInterval: form.subscriptionInterval,
     })
     
-    // Se houver imagens selecionadas, fazer upload delas
-    if (selectedImages.value.length > 0) {
-      console.log('📸 Fazendo upload de', selectedImages.value.length, 'imagens...')
+    // Se houver imagem selecionada, fazer upload dela
+    if (!useVideo.value && selectedImage.value) {
+      // noop: removed debug log
       uploadingImages.value = true
       
       try {
         await projectImagesService.uploadImages(
           response.data.id, 
-          selectedImages.value, 
-          token
+          [selectedImage.value]
         )
-        console.log('✅ Imagens enviadas com sucesso!')
-      } catch (uploadError) {
-        console.error('❌ Erro ao fazer upload das imagens:', uploadError)
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
         Notify.create({
           type: 'warning',
-          message: 'Campanha criada, mas houve erro no upload das imagens.',
+          message: 'Campanha criada, mas houve erro no upload da imagem.',
           timeout: 3000
         })
       } finally {
@@ -459,21 +658,41 @@ async function submit() {
       }
     }
 
+    // Se houver vídeo selecionado, fazer upload
+    if (useVideo.value && selectedVideo.value) {
+      // noop: removed debug log
+      try {
+        await projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
+        Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload do vídeo.' })
+      }
+    }
+
+    // Se houver capa selecionada, enviar como primeira imagem
+    if (useVideo.value && selectedCover.value) {
+      try {
+        await projectImagesService.uploadImages(response.data.id, [selectedCover.value])
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
+      }
+    }
+
     const createdProject = response.data
-    console.log('✅ Resposta do backend:', response)
-    console.log('✅ Campanha criada:', createdProject)
-    console.log('🆔 ID da campanha:', createdProject?.id)
+    // noop: removed debug log
     
     if (!createdProject?.id) {
-      console.error('❌ ID da campanha não encontrado na resposta!')
+      // noop: removed debug log
       try {
         Notify.create({ 
           type: 'warning', 
           message: 'Campanha criada, mas redirecionando para listagem.',
           timeout: 2000
         })
-      } catch (notifyError) {
-        console.error('❌ Erro no Notify:', notifyError)
+      } catch {
+        // noop: removed debug log
       }
       // Fallback para listagem se não tiver ID
       try {
@@ -490,35 +709,46 @@ async function submit() {
         message: 'Campanha criada com sucesso! Redirecionando para suas campanhas...',
         timeout: 2000
       })
-    } catch (notifyError) {
-      console.error('❌ Erro no Notify:', notifyError)
+    } catch {
+      // noop: removed debug log
     }
     
     // Limpa o formulário
     form.title = ''
     form.description = ''
+    form.fundingType = 'DIRECT'
     form.goalReais = ''
     form.date = ''
     form.time = '23:59'
     form.categoryId = ''
-    selectedImages.value = []
+    selectedImage.value = null
+    selectedVideo.value = null
+    selectedCover.value = null
+    useVideo.value = false
     
     // Redireciona para a página "Minhas Campanhas"
-    console.log('🔄 Redirecionando para Minhas Campanhas: /me')
+    // noop: removed debug log
     try {
       await router.push('/me')
-      console.log('✅ Redirecionamento concluído!')
-    } catch (routerError) {
-      console.error('❌ Erro no redirecionamento:', routerError)
+      // noop: removed debug log
+    } catch {
+      // noop: removed debug log
       // Fallback
       window.location.href = '/#/me'
     }
   } catch (err: unknown) {
-    const error = err as { response?: { status?: number; data?: { issues?: { fieldErrors?: Record<string, string | string[]> } } } }
+    const error = err as { response?: { status?: number; data?: { issues?: { fieldErrors?: Record<string, string | string[]> }, error?: string, message?: string } } }
     const status = error?.response?.status
     const resp = error?.response?.data
 
-    if (status === 400 && resp?.issues?.fieldErrors) {
+    if (status === 422 && resp?.details?.fieldErrors) {
+      const fe = resp.details.fieldErrors
+      for (const key of Object.keys(fe)) {
+        const msg = Array.isArray(fe[key]) ? fe[key][0] : String(fe[key])
+        fieldErrors[key] = msg
+      }
+      Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
+    } else if (status === 400 && resp?.issues?.fieldErrors) {
       // mapeia erros do Zod para os campos
       const fe = resp.issues.fieldErrors
       for (const key of Object.keys(fe)) {
@@ -527,12 +757,16 @@ async function submit() {
         fieldErrors[key] = msg
       }
       Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
+    } else if (status === 429) {
+      Notify.create({ type: 'warning', message: 'Muitas tentativas. Tente novamente em instantes.' })
+    } else if (status === 409 && resp?.error === 'IdempotencyConflict') {
+      Notify.create({ type: 'warning', message: 'Requisição duplicada com payload diferente.' })
     } else if (status === 401) {
       Notify.create({ type: 'warning', message: 'Sessão expirada. Entre novamente.' })
       void router.push('/sign-in')
     } else {
       Notify.create({ type: 'negative', message: 'Erro ao criar campanha.' })
-      console.error(err)
+      // noop: removed debug log
     }
   } finally {
     loading.value = false

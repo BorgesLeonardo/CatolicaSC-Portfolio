@@ -16,6 +16,19 @@ export interface Category {
   projectsCount?: number;
 }
 
+export interface ProjectImage {
+  id: string;
+  projectId: string;
+  filename: string;
+  originalName: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Project {
   id: string;
   ownerId: string;
@@ -23,10 +36,17 @@ export interface Project {
   title: string;
   description?: string;
   goalCents: number;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   deadline: string;
-  imageUrl?: string;
+  imageUrl?: string;           // Mantido para compatibilidade
+  videoUrl?: string;           // URL de vídeo opcional
+  images?: ProjectImage[];     // Novo sistema de imagens
   raisedCents?: number;        // Valor arrecadado em centavos
   supportersCount?: number;    // Número de apoiadores únicos
+  // Assinaturas (recorrente)
+  subscriptionEnabled?: boolean;
+  subscriptionPriceCents?: number;
+  subscriptionInterval?: 'MONTH' | 'YEAR';
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -43,6 +63,11 @@ export interface Comment {
   id: string;
   projectId: string;
   authorId: string;
+  author?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
   content: string;
   createdAt: string;
   updatedAt: string;

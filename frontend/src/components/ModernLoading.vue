@@ -170,7 +170,7 @@ withDefaults(defineProps<Props>(), {
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--color-border);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 8px;

@@ -39,14 +39,12 @@ export class ProjectImagesService {
         fs.mkdirSync(this.uploadDir, { recursive: true });
       }
     } catch (error) {
-      console.error('Erro ao criar diretório de uploads:', error);
+      // noop: removed debug log
     }
   }
 
   async uploadImages(projectId: string, files: UploadedImageFile[]): Promise<any[]> {
-    console.log('📸 Iniciando upload de imagens para projeto:', projectId);
-    console.log('📁 Diretório de upload:', this.uploadDir);
-    console.log('📊 Número de arquivos:', files.length);
+    // noop: removed debug log
 
     // Verificar se o projeto existe
     const project = await prisma.project.findUnique({
@@ -58,7 +56,7 @@ export class ProjectImagesService {
       throw new AppError('Project not found', 404);
     }
 
-    console.log('✅ Projeto encontrado:', project.id);
+    // noop: removed debug log
 
     // Verificar limite de imagens (máximo 5)
     const existingImagesCount = await prisma.projectImage.count({
@@ -69,7 +67,7 @@ export class ProjectImagesService {
       throw new AppError('Maximum 5 images allowed per project', 400);
     }
 
-    const uploadedImages = [];
+    const uploadedImages: any[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -78,7 +76,7 @@ export class ProjectImagesService {
         throw new AppError('Invalid file provided', 400);
       }
       
-      console.log(`📄 Processando arquivo ${i + 1}:`, file.originalname);
+      // noop: removed debug log
       
       // Validar tipo de arquivo
       if (!file.mimetype.startsWith('image/')) {
@@ -90,21 +88,20 @@ export class ProjectImagesService {
         throw new AppError(`File ${file.originalname} exceeds 5MB limit`, 400);
       }
 
-      console.log(`✅ Validações OK para ${file.originalname}`);
+      // noop: removed debug log
 
       // Gerar nome único para o arquivo
       const fileExtension = path.extname(file.originalname);
       const filename = `${projectId}-${Date.now()}-${i}${fileExtension}`;
       const filepath = path.join(this.uploadDir, filename);
 
-      console.log(`💾 Salvando arquivo em:`, filepath);
+      // noop: removed debug log
 
       // Salvar arquivo no disco
       try {
         await writeFile(filepath, file.buffer);
-        console.log(`✅ Arquivo salvo: ${filename}`);
       } catch (writeError) {
-        console.error(`❌ Erro ao salvar arquivo ${filename}:`, writeError);
+        // noop: removed debug log
         throw new AppError(`Failed to save file ${file.originalname}`, 500);
       }
 
@@ -112,7 +109,7 @@ export class ProjectImagesService {
       const url = `/uploads/projects/${filename}`;
 
       // Salvar no banco de dados
-      console.log(`💾 Salvando no banco de dados: ${filename}`);
+      // noop: removed debug log
       try {
         const projectImage = await prisma.projectImage.create({
           data: {
@@ -126,15 +123,15 @@ export class ProjectImagesService {
           }
         });
 
-        console.log(`✅ Imagem salva no banco: ${projectImage.id}`);
+        // noop: removed debug log
         uploadedImages.push(projectImage);
       } catch (dbError) {
-        console.error(`❌ Erro ao salvar no banco de dados:`, dbError);
+        // noop: removed debug log
         throw new AppError(`Failed to save image metadata for ${file.originalname}`, 500);
       }
     }
 
-    console.log(`🎉 Upload concluído! ${uploadedImages.length} imagens processadas.`);
+    // noop: removed debug log
     return uploadedImages;
   }
 
@@ -174,7 +171,7 @@ export class ProjectImagesService {
     try {
       await unlink(filepath);
     } catch (error) {
-      console.error('Erro ao remover arquivo:', error);
+      // noop: removed debug log
       // Continua mesmo se não conseguir remover o arquivo
     }
 
@@ -229,7 +226,7 @@ export class ProjectImagesService {
       try {
         await unlink(filepath);
       } catch (error) {
-        console.error('Erro ao remover arquivo:', error);
+        // noop: removed debug log
       }
     }
 

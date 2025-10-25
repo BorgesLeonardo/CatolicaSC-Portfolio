@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { requireApiAuth } from '../middleware/auth';
 import { ProjectsController } from '../controllers/projects.controller';
+import { createProjectLimiter } from '../middleware/rateLimit';
+import { idempotencyMiddleware } from '../middleware/idempotency';
 
 const router = Router();
 const projectsController = new ProjectsController();
 
 /** ---------- Criação (privado) ---------- */
-router.post('/', requireApiAuth, projectsController.create.bind(projectsController));
+router.post('/', createProjectLimiter, idempotencyMiddleware, requireApiAuth, projectsController.create.bind(projectsController));
 
 /** ---------- Listagem (pública) com filtros ---------- */
 /**

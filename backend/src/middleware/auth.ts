@@ -1,6 +1,7 @@
 import { getAuth } from '@clerk/express';
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
+import { prisma } from '../infrastructure/prisma';
 
 // Interface para dados de autenticação
 interface AuthData {

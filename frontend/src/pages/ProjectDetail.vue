@@ -63,6 +63,19 @@ const hasImages = computed(() => {
   return (project.value.images && project.value.images.length > 0) || !!project.value.imageUrl
 })
 
+// Video management
+const hasVideo = computed(() => {
+  return !!project.value?.videoUrl
+})
+
+const showVideo = ref(false)
+const videoEl = ref<HTMLVideoElement | null>(null)
+
+const videoSrc = computed(() => {
+  if (!project.value?.videoUrl) return ''
+  return buildImageUrl(project.value.videoUrl)
+})
+
 const displayImages = computed(() => {
   if (!project.value) return []
   
@@ -107,11 +120,11 @@ const firstImageUrl = computed(() => {
 
 // Image loading callbacks for debug
 function onImageLoad() {
-  console.log('✅ Image loaded successfully:', firstImageUrl.value)
+  // noop: removed debug log
 }
 
-function onImageError(error: Event) {
-  console.error('❌ Image failed to load:', firstImageUrl.value, error)
+function onImageError() {
+  // noop: removed debug log
 }
 
 function openImageLightbox() {
@@ -148,6 +161,21 @@ const canDelete = computed(() => {
   return isOwner.value && !hasContributions.value
 })
 
+// Subscription helpers
+const isActive = computed(() => {
+  return project.value?.status === 'PUBLISHED'
+})
+const isSubscription = computed(() => {
+  return !!project.value?.subscriptionEnabled
+})
+
+const subscriptionIntervalLabel = computed(() => {
+  const interval = project.value?.subscriptionInterval
+  if (interval === 'MONTH') return 'Mensal'
+  if (interval === 'YEAR') return 'Anual'
+  return '—'
+})
+
 async function fetchProject() {
   loading.value = true
   try {
@@ -155,15 +183,15 @@ async function fetchProject() {
     await updateStatsIfNeeded()
     
     const { data } = await http.get<Project>(`/api/projects/${id}`)
-    console.log('📡 API Response:', data)
+    // noop: removed debug log
     project.value = data
     
     // Check if project has contributions (for delete permission)
     if (project.value) {
       try {
         hasContributions.value = await contributionsService.hasContributions(project.value.id)
-      } catch (error) {
-        console.warn('Error checking contributions:', error)
+      } catch {
+        // noop: removed debug log
         hasContributions.value = true // Default to safe side
       }
     }
@@ -176,6 +204,33 @@ async function fetchProject() {
 
 function openContrib() {
   dialogRef.value?.show()
+}
+
+async function subscribeNow() {
+  if (!project.value) return
+  try {
+    if (isExpired.value || !isActive.value) {
+      Notify.create({ type: 'warning', message: isExpired.value ? 'Campanha encerrada.' : 'Campanha inativa.' })
+      return
+    }
+    const token = await getToken.value?.()
+    if (!token) {
+      Notify.create({ type: 'warning', message: 'Entre para assinar.' })
+      return
+    }
+    setAuthToken(token)
+    const { data } = await http.post('/api/subscriptions/checkout', {
+      projectId: project.value.id
+    })
+    if (data?.checkoutUrl) {
+      window.location.href = data.checkoutUrl
+    } else {
+      Notify.create({ type: 'negative', message: 'Falha ao iniciar assinatura.' })
+    }
+  } catch {
+    // noop: removed debug log
+    Notify.create({ type: 'negative', message: 'Erro ao iniciar assinatura.' })
+  }
 }
 
 function editProject() {
@@ -245,8 +300,8 @@ async function performDelete() {
     
     // Redirect to projects page
     void router.push('/projects')
-  } catch (error) {
-    console.error('Error deleting project:', error)
+  } catch {
+    // noop: removed debug log
     Notify.create({
       type: 'negative',
       message: 'Erro ao excluir campanha. Tente novamente.',
@@ -270,16 +325,16 @@ async function shareProject() {
         url: window.location.href,
       })
     } catch {
-      console.log('Compartilhamento cancelado pelo usuário')
+      // noop: removed debug log
     }
   } else {
     // Fallback para copiar URL
     try {
       await navigator.clipboard.writeText(window.location.href)
       // Você pode adicionar uma notificação de sucesso aqui
-      console.log('URL copiada para a área de transferência')
-    } catch (error) {
-      console.error('Erro ao copiar URL:', error)
+      // noop: removed debug log
+    } catch {
+      // noop: removed debug log
     }
   }
 }
@@ -288,13 +343,28 @@ async function shareProject() {
 watch(() => user?.value?.id, (userId) => {
   if (userId && project.value) {
     // Força recálculo dos computeds
-    console.log('✅ Usuário carregado, recalculando permissões')
+    // noop: removed debug log
   }
 })
 
 onMounted(() => {
   void fetchProject()
+  // por padrão, manter capa (não iniciar vídeo automaticamente)
+  showVideo.value = false
 })
+
+function backToCover() {
+  const el = videoEl.value
+  if (el) {
+    try {
+      el.pause()
+      el.currentTime = 0
+    } catch {
+      // noop: removed debug log
+    }
+  }
+  showVideo.value = false
+}
 </script>
 
 <template>
@@ -306,26 +376,26 @@ onMounted(() => {
     <!-- Header com navegação -->
     <div class="project-header q-pa-md">
       <div class="row items-center justify-between">
-        <q-btn
-          flat
-          round
-          icon="arrow_back"
-          @click="goBack"
-          class="text-grey-7"
-        />
+          <q-btn
+            flat
+            round
+            icon="arrow_back"
+            @click="goBack"
+            class="text-grey-7 icon-muted-text"
+          />
         <div class="row q-gutter-sm">
           <q-btn
             flat
             round
             icon="share"
             @click="shareProject"
-            class="text-grey-7"
+            class="text-grey-7 icon-muted-text"
           />
           <q-btn
             flat
             round
             icon="favorite_border"
-            class="text-grey-7"
+            class="text-grey-7 icon-muted-text"
           />
         </div>
       </div>
@@ -334,9 +404,9 @@ onMounted(() => {
     <!-- Estado vazio -->
     <div v-if="!project && !loading" class="empty-state">
       <div class="text-center q-pa-xl">
-        <q-icon name="search_off" size="4rem" color="grey-4" />
-        <div class="text-h6 text-grey-6 q-mt-md">Campanha não encontrada</div>
-        <div class="text-body2 text-grey-5 q-mt-sm">
+        <q-icon name="search_off" size="4rem" class="icon-muted" />
+        <div class="text-h6 text-muted q-mt-md">Campanha não encontrada</div>
+        <div class="text-body2 text-hint q-mt-sm">
           A campanha que você está procurando pode ter sido removida ou não existe.
         </div>
         <q-btn
@@ -375,7 +445,10 @@ onMounted(() => {
                         class="q-mr-xs"
                       />
                     </q-badge>
-                    <div class="text-caption text-grey-6">
+                    <q-badge v-if="isSubscription" color="indigo-6" class="q-mr-sm">
+                      <q-icon name="autorenew" size="xs" class="q-mr-xs" /> Assinatura
+                    </q-badge>
+                    <div class="text-caption text-muted">
                       Por <strong>Criador</strong> • {{ formatDateTimeBR(project.createdAt) }}
                     </div>
                   </div>
@@ -384,25 +457,78 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Modern Campaign Image Gallery -->
-            <div v-if="hasImages" class="modern-image-gallery q-mb-lg">
-              <div class="gallery-container" @click="openImageLightbox">
+            <!-- Media: Video or Image -->
+            <div v-if="hasVideo || hasImages" class="modern-image-gallery q-mb-lg">
+              
+
+              <!-- Video Player -->
+              <div v-if="hasVideo && showVideo" class="gallery-container">
                 <div class="image-frame">
-                  <img 
-                    v-if="firstImageUrl"
-                    :src="firstImageUrl" 
-                    alt="Imagem da campanha"
-                    class="gallery-hero-image"
-                    @load="onImageLoad"
-                    @error="onImageError"
+                  <video
+                    ref="videoEl"
+                    :src="videoSrc"
+                    controls
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 24px;"
                   />
-                  <div v-else class="modern-placeholder">
-                    <q-icon name="image" size="4rem" color="grey-4" />
-                    <div class="text-h6 text-grey-5 q-mt-md">Imagem da Campanha</div>
-                  </div>
+                  <q-btn
+                    round
+                    dense
+                    icon="image"
+                    color="white"
+                    text-color="primary"
+                    class="absolute-top-right q-ma-sm"
+                    @click.stop="backToCover"
+                    aria-label="Voltar para capa"
+                  />
+                </div>
+              </div>
+
+              <!-- Image -->
+              <div v-else-if="hasImages" class="gallery-container" @click="hasVideo ? (showVideo = true) : openImageLightbox()">
+                <div class="image-frame">
+                  <template v-if="hasVideo">
+                    <div class="video-cover">
+                      <template v-if="firstImageUrl">
+                        <img 
+                          :src="firstImageUrl" 
+                          alt="Capa do vídeo"
+                          class="gallery-hero-image"
+                          @load="onImageLoad"
+                          @error="onImageError"
+                        />
+                      </template>
+                      <template v-else>
+                        <div class="modern-placeholder">
+                          <q-icon name="image" size="4rem" class="icon-muted" />
+                          <div class="text-h6 text-hint q-mt-md">Imagem da Campanha</div>
+                        </div>
+                      </template>
+                      <div class="play-overlay">
+                        <q-icon name="play_circle" color="white" size="64px" />
+                        <div class="overlay-text">Assistir vídeo</div>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <template v-if="firstImageUrl">
+                      <img 
+                        :src="firstImageUrl" 
+                        alt="Imagem da campanha"
+                        class="gallery-hero-image"
+                        @load="onImageLoad"
+                        @error="onImageError"
+                      />
+                    </template>
+                    <template v-else>
+                      <div class="modern-placeholder">
+                        <q-icon name="image" size="4rem" class="icon-muted" />
+                        <div class="text-h6 text-hint q-mt-md">Imagem da Campanha</div>
+                      </div>
+                    </template>
+                  </template>
                   
-                  <!-- Elegant hover overlay -->
-                  <div class="modern-overlay">
+                  <!-- Elegant hover overlay (only for image-only mode) -->
+                  <div v-if="!hasVideo" class="modern-overlay">
                     <div class="overlay-content">
                       <q-icon name="zoom_in" size="xl" color="white" />
                       <div class="overlay-text">Ver em tamanho real</div>
@@ -412,44 +538,73 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Progress Section -->
+            <!-- Progress / Plan Section -->
             <q-card flat bordered class="progress-card q-mb-lg">
               <q-card-section>
-                <!-- Progress Bar -->
-                <div class="progress-section q-mb-md">
-                  <q-linear-progress
-                    :value="progressPercentage / 100"
-                    size="12px"
-                    :color="isExpired ? 'grey-5' : 'positive'"
-                    track-color="grey-3"
-                    class="progress-bar"
-                  />
-                </div>
+                <template v-if="!isSubscription">
+                  <!-- Progress Bar (one-time) -->
+                  <div class="progress-section q-mb-md">
+                    <q-linear-progress
+                      :value="progressPercentage / 100"
+                      size="12px"
+                      :color="isExpired ? 'grey-5' : 'positive'"
+                      track-color="grey-3"
+                      class="progress-bar"
+                    />
+                  </div>
 
-                <!-- Stats Row -->
-                <div class="row q-col-gutter-md">
-                  <div class="col-4">
-                    <div class="stat-item">
-                      <div class="stat-value">{{ formatMoneyBRL(raisedAmount) }}</div>
-                      <div class="stat-label">Arrecadado</div>
-                      <div class="stat-sublabel">{{ progressPercentage.toFixed(0) }}% da meta</div>
+                  <!-- Stats Row (one-time) -->
+                  <div class="row q-col-gutter-md">
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ formatMoneyBRL(raisedAmount) }}</div>
+                        <div class="stat-label">Arrecadado</div>
+                        <div class="stat-sublabel">{{ progressPercentage.toFixed(0) }}% da meta</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ backersCount }}</div>
+                        <div class="stat-label">Apoiadores</div>
+                        <div class="stat-sublabel">Pessoas que contribuíram</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ daysLeft }}</div>
+                        <div class="stat-label">{{ daysLeft === 1 ? 'Dia restante' : 'Dias restantes' }}</div>
+                        <div class="stat-sublabel">{{ formatDateTimeBR(project.deadline) }}</div>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-4">
-                    <div class="stat-item">
-                      <div class="stat-value">{{ backersCount }}</div>
-                      <div class="stat-label">Apoiadores</div>
-                      <div class="stat-sublabel">Pessoas que contribuíram</div>
+                </template>
+
+                <template v-else>
+                  <!-- Subscription plan stats -->
+                  <div class="row q-col-gutter-md">
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ backersCount }}</div>
+                        <div class="stat-label">Assinantes</div>
+                        <div class="stat-sublabel">Planos ativos</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ formatMoneyBRL(project.subscriptionPriceCents) }}</div>
+                        <div class="stat-label">Preço</div>
+                        <div class="stat-sublabel">{{ subscriptionIntervalLabel }}</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <div class="stat-value">{{ formatMoneyBRL(raisedAmount) }}</div>
+                        <div class="stat-label">Receita total</div>
+                        <div class="stat-sublabel">Acumulado</div>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-4">
-                    <div class="stat-item">
-                      <div class="stat-value">{{ daysLeft }}</div>
-                      <div class="stat-label">{{ daysLeft === 1 ? 'Dia restante' : 'Dias restantes' }}</div>
-                      <div class="stat-sublabel">{{ formatDateTimeBR(project.deadline) }}</div>
-                    </div>
-                  </div>
-                </div>
+                </template>
               </q-card-section>
             </q-card>
 
@@ -482,22 +637,45 @@ onMounted(() => {
               <q-card-section>
                 <div class="contribute-content">
                   <div class="goal-info q-mb-md">
-                    <div class="goal-amount">{{ formatMoneyBRL(project.goalCents) }}</div>
-                    <div class="goal-label">Meta da campanha</div>
+                    <template v-if="!isSubscription">
+                      <div class="goal-amount">{{ formatMoneyBRL(project.goalCents) }}</div>
+                      <div class="goal-label">Meta da campanha</div>
+                    </template>
+                    <template v-else>
+                      <div class="goal-amount">{{ formatMoneyBRL(project.subscriptionPriceCents) }}</div>
+                      <div class="goal-label">Plano {{ subscriptionIntervalLabel.toLowerCase() }}</div>
+                    </template>
                   </div>
 
                   <!-- Botão de contribuir (para não-donos) -->
                   <q-btn
-                    v-if="!isOwner"
-                    :color="isExpired ? 'grey-5' : 'info'"
-                    :label="isExpired ? 'Campanha Encerrada' : 'Contribuir Agora'"
-                    :icon="isExpired ? 'block' : 'favorite'"
-                    :disable="isExpired"
+                    v-if="!isOwner && !isSubscription"
+                    :color="(isExpired || !isActive) ? 'grey-5' : 'info'"
+                    :label="isExpired ? 'Campanha Encerrada' : (!isActive ? 'Campanha Inativa' : 'Contribuir Agora')"
+                    :icon="(isExpired || !isActive) ? 'block' : 'favorite'"
+                    :disable="isExpired || !isActive"
                     @click="openContrib"
                     size="lg"
                     class="full-width contribute-btn q-mb-md"
-                    :class="{ 'pulse-animation': !isExpired }"
+                    :class="{ 'pulse-animation': !(isExpired || !isActive) }"
                   />
+
+                  <q-btn
+                    v-if="!isOwner && isSubscription"
+                    color="primary"
+                    :label="(project.subscriptionPriceCents && project.subscriptionInterval)
+                      ? `Assinar por ${formatMoneyBRL(project.subscriptionPriceCents)} / ${project.subscriptionInterval === 'MONTH' ? 'mês' : 'ano'}`
+                      : (isExpired ? 'Campanha Encerrada' : (!isActive ? 'Campanha Inativa' : 'Assinar'))"
+                    icon="autorenew"
+                    :disable="isExpired || !isActive"
+                    @click="subscribeNow"
+                    size="lg"
+                    class="full-width q-mb-sm"
+                  />
+
+                  <div v-if="!isOwner && isSubscription && project.subscriptionPriceCents && project.subscriptionInterval" class="text-caption text-hint q-mt-xs q-mb-sm">
+                    Assinatura recorrente: será cobrado automaticamente a cada {{ project.subscriptionInterval === 'MONTH' ? 'mês' : 'ano' }}.
+                  </div>
 
 
                   <!-- Botões de ação para o dono -->
@@ -526,14 +704,14 @@ onMounted(() => {
                     
                     <div v-if="isOwner && !canDelete && hasContributions" class="contribution-warning q-mb-sm">
                       <q-icon name="info" class="q-mr-sm" />
-                      <span class="text-body2 text-grey-6">
+                      <span class="text-body2 text-muted">
                         Não é possível excluir campanhas com contribuições
                       </span>
                     </div>
                     
                     <div v-if="isOwner && !canEdit && isExpired" class="expired-warning q-mb-sm">
                       <q-icon name="schedule" class="q-mr-sm" />
-                      <span class="text-body2 text-grey-6">
+                      <span class="text-body2 text-muted">
                         Campanha encerrada - não é possível editar
                       </span>
                     </div>
@@ -565,20 +743,41 @@ onMounted(() => {
                       <div class="info-value">{{ formatDateTimeBR(project.createdAt) }}</div>
                     </div>
                   </div>
-                  <div class="info-row">
-                    <q-icon name="schedule" class="info-icon" />
-                    <div class="info-content">
-                      <div class="info-label">Prazo limite</div>
-                      <div class="info-value">{{ formatDateTimeBR(project.deadline) }}</div>
+
+                  <template v-if="!isSubscription">
+                    <div class="info-row">
+                      <q-icon name="schedule" class="info-icon" />
+                      <div class="info-content">
+                        <div class="info-label">Prazo limite</div>
+                        <div class="info-value">{{ formatDateTimeBR(project.deadline) }}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="info-row">
-                    <q-icon name="flag" class="info-icon" />
-                    <div class="info-content">
-                      <div class="info-label">Meta</div>
-                      <div class="info-value">{{ formatMoneyBRL(project.goalCents) }}</div>
+                    <div class="info-row">
+                      <q-icon name="flag" class="info-icon" />
+                      <div class="info-content">
+                        <div class="info-label">Meta</div>
+                        <div class="info-value">{{ formatMoneyBRL(project.goalCents) }}</div>
+                      </div>
                     </div>
-                  </div>
+                  </template>
+
+                  <template v-else>
+                    <div class="info-row">
+                      <q-icon name="autorenew" class="info-icon" />
+                      <div class="info-content">
+                        <div class="info-label">Tipo</div>
+                        <div class="info-value">Assinatura {{ subscriptionIntervalLabel.toLowerCase() }}</div>
+                      </div>
+                    </div>
+                    <div class="info-row">
+                      <q-icon name="payments" class="info-icon" />
+                      <div class="info-content">
+                        <div class="info-label">Preço do plano</div>
+                        <div class="info-value">{{ formatMoneyBRL(project.subscriptionPriceCents) }} / {{ subscriptionIntervalLabel.toLowerCase() }}</div>
+                      </div>
+                    </div>
+                  </template>
+
                   <div class="info-row">
                     <q-icon name="category" class="info-icon" />
                     <div class="info-content">
@@ -594,7 +793,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <ContributeDialog ref="dialogRef" :project-id="id" />
+    <ContributeDialog ref="dialogRef" :project-id="id" :subscription-enabled="project?.subscriptionEnabled" />
     <EditProjectDialog 
       ref="editDialogRef" 
       v-model="editDialogOpen"
@@ -607,7 +806,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .project-detail {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--color-surface);
 }
 
 .project-header {
@@ -877,6 +1076,28 @@ onMounted(() => {
   backdrop-filter: blur(8px);
 }
 
+.video-cover {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(30, 58, 138, 0.4));
+  transition: background 0.2s ease;
+}
+
+.play-overlay .overlay-text {
+  margin-top: 8px;
+  color: #fff;
+  font-weight: 600;
+}
+
 .overlay-content {
   display: flex;
   flex-direction: column;
@@ -969,7 +1190,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .gallery-img {
@@ -978,7 +1199,7 @@ onMounted(() => {
 
 .gallery-placeholder {
   height: 400px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -987,7 +1208,7 @@ onMounted(() => {
 
 .gallery-navigation {
   background: white;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 
 .gallery-counter {
@@ -1021,12 +1242,12 @@ onMounted(() => {
   }
   
   &::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--color-surface-subtle);
     border-radius: 2px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--color-border);
     border-radius: 2px;
     
     &:hover {
@@ -1066,7 +1287,7 @@ onMounted(() => {
 // === ENHANCED THUMBNAIL NAVIGATION ===
 .thumbnail-navigation {
   background: white;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
   padding: 20px;
 }
 
@@ -1077,12 +1298,12 @@ onMounted(() => {
 }
 
 .thumbnail-nav-btn {
-  background: #f1f5f9;
+  background: var(--color-surface-subtle);
   color: #64748b;
   transition: all 0.3s ease;
   
   &:hover {
-    background: #e2e8f0;
+    background: var(--color-border);
     color: #475569;
     transform: scale(1.1);
   }
@@ -1101,7 +1322,7 @@ onMounted(() => {
   }
   
   &::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--color-surface-subtle);
     border-radius: 3px;
   }
   
@@ -1188,8 +1409,8 @@ onMounted(() => {
 
 // === IMAGE INFO SECTION ===
 .image-info {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-top: 1px solid #e2e8f0;
+  background: var(--gradient-subtle);
+  border-top: 1px solid var(--color-border);
 }
 
 // === AUTOPLAY CONTROLS ===
@@ -1341,13 +1562,13 @@ onMounted(() => {
 
 .hero-placeholder {
   height: 400px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--gradient-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--color-border);
 }
 
 .hero-overlay {

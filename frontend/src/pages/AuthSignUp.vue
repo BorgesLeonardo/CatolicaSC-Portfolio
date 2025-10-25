@@ -3,7 +3,7 @@ import { SignUp } from '@clerk/vue'
 </script>
 
 <template>
-  <div class="q-pa-xl flex flex-center">
+  <div class="q-pa-xl flex flex-center bg-surface">
     <SignUp
       fallbackRedirectUrl="/"
       forceRedirectUrl="/"

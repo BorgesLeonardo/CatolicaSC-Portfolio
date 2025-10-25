@@ -1,5 +1,18 @@
 import { http } from '../utils/http'
 
+export interface ProjectImage {
+  id: string
+  projectId: string
+  filename: string
+  originalName: string
+  url: string
+  size: number
+  mimeType: string
+  order: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Project {
   id: string
   ownerId: string
@@ -7,10 +20,16 @@ export interface Project {
   title: string
   description?: string
   goalCents: number
+  fundingType?: 'DIRECT' | 'RECURRING'
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   deadline: string
-  imageUrl?: string
+  imageUrl?: string           // Mantido para compatibilidade
+  images?: ProjectImage[]     // Novo sistema de imagens
   raisedCents?: number        // Valor arrecadado em centavos
   supportersCount?: number    // Número de apoiadores únicos
+  subscriptionEnabled?: boolean
+  subscriptionPriceCents?: number
+  subscriptionInterval?: 'MONTH' | 'YEAR'
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -26,9 +45,14 @@ export interface Project {
 export interface CreateProjectData {
   title: string
   description?: string
-  goalCents: number
+  fundingType: 'DIRECT' | 'RECURRING'
+  goalCents?: number
   deadline: string
   imageUrl?: string
+  categoryId: string
+  subscriptionEnabled?: boolean
+  subscriptionPriceCents?: number
+  subscriptionInterval?: 'MONTH' | 'YEAR'
 }
 
 export interface UpdateProjectData {
@@ -38,6 +62,7 @@ export interface UpdateProjectData {
   deadline?: string
   imageUrl?: string
   categoryId?: string
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 }
 
 export interface ProjectFilters {

@@ -188,7 +188,7 @@ async function subscribeNewsletter() {
   await new Promise(resolve => setTimeout(resolve, 1000))
   
   // Show success message (implement with your notification system)
-  console.log('Newsletter subscription:', email.value)
+  // noop: removed debug log
   email.value = ''
   subscribing.value = false
 }

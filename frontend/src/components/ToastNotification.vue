@@ -178,8 +178,8 @@ const resumeTimer = (id: string) => {
 const handleAction = async (toastId: string, action: ToastAction) => {
   try {
     await action.action()
-  } catch (error) {
-    console.error('Toast action error:', error)
+  } catch {
+    // noop: removed debug log
   }
   
   // Remove toast after action

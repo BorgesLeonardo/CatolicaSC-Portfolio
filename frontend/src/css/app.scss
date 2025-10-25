@@ -7,6 +7,35 @@
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Brand colors (mirror quasar.variables.scss) */
+  --color-primary: #1e40af;
+  --color-secondary: #f97316;
+  --color-accent: #10b981;
+  --color-tertiary: #8b5cf6;
+
+  /* Semantic colors */
+  --color-positive: #10b981;
+  --color-negative: #ef4444;
+  --color-info: #3b82f6;
+  --color-warning: #f59e0b;
+
+  /* Neutrals */
+  --color-text-strong: #0f172a;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-text-hint: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-surface-subtle: #f1f5f9;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  --gradient-secondary: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+  --gradient-accent: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  --gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #f97316 70%, #fb923c 100%);
+  --gradient-subtle: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
 }
 
 // === GLOBAL RESETS ===
@@ -504,6 +533,8 @@ html {
 .text-shadow {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+@import './utilities.scss';
 
 .hover-lift {
   transition: transform var(--transition-base);

@@ -57,7 +57,7 @@ export class ProjectStatsService {
           const stats = await this.updateProjectStats(project.id)
           return stats
         } catch (error) {
-          console.error(`❌ Erro ao atualizar ${project.title}:`, error)
+          // noop: removed debug log
           return null
         }
       })

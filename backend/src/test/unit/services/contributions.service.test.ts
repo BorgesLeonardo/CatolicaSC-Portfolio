@@ -29,6 +29,9 @@ jest.mock('../../../lib/stripe', () => ({
         create: jest.fn(),
       },
     },
+    accounts: {
+      retrieve: jest.fn().mockResolvedValue({ id: 'acct_123' }),
+    },
   },
 }))
 
@@ -58,6 +61,9 @@ describe('ContributionsService', () => {
         title: 'Test Project',
         deadline: new Date(Date.now() + 86400000), // Tomorrow
         deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_123' },
       }
       const mockContribution = {
         id: 'contribution-1',
@@ -85,9 +91,9 @@ describe('ContributionsService', () => {
         contributionId: 'contribution-1',
       })
 
-      expect(mockPrisma.project.findUnique).toHaveBeenCalledWith({
-        where: { id: 'project-1' },
-      })
+      expect(mockPrisma.project.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'project-1' } })
+      )
       expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
         where: { id: userId },
         update: {},
@@ -156,6 +162,9 @@ describe('ContributionsService', () => {
         title: 'Test Project',
         deadline: new Date(Date.now() + 86400000),
         deletedAt: null,
+        ownerId: 'owner-1',
+        status: 'PUBLISHED',
+        owner: { stripeAccountId: 'acct_123' },
       }
       const mockContribution = {
         id: 'contribution-1',
@@ -179,7 +188,7 @@ describe('ContributionsService', () => {
       mockStripe.checkout.sessions.create.mockResolvedValue(mockSession as any)
       mockPrisma.contribution.update.mockResolvedValue(mockContribution as any)
 
-      await service.createCheckout(dataWithoutUrls, userId)
+      await service.createCheckout(dataWithoutUrls as any, userId)
 
       expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith({
         mode: 'payment',
@@ -197,8 +206,10 @@ describe('ContributionsService', () => {
         metadata: {
           contributionId: 'contribution-1',
           projectId: 'project-1',
-          ownerId: undefined,
+          ownerId: 'owner-1',
+          userId: userId,
         },
+        payment_intent_data: expect.any(Object),
         success_url: 'https://example.com/contrib/success?c=contribution-1',
         cancel_url: 'https://example.com/contrib/cancel?c=contribution-1',
       })

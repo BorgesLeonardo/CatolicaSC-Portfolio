@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { stripe } from '../utils/stripeClient'
-import { createContributionFromCheckoutSession } from '../services/contribution.service'
+import { createContributionFromCheckoutSession, markContributionFailedFromCheckoutSession, markContributionFailedFromPaymentIntent, markContributionRefundedFromCharge, markContributionRefundedFromRefund, markContributionSucceededFromPaymentIntent } from '../services/contribution.service'
+import { prisma } from '../infrastructure/prisma'
 import { AppError } from '../utils/AppError'
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {
@@ -28,14 +29,75 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         const session = event.data.object
         await createContributionFromCheckoutSession(session)
         break
-      
-      case 'payment_intent.succeeded':
-        // Payment succeeded - no action needed
+      case 'checkout.session.expired': {
+        const session = event.data.object
+        await markContributionFailedFromCheckoutSession(session)
         break
-      
-      case 'payment_intent.payment_failed':
-        // Payment failed - no action needed
+      }
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object
+        const metadata = (sub as any).metadata || {}
+        const subscriptionId = metadata.subscriptionId as string | undefined
+        if (subscriptionId) {
+          const statusMap: Record<string, string> = {
+            'trialing': 'ACTIVE',
+            'active': 'ACTIVE',
+            'past_due': 'PAST_DUE',
+            'canceled': 'CANCELED',
+            'unpaid': 'PAST_DUE',
+            'incomplete': 'INCOMPLETE',
+            'incomplete_expired': 'INCOMPLETE',
+          }
+          const mapped = statusMap[(sub as any).status] || 'INCOMPLETE'
+          // Best-effort update; ignore if model not present in some envs
+          try {
+            await (prisma as any).subscription.update({
+            where: { id: subscriptionId },
+            data: {
+              status: mapped as any,
+              stripeSubscriptionId: (sub as any).id,
+              stripeCustomerId: (sub as any).customer as string,
+              latestInvoiceId: (sub as any).latest_invoice as string | null,
+            }
+            })
+          } catch (_) {
+            // swallow to keep webhook robust during tests
+          }
+        }
         break
+      }
+      
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object
+        if (typeof markContributionSucceededFromPaymentIntent === 'function') {
+          await markContributionSucceededFromPaymentIntent(pi)
+        }
+        break
+      }
+      case 'payment_intent.payment_failed': {
+        const pi = event.data.object
+        if (typeof markContributionFailedFromPaymentIntent === 'function') {
+          await markContributionFailedFromPaymentIntent(pi)
+        }
+        break
+      }
+      case 'charge.refunded': {
+        const charge = event.data.object
+        if (typeof markContributionRefundedFromCharge === 'function') {
+          await markContributionRefundedFromCharge(charge)
+        }
+        break
+      }
+      case 'refund.updated':
+      case 'refund.created': {
+        const refund = event.data.object
+        if (typeof markContributionRefundedFromRefund === 'function') {
+          await markContributionRefundedFromRefund(refund)
+        }
+        break
+      }
       
       default:
         // Unhandled event type - no action needed

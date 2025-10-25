@@ -33,6 +33,7 @@ describe('ProjectsService', () => {
     const validProjectData: CreateProjectData = {
       title: 'Test Project',
       description: 'This is a test project description',
+      fundingType: 'DIRECT',
       goalCents: 100000,
       deadline: '2024-12-31T23:59:59Z',
       imageUrl: 'https://example.com/image.jpg',
@@ -57,21 +58,60 @@ describe('ProjectsService', () => {
       expect(prisma.category.findFirst).toHaveBeenCalledWith({
         where: { id: validProjectData.categoryId, isActive: true }
       });
-      expect(prisma.project.create).toHaveBeenCalledWith({
-        data: {
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
           ownerId: 'user123',
           title: validProjectData.title,
           description: validProjectData.description,
+          fundingType: 'DIRECT',
           goalCents: validProjectData.goalCents,
           deadline: new Date(validProjectData.deadline),
+          minContributionCents: null,
           imageUrl: validProjectData.imageUrl,
+          videoUrl: null,
           categoryId: validProjectData.categoryId,
-        },
+          slug: expect.any(String),
+          status: 'PUBLISHED',
+          startsAt: expect.any(Date),
+          version: 1,
+          subscriptionEnabled: false,
+          subscriptionPriceCents: null,
+          subscriptionInterval: null,
+        }),
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
-      });
+      }));
       expect(result).toEqual(mockProject);
+    });
+
+    it('should create RECURRING project enforcing subscription fields', async () => {
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const recurringData: CreateProjectData = {
+        title: 'Recurring Project',
+        description: 'This is a test project description',
+        fundingType: 'RECURRING',
+        deadline: '2024-12-31T23:59:59Z',
+        categoryId: 'cm12345678901234567890',
+        subscriptionPriceCents: 2990,
+        subscriptionInterval: 'MONTH',
+      };
+
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+      (prisma.project.create as jest.Mock).mockResolvedValue({ id: 'p1' });
+
+      await service.create(recurringData, 'user123');
+
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          fundingType: 'RECURRING',
+          subscriptionEnabled: true,
+          subscriptionPriceCents: 2990,
+          subscriptionInterval: 'MONTH',
+        })
+      }));
     });
 
     it('should create project without imageUrl', async () => {
@@ -87,20 +127,31 @@ describe('ProjectsService', () => {
 
       const result = await service.create(projectDataWithoutImage, 'user123');
 
-      expect(prisma.project.create).toHaveBeenCalledWith({
-        data: {
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
           ownerId: 'user123',
           title: projectDataWithoutImage.title,
           description: projectDataWithoutImage.description,
+          fundingType: 'DIRECT',
           goalCents: projectDataWithoutImage.goalCents,
           deadline: new Date(projectDataWithoutImage.deadline),
+          minContributionCents: null,
           imageUrl: null,
+          videoUrl: null,
           categoryId: projectDataWithoutImage.categoryId,
-        },
+          slug: expect.any(String),
+          status: 'PUBLISHED',
+          startsAt: expect.any(Date),
+          version: 1,
+          subscriptionEnabled: false,
+          subscriptionPriceCents: null,
+          subscriptionInterval: null,
+        }),
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
-      });
+      }));
       expect(result).toEqual(mockProject);
     });
 
@@ -141,7 +192,8 @@ describe('ProjectsService', () => {
         skip: 0,
         take: 10,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({
@@ -170,18 +222,20 @@ describe('ProjectsService', () => {
       const result = await service.list(filters);
 
       expect(prisma.project.findMany).toHaveBeenCalledWith({
-        where: {
+        where: expect.objectContaining({
           deletedAt: null,
           title: { contains: 'test', mode: 'insensitive' },
           ownerId: 'user123',
           categoryId: 'cat1',
-          deadline: { gte: expect.any(Date) }
-        },
+          deadline: expect.objectContaining({ gte: expect.any(Date) }),
+          status: 'PUBLISHED',
+        }),
         orderBy: { createdAt: 'desc' },
         skip: 5, // (page - 1) * pageSize
         take: 5,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({
@@ -209,7 +263,8 @@ describe('ProjectsService', () => {
         skip: 0, // Clamped to 1, so (1-1)*10 = 0
         take: 50, // Clamped to 50
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
     });
@@ -231,7 +286,8 @@ describe('ProjectsService', () => {
       expect(prisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: 'proj1' },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -274,7 +330,8 @@ describe('ProjectsService', () => {
         where: { ownerId: 'user123', deletedAt: null },
         orderBy: { createdAt: 'desc' },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual({ items: mockProjects });
@@ -300,7 +357,8 @@ describe('ProjectsService', () => {
         where: { id: 'proj1' },
         data: updateData,
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
       expect(result).toEqual(mockProject);
@@ -349,7 +407,8 @@ describe('ProjectsService', () => {
           deadline: new Date('2024-12-31T23:59:59Z')
         },
         include: {
-          category: true
+          category: true,
+          images: { orderBy: { order: 'asc' } },
         }
       });
     });

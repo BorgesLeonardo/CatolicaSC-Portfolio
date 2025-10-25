@@ -16,6 +16,16 @@ export const errorHandler = (
     });
   }
 
+  // Prisma unique constraint (e.g., slug)
+  const anyErr = error as any;
+  if (anyErr?.code === 'P2002') {
+    return res.status(409).json({
+      error: 'Conflict',
+      message: 'Registro já existe com os mesmos dados únicos',
+      details: { target: anyErr.meta?.target },
+    });
+  }
+
   // Se for um erro de validação do Zod
   if (error.name === 'ZodError') {
     return res.status(400).json({
@@ -27,8 +37,12 @@ export const errorHandler = (
 
   // Erro interno do servidor
   console.error('Internal Server Error:', error);
-  return res.status(500).json({
+  const response: Record<string, unknown> = {
     error: 'InternalError',
     message: 'Erro interno do servidor',
-  });
+  };
+  if (process.env.NODE_ENV !== 'production') {
+    response.details = error.message;
+  }
+  return res.status(500).json(response);
 };
