@@ -105,12 +105,26 @@ if (process.env.ENFORCE_HTTPS === 'true') {
   app.use((req, res, next) => {
     const proto = req.header('x-forwarded-proto');
     if (proto && proto !== 'https' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const canonicalBase = (process.env.CANONICAL_BASE_URL || process.env.APP_BASE_URL || '').trim().replace(/\/+$/, '');
+      const rawBase = (process.env.CANONICAL_BASE_URL || process.env.APP_BASE_URL || '').trim();
+      let canonicalBase = rawBase;
+      // Remove trailing slashes without regex
+      if (canonicalBase) {
+        let end = canonicalBase.length;
+        while (end > 0 && canonicalBase.charCodeAt(end - 1) === 47) { // '/'
+          end--;
+        }
+        canonicalBase = canonicalBase.slice(0, end);
+      }
       if (canonicalBase && canonicalBase.startsWith('https://')) {
         // Normalize the original URL to a safe, same-origin path
         let requestPath = req.originalUrl || '/';
         // Disallow protocol-relative (//host) and absolute (scheme:) forms
-        if (requestPath.startsWith('//') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(requestPath)) {
+        const hasSchemePrefix = (() => {
+          const colonIndex = requestPath.indexOf(':');
+          const slashIndex = requestPath.indexOf('/');
+          return colonIndex > 0 && (slashIndex === -1 || colonIndex < slashIndex);
+        })();
+        if (requestPath.startsWith('//') || hasSchemePrefix) {
           requestPath = '/';
         }
         if (!requestPath.startsWith('/')) {
@@ -152,7 +166,27 @@ app.use((req, res, next) => {
 });
 app.use((req, _res, next) => {
   const ip = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
-  const anonymizedIp = ip ? ip.replace(/(\d+)$/, '0') : '';
+  const anonymizeIp = (value: string): string => {
+    if (!value) return '';
+    if (value.includes('.')) { // IPv4
+      const parts = value.split('.');
+      const lastIndex = parts.length - 1;
+      const last = parts[lastIndex] || '';
+      const allDigits = last.length > 0 && [...last].every(ch => ch >= '0' && ch <= '9');
+      if (allDigits) {
+        parts[lastIndex] = '0';
+        return parts.join('.');
+      }
+      return value;
+    }
+    if (value.includes(':')) { // IPv6 (best-effort anonymization)
+      const parts = value.split(':');
+      parts[parts.length - 1] = '0';
+      return parts.join(':');
+    }
+    return value;
+  };
+  const anonymizedIp = ip ? anonymizeIp(ip) : '';
   (req as any).log = logger.child({
     path: req.path,
     method: req.method,
