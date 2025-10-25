@@ -21,6 +21,7 @@ export interface Project {
   description?: string
   goalCents: number
   fundingType?: 'DIRECT' | 'RECURRING'
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   deadline: string
   imageUrl?: string           // Mantido para compatibilidade
   images?: ProjectImage[]     // Novo sistema de imagens
@@ -61,6 +62,7 @@ export interface UpdateProjectData {
   deadline?: string
   imageUrl?: string
   categoryId?: string
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 }
 
 export interface ProjectFilters {

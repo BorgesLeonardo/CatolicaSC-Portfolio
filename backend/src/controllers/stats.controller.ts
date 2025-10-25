@@ -19,22 +19,28 @@ export class StatsController {
     })
 
     // Total arrecadado (centavos) em contribuições concluídas
+    const createdAtFilter: Record<string, Date> = {}
+    if (fromDate) createdAtFilter.gte = fromDate
+    if (toDate) createdAtFilter.lte = toDate
+
     const contribAgg = await prisma.contribution.aggregate({
       _sum: { amountCents: true },
       where: {
         status: 'SUCCEEDED',
-        ...(fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : {})
+        ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {})
       }
     })
-    const totalRaisedCents = contribAgg._sum.amountCents || 0
+    const totalRaisedCents = (contribAgg._sum?.amountCents ?? 0)
 
     // Apoiadores únicos com contribuições concluídas
+    const contribWhere: any = {
+      status: 'SUCCEEDED',
+      contributorId: { not: null },
+      ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {})
+    }
+
     const distinctBackers = await prisma.contribution.findMany({
-      where: {
-        status: 'SUCCEEDED',
-        contributorId: { not: null },
-        ...(fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : {})
-      },
+      where: contribWhere,
       distinct: ['contributorId'],
       select: { contributorId: true }
     })

@@ -39,6 +39,7 @@ describe('ProjectsController', () => {
     const validProjectData = {
       title: 'Valid Project Title',
       description: 'This is a sufficiently long project description text.',
+      fundingType: 'DIRECT',
       goalCents: 100000,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       imageUrl: 'https://example.com/image.jpg',
@@ -79,6 +80,53 @@ describe('ProjectsController', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(mockProject);
       expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should call next with validation error when body is invalid', async () => {
+      mockRequest.body = {
+        title: 'bad',
+        description: 'too short',
+        fundingType: 'DIRECT',
+        goalCents: 100,
+        categoryId: 'cm12345678901234567890',
+        hasImage: false,
+      } as any;
+      (mockRequest as any).authUserId = 'user123';
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should accept endsAt field and map to deadline', async () => {
+      const endsAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+      const body = {
+        title: 'Valid Project Title',
+        description: 'This is a sufficiently long project description text.',
+        fundingType: 'DIRECT',
+        goalCents: 100000,
+        endsAt: endsAt.toISOString(),
+        categoryId: 'cm12345678901234567890',
+        hasImage: true,
+      } as any;
+      mockRequest.body = body;
+      (mockRequest as any).authUserId = 'user123';
+
+      mockService.create.mockResolvedValue({ id: 'p1' } as any);
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: body.title,
+          fundingType: 'DIRECT',
+          goalCents: body.goalCents,
+          deadline: endsAt.toISOString(),
+        }),
+        'user123'
+      );
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
     });
 
     it('should call next with error when service throws', async () => {
@@ -136,6 +184,23 @@ describe('ProjectsController', () => {
         active: true,
       });
       expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+    });
+
+    it('should interpret active=1 as true', async () => {
+      const mockResult = { items: [], total: 0, page: 1, pageSize: 10 };
+      mockRequest.query = { active: '1' } as any;
+      mockService.list.mockResolvedValue(mockResult as any);
+
+      await controller.list(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.list).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 10,
+        q: undefined,
+        ownerId: undefined,
+        categoryId: undefined,
+        active: true,
+      });
     });
 
     it('should handle invalid page parameters', async () => {

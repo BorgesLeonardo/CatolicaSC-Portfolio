@@ -36,6 +36,7 @@ export interface Project {
   title: string;
   description?: string;
   goalCents: number;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   deadline: string;
   imageUrl?: string;           // Mantido para compatibilidade
   videoUrl?: string;           // URL de vídeo opcional

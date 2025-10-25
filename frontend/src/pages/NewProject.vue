@@ -470,10 +470,30 @@ const rules = {
   },
   futureDate: (v: string) => {
     if (!v) return true
-    const selectedDate = new Date(v)
+    // Aceita 'YYYY-MM-DD' ou 'DD/MM/YYYY' e compara em horário local
+    let y: number, m: number, d: number
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      const parts = v.split('-').map(Number)
+      y = parts[0]; m = parts[1]; d = parts[2]
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+      const parts = v.split('/').map(Number)
+      d = parts[0]; m = parts[1]; y = parts[2]
+    } else {
+      return 'Data inválida'
+    }
+    const selectedDate = new Date(y, (m - 1), d)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return selectedDate >= today || 'Data deve ser hoje ou no futuro'
+
+    const cmp = selectedDate.getTime() - today.getTime()
+    if (cmp > 0) return true
+    if (cmp < 0) return 'Data deve ser hoje ou no futuro'
+
+    // mesma data: validar horário
+    const [hh, mm] = String(form.time || '23:59').split(':').map(Number)
+    const selectedDateTime = new Date(y, (m - 1), d, hh, mm, 0)
+    const now = new Date()
+    return selectedDateTime.getTime() >= now.getTime() || 'Hora deve ser no futuro'
   },
   image: (file: File | null) => {
     if (!file) return true // Campo opcional
@@ -540,12 +560,34 @@ async function submit() {
   
   // Validação de data futura (apenas para DIRECT)
   if (form.fundingType === 'DIRECT' && form.date) {
-    const selectedDate = new Date(form.date)
+    // Parse local: aceita 'YYYY-MM-DD' ou 'DD/MM/YYYY'
+    let y: number, m: number, d: number
+    if (/^\d{4}-\d{2}-\d{2}$/.test(form.date)) {
+      const parts = form.date.split('-').map(Number)
+      y = parts[0]; m = parts[1]; d = parts[2]
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(form.date)) {
+      const parts = form.date.split('/').map(Number)
+      d = parts[0]; m = parts[1]; y = parts[2]
+    } else {
+      fieldErrors.deadline = 'Data inválida'
+      return
+    }
+    const selectedDate = new Date(y, (m - 1), d)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    if (selectedDate < today) {
+    const cmp = selectedDate.getTime() - today.getTime()
+    if (cmp < 0) {
       fieldErrors.deadline = 'Data deve ser hoje ou no futuro'
       return
+    }
+    if (cmp === 0) {
+      const [hh, mm] = String(form.time || '23:59').split(':').map(Number)
+      const selectedDateTime = new Date(y, (m - 1), d, hh, mm, 0)
+      const now = new Date()
+      if (selectedDateTime.getTime() < now.getTime()) {
+        fieldErrors.deadline = 'Hora deve ser no futuro'
+        return
+      }
     }
   }
 

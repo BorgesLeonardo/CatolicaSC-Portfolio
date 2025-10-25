@@ -35,7 +35,7 @@ export const createCampaignSchema = z.object({
   if (data.endsAt > maxEnd) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Duração máxima é de 365 dias', path: ['endsAt'] });
   }
-  if (typeof data.minContributionCents === 'number' && data.minContributionCents > data.goalCents) {
+  if (typeof data.minContributionCents === 'number' && typeof data.goalCents === 'number' && data.minContributionCents > data.goalCents) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Contribuição mínima deve ser menor ou igual à meta', path: ['minContributionCents'] });
   }
 

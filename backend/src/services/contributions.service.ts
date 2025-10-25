@@ -13,7 +13,7 @@ export class ContributionsService {
   async createCheckout(data: CreateCheckoutData, userId: string) {
     const project = await prisma.project.findUnique({ 
       where: { id: data.projectId },
-      select: { id: true, title: true, deadline: true, ownerId: true, deletedAt: true, owner: { select: { stripeAccountId: true } } }
+      select: { id: true, title: true, deadline: true, ownerId: true, deletedAt: true, status: true, owner: { select: { stripeAccountId: true } } }
     });
     
     if (!project || project.deletedAt) {
@@ -22,6 +22,9 @@ export class ContributionsService {
     
     if (project.deadline < new Date()) {
       throw new AppError('Project is closed', 400);
+    }
+    if (project.status !== 'PUBLISHED') {
+      throw new AppError('Project is not accepting contributions', 400);
     }
 
     // Check owner connect account

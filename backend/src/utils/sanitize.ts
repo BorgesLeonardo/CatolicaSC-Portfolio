@@ -18,8 +18,9 @@ export function sanitizeHtml(input: string): string {
 export function maskEmail(email: string): string {
   if (!email || typeof email !== 'string' || !email.includes('@')) return email;
   const [user, domain] = email.split('@');
-  const visible = user.slice(0, 1);
-  const maskedUser = visible + '*'.repeat(Math.max(0, user.length - 1));
+  const safeUser = user ?? '';
+  const visible = safeUser.slice(0, 1);
+  const maskedUser = visible + '*'.repeat(Math.max(0, safeUser.length - 1));
   return `${maskedUser}@${domain}`;
 }
 

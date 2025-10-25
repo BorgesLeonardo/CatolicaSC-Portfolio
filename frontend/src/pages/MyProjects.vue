@@ -9,6 +9,7 @@ import { getImageUrl as buildImageUrl } from 'src/config/api'
 import type { Project, ProjectResponse } from 'src/components/models'
 import EditProjectDialog from 'src/components/EditProjectDialog.vue'
 import { contributionsService } from 'src/services/contributions'
+import { projectsService } from 'src/services/projects'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
 const { isSignedIn, getToken } = useAuth()
@@ -18,6 +19,8 @@ const { updateStatsIfNeeded } = useProjectStats()
 const items = ref<Project[]>([])
 const loading = ref(false)
 const deleteLoading = ref<string | null>(null)
+const deactivateLoading = ref<string | null>(null)
+const activateLoading = ref<string | null>(null)
 
 // Edit dialog state
 const editDialogOpen = ref(false)
@@ -122,6 +125,62 @@ function deleteProject(project: Project) {
   }).onOk(() => {
     void performDelete(project)
   })
+}
+
+function deactivateProject(project: Project) {
+  if (project.status === 'ARCHIVED') {
+    Notify.create({ type: 'info', message: 'Campanha já está desativada' })
+    return
+  }
+
+  Dialog.create({
+    title: 'Desativar campanha',
+    message: `Deseja desativar a campanha "${project.title}"? Ela não poderá mais receber contribuições.`,
+    ok: { label: 'Desativar', color: 'warning', icon: 'pause_circle' },
+    cancel: { label: 'Cancelar', flat: true }
+  }).onOk(() => { void performDeactivate(project) })
+}
+
+async function performDeactivate(project: Project) {
+  deactivateLoading.value = project.id
+  try {
+    const updated = await projectsService.update(project.id, { status: 'ARCHIVED' })
+    const idx = items.value.findIndex(p => p.id === project.id)
+    if (idx !== -1) items.value[idx] = updated
+    Notify.create({ type: 'positive', message: 'Campanha desativada' })
+  } catch {
+    Notify.create({ type: 'negative', message: 'Erro ao desativar campanha' })
+  } finally {
+    deactivateLoading.value = null
+  }
+}
+
+function activateProject(project: Project) {
+  if (project.status === 'PUBLISHED') {
+    Notify.create({ type: 'info', message: 'Campanha já está ativa' })
+    return
+  }
+
+  Dialog.create({
+    title: 'Ativar campanha',
+    message: `Deseja reativar a campanha "${project.title}"? Ela voltará a receber contribuições até o prazo.`,
+    ok: { label: 'Ativar', color: 'positive', icon: 'play_circle' },
+    cancel: { label: 'Cancelar', flat: true }
+  }).onOk(() => { void performActivate(project) })
+}
+
+async function performActivate(project: Project) {
+  activateLoading.value = project.id
+  try {
+    const updated = await projectsService.update(project.id, { status: 'PUBLISHED' })
+    const idx = items.value.findIndex(p => p.id === project.id)
+    if (idx !== -1) items.value[idx] = updated
+    Notify.create({ type: 'positive', message: 'Campanha ativada' })
+  } catch {
+    Notify.create({ type: 'negative', message: 'Erro ao ativar campanha' })
+  } finally {
+    activateLoading.value = null
+  }
 }
 
 async function performDelete(project: Project) {
@@ -332,8 +391,8 @@ onMounted(fetchMyProjects)
                   </div>
 
                   <q-badge 
-                    :color="isPast(project.deadline) ? 'grey-6' : 'positive'" 
-                    :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
+                    :color="project.status === 'ARCHIVED' ? 'warning' : (isPast(project.deadline) ? 'grey-6' : 'positive')" 
+                    :label="project.status === 'ARCHIVED' ? 'Desativada' : (isPast(project.deadline) ? 'Encerrada' : 'Ativa')"
                     class="q-mt-sm"
                   />
                 </q-card-section>
@@ -349,11 +408,33 @@ onMounted(fetchMyProjects)
                     <q-tooltip>Ver detalhes</q-tooltip>
                   </q-btn>
                   <q-btn 
+                    v-if="project.status !== 'ARCHIVED'"
+                    flat
+                    icon="pause_circle"
+                    color="warning"
+                    @click="deactivateProject(project)"
+                    :loading="deactivateLoading === project.id"
+                    class="action-btn"
+                  >
+                    <q-tooltip>Desativar campanha</q-tooltip>
+                  </q-btn>
+                  <q-btn 
+                    v-else
+                    flat
+                    icon="play_circle"
+                    color="positive"
+                    @click="activateProject(project)"
+                    :loading="activateLoading === project.id"
+                    class="action-btn"
+                  >
+                    <q-tooltip>Ativar campanha</q-tooltip>
+                  </q-btn>
+                  <q-btn 
                     flat 
                     icon="edit" 
                     @click="editProject(project)"
-                    :disable="isPast(project.deadline)"
-                    :color="isPast(project.deadline) ? 'grey-5' : 'primary'"
+                    :disable="isPast(project.deadline) || project.status === 'ARCHIVED'"
+                    :color="(isPast(project.deadline) || project.status === 'ARCHIVED') ? 'grey-5' : 'primary'"
                     class="action-btn"
                   >
                     <q-tooltip>

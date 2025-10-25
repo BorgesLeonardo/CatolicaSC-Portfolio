@@ -36,7 +36,7 @@ export const errorHandler = (
   }
 
   // Erro interno do servidor
-  // noop: removed debug log
+  console.error('Internal Server Error:', error);
   const response: Record<string, unknown> = {
     error: 'InternalError',
     message: 'Erro interno do servidor',

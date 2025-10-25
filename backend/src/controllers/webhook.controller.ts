@@ -18,7 +18,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     // Verify webhook signature
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
   } catch (err: any) {
-    // noop: removed debug log
+    console.error('Webhook signature verification failed:', err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
@@ -106,7 +106,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
     return res.json({ received: true })
   } catch (error) {
-    // noop: removed debug log
+    console.error('Error processing webhook:', error)
     return res.status(500).json({ error: 'Webhook processing failed' })
   }
 }

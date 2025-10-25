@@ -27,6 +27,7 @@ export interface UpdateProjectData {
   imageUrl?: string | undefined;
   videoUrl?: string | undefined;
   categoryId?: string | undefined;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | undefined;
 }
 
 export interface ProjectFilters {
@@ -127,6 +128,7 @@ export class ProjectsService {
     
     if (filters.active) {
       where.deadline = { gte: new Date() };
+      where.status = 'PUBLISHED';
     }
 
     const [items, total] = await Promise.all([

@@ -16,6 +16,7 @@ export class SubscriptionsService {
         id: true,
         title: true,
         deletedAt: true,
+        status: true,
         subscriptionEnabled: true,
         subscriptionPriceCents: true,
         subscriptionInterval: true,
@@ -30,6 +31,11 @@ export class SubscriptionsService {
 
     if (!project.subscriptionEnabled || !project.subscriptionPriceCents || !project.subscriptionInterval) {
       throw new AppError('Subscription not available for this project', 400);
+    }
+
+    // Only allow subscriptions when campaign is ACTIVE (PUBLISHED)
+    if (project.status !== 'PUBLISHED') {
+      throw new AppError('Project is not accepting subscriptions', 400);
     }
 
     const ownerStripeAccountId = project.owner?.stripeAccountId;

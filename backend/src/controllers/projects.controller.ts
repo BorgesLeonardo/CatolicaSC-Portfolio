@@ -28,15 +28,24 @@ export class ProjectsController {
     imageUrl: z.string().optional(),
     videoUrl: z.string().url('Informe uma URL de vídeo válida').optional(),
     categoryId: z.string().cuid('Categoria deve ser válida').optional(),
+    status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
   }).refine((b) => Object.values(b).some((v) => v !== undefined), {
     message: 'Envie ao menos um campo para atualização',
   });
   async create(req: Request, res: Response, next: NextFunction) {
     try {
+      // Define um deadline padrão para campanhas recorrentes quando não informado pelo frontend
+      const shouldDefaultEndsAt =
+        (!req.body.deadline && !req.body.endsAt) && req.body.fundingType === 'RECURRING';
+
+      const defaultEndsAt = shouldDefaultEndsAt
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        : undefined;
+
       const parse = this.createProjectSchema.safeParse({
         ...req.body,
         // allow incoming ISO strings for endsAt
-        endsAt: req.body.deadline ? new Date(req.body.deadline) : req.body.endsAt,
+        endsAt: req.body.deadline ? new Date(req.body.deadline) : (req.body.endsAt || defaultEndsAt),
       });
       if (!parse.success) {
         throw new AppError('ValidationError', 422, parse.error.flatten());

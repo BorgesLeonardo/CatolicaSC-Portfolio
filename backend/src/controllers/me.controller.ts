@@ -18,10 +18,10 @@ export class MeController {
       where: { status: 'SUCCEEDED', project: { ownerId: userId } }
     })
 
-    // Campanhas ativas/publicadas
+    // Campanhas ativas/publicadas (ignorar removidas via soft delete)
     const [activeCampaigns, publishedCampaigns] = await Promise.all([
-      prisma.project.count({ where: { ownerId: userId, status: 'PUBLISHED', deadline: { gt: new Date() } } }),
-      prisma.project.count({ where: { ownerId: userId, status: 'PUBLISHED' } })
+      prisma.project.count({ where: { ownerId: userId, status: 'PUBLISHED', deletedAt: null, deadline: { gt: new Date() } } }),
+      prisma.project.count({ where: { ownerId: userId, status: 'PUBLISHED', deletedAt: null } })
     ])
 
     // Taxa de sucesso: atingiram goalCents
@@ -29,6 +29,7 @@ export class MeController {
       where: {
         ownerId: userId,
         status: 'PUBLISHED',
+        deletedAt: null,
         raisedCents: { gte: prisma.project.fields.goalCents }
       }
     })

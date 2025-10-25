@@ -162,6 +162,9 @@ const canDelete = computed(() => {
 })
 
 // Subscription helpers
+const isActive = computed(() => {
+  return project.value?.status === 'PUBLISHED'
+})
 const isSubscription = computed(() => {
   return !!project.value?.subscriptionEnabled
 })
@@ -206,6 +209,10 @@ function openContrib() {
 async function subscribeNow() {
   if (!project.value) return
   try {
+    if (isExpired.value || !isActive.value) {
+      Notify.create({ type: 'warning', message: isExpired.value ? 'Campanha encerrada.' : 'Campanha inativa.' })
+      return
+    }
     const token = await getToken.value?.()
     if (!token) {
       Notify.create({ type: 'warning', message: 'Entre para assinar.' })
@@ -643,24 +650,24 @@ function backToCover() {
                   <!-- Botão de contribuir (para não-donos) -->
                   <q-btn
                     v-if="!isOwner && !isSubscription"
-                    :color="isExpired ? 'grey-5' : 'info'"
-                    :label="isExpired ? 'Campanha Encerrada' : 'Contribuir Agora'"
-                    :icon="isExpired ? 'block' : 'favorite'"
-                    :disable="isExpired"
+                    :color="(isExpired || !isActive) ? 'grey-5' : 'info'"
+                    :label="isExpired ? 'Campanha Encerrada' : (!isActive ? 'Campanha Inativa' : 'Contribuir Agora')"
+                    :icon="(isExpired || !isActive) ? 'block' : 'favorite'"
+                    :disable="isExpired || !isActive"
                     @click="openContrib"
                     size="lg"
                     class="full-width contribute-btn q-mb-md"
-                    :class="{ 'pulse-animation': !isExpired }"
+                    :class="{ 'pulse-animation': !(isExpired || !isActive) }"
                   />
 
                   <q-btn
                     v-if="!isOwner && isSubscription"
                     color="primary"
-                    :label="project.subscriptionPriceCents && project.subscriptionInterval
+                    :label="(project.subscriptionPriceCents && project.subscriptionInterval)
                       ? `Assinar por ${formatMoneyBRL(project.subscriptionPriceCents)} / ${project.subscriptionInterval === 'MONTH' ? 'mês' : 'ano'}`
-                      : 'Assinar'"
+                      : (isExpired ? 'Campanha Encerrada' : (!isActive ? 'Campanha Inativa' : 'Assinar'))"
                     icon="autorenew"
-                    :disable="isExpired"
+                    :disable="isExpired || !isActive"
                     @click="subscribeNow"
                     size="lg"
                     class="full-width q-mb-sm"

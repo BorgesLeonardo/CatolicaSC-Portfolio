@@ -61,6 +61,8 @@ describe('ContributionsService', () => {
         title: 'Test Project',
         deadline: new Date(Date.now() + 86400000), // Tomorrow
         deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
         owner: { stripeAccountId: 'acct_123' },
       }
       const mockContribution = {
@@ -161,6 +163,7 @@ describe('ContributionsService', () => {
         deadline: new Date(Date.now() + 86400000),
         deletedAt: null,
         ownerId: 'owner-1',
+        status: 'PUBLISHED',
         owner: { stripeAccountId: 'acct_123' },
       }
       const mockContribution = {
