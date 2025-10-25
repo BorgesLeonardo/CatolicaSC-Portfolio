@@ -45,7 +45,10 @@ router.get('/events', requireApiAuth, (req: Request, res: Response) => {
   const ownerId = (req.query.ownerId as string) || undefined
 
   const id = ++clientSeq
-  clients.push({ id, res, userId, ownerId })
+  const client: { id: number; res: Response; userId?: string; ownerId?: string } = { id, res }
+  if (userId !== undefined) client.userId = userId
+  if (ownerId !== undefined) client.ownerId = ownerId
+  clients.push(client)
 
   // Send a ping/hello event
   res.write(`event: connected\ndata: ${JSON.stringify({ id, userId, ownerId })}\n\n`)
