@@ -100,43 +100,44 @@ app.use((req, res, next) => {
 app.use(hpp());
 app.use(compression());
 
+// Small helpers to keep middleware logic simple and maintainable
+function stripTrailingSlashes(value: string): string {
+  if (!value) return '';
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) { // '/'
+    end--;
+  }
+  return value.slice(0, end);
+}
+
+function hasSchemePrefix(path: string): boolean {
+  const colonIndex = path.indexOf(':');
+  const slashIndex = path.indexOf('/');
+  return colonIndex > 0 && (slashIndex === -1 || colonIndex < slashIndex);
+}
+
+function buildSafeRequestPath(originalUrl: string): string {
+  let p = originalUrl || '/';
+  if (p.startsWith('//') || hasSchemePrefix(p)) {
+    return '/';
+  }
+  return p.startsWith('/') ? p : `/${p}`;
+}
+
 // Optional HTTPS enforcement (behind proxy/load balancer)
 if (process.env.ENFORCE_HTTPS === 'true') {
   app.use((req, res, next) => {
     const proto = req.header('x-forwarded-proto');
-    if (proto && proto !== 'https' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const rawBase = (process.env.CANONICAL_BASE_URL || process.env.APP_BASE_URL || '').trim();
-      let canonicalBase = rawBase;
-      // Remove trailing slashes without regex
-      if (canonicalBase) {
-        let end = canonicalBase.length;
-        while (end > 0 && canonicalBase.charCodeAt(end - 1) === 47) { // '/'
-          end--;
-        }
-        canonicalBase = canonicalBase.slice(0, end);
-      }
-      if (canonicalBase && canonicalBase.startsWith('https://')) {
-        // Normalize the original URL to a safe, same-origin path
-        let requestPath = req.originalUrl || '/';
-        // Disallow protocol-relative (//host) and absolute (scheme:) forms
-        const hasSchemePrefix = (() => {
-          const colonIndex = requestPath.indexOf(':');
-          const slashIndex = requestPath.indexOf('/');
-          return colonIndex > 0 && (slashIndex === -1 || colonIndex < slashIndex);
-        })();
-        if (requestPath.startsWith('//') || hasSchemePrefix) {
-          requestPath = '/';
-        }
-        if (!requestPath.startsWith('/')) {
-          requestPath = `/${requestPath}`;
-        }
-        const targetUrl = `${canonicalBase}${requestPath}`;
-        return res.redirect(308, targetUrl);
-      }
-      // No canonical HTTPS base configured; avoid redirecting with user-controlled host
-      return next();
-    }
-    return next();
+    const isRedirectCandidate = proto && proto !== 'https' && (req.method === 'GET' || req.method === 'HEAD');
+    if (!isRedirectCandidate) return next();
+
+    const rawBase = (process.env.CANONICAL_BASE_URL || process.env.APP_BASE_URL || '').trim();
+    const canonicalBase = stripTrailingSlashes(rawBase);
+    if (!canonicalBase || !canonicalBase.startsWith('https://')) return next();
+
+    const requestPath = buildSafeRequestPath(req.originalUrl);
+    const targetUrl = `${canonicalBase}${requestPath}`;
+    return res.redirect(308, targetUrl);
   });
 }
 
