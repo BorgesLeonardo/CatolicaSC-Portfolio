@@ -63,7 +63,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 
     return res.json({ id: session.id })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    try { (req as any)?.log?.error?.({ err: error }, 'checkout_session_create_failed') } catch {}
     
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ message: error.message })

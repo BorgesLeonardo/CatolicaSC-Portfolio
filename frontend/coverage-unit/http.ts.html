@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">59.18% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>58/98</span>
+                <span class='fraction'>59/118</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.88% </span>
+                <span class="strong">35% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/18</span>
+                <span class='fraction'>7/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>4/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">59.18% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>58/98</span>
+                <span class='fraction'>59/118</span>
             </div>
         
             
@@ -160,7 +160,27 @@
 <a name='L95'></a><a href='#L95'>95</a>
 <a name='L96'></a><a href='#L96'>96</a>
 <a name='L97'></a><a href='#L97'>97</a>
-<a name='L98'></a><a href='#L98'>98</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -250,6 +270,26 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -345,15 +385,35 @@ function cryptoRandomUuid(): string {
   try {
     if (c &amp;&amp; typeof c.randomUUID === 'function') {
       return c.randomUUID.call(c)
-    }
+<span class="branch-0 cbranch-no" title="branch not covered" >    }</span>
+    if (c &amp;&amp; typeof c.getRandomValues === 'function') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      const bytes = new Uint8Array(16)</span>
+<span class="cstat-no" title="statement not covered" >      c.getRandomValues(bytes)</span>
+<span class="cstat-no" title="statement not covered" >      // Per RFC 4122 section 4.4</span>
+<span class="cstat-no" title="statement not covered" >      bytes[6] = (bytes[6] &amp; 0x0f) | 0x40</span>
+<span class="cstat-no" title="statement not covered" >      bytes[8] = (bytes[8] &amp; 0x3f) | 0x80</span>
+<span class="cstat-no" title="statement not covered" >      const toHex = <span class="fstat-no" title="function not covered" >(n: number) =&gt; n.toString(16).padStart(2, '0')</span></span>
+<span class="cstat-no" title="statement not covered" >      const b = Array.from(bytes, toHex).join('')</span>
+<span class="cstat-no" title="statement not covered" >      return `${b.slice(0,8)}-${b.slice(8,12)}-${b.slice(12,16)}-${b.slice(16,20)}-${b.slice(20)}`</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="branch-0 cbranch-no" title="branch not covered" >  } catch {</span>
 <span class="cstat-no" title="statement not covered" >    // ignore and use fallback</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >  // fallback</span>
-<span class="cstat-no" title="statement not covered" >  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(ch) {</span>
-<span class="cstat-no" title="statement not covered" >    const r = Math.random() * 16 | 0, v = ch === 'x' ? r : (r &amp; 0x3 | 0x8)</span>
-<span class="cstat-no" title="statement not covered" >    return v.toString(16)</span>
-<span class="cstat-no" title="statement not covered" >  })</span>
+<span class="cstat-no" title="statement not covered" >  // minimal non-crypto fallback (very unlikely path in modern runtimes)</span>
+<span class="cstat-no" title="statement not covered" >  let now = Date.now()</span>
+<span class="cstat-no" title="statement not covered" >  const template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'</span>
+<span class="cstat-no" title="statement not covered" >  let out = ''</span>
+<span class="cstat-no" title="statement not covered" >  for (let i = 0; i &lt; template.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >    const ch = template[i]</span>
+<span class="cstat-no" title="statement not covered" >    if (ch === 'x' || ch === 'y') {</span>
+<span class="cstat-no" title="statement not covered" >      now = (now + 1) % 16</span>
+<span class="cstat-no" title="statement not covered" >      const v = ch === 'x' ? now : ((now &amp; 0x3) | 0x8)</span>
+<span class="cstat-no" title="statement not covered" >      out += v.toString(16)</span>
+<span class="cstat-no" title="statement not covered" >    } else {</span>
+<span class="cstat-no" title="statement not covered" >      out += ch</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="cstat-no" title="statement not covered" >  return out</span>
 <span class="cstat-no" title="statement not covered" >}</span></pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -361,7 +421,7 @@ function cryptoRandomUuid(): string {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-25T14:01:16.069Z
+                at 2025-10-25T16:06:20.717Z
             </div>
         <script src="prettify.js"></script>
         <script>

@@ -36,7 +36,11 @@ export const errorHandler = (
   }
 
   // Erro interno do servidor
-  console.error('Internal Server Error:', error);
+  try {
+    (req as any)?.log?.error?.({ err: error }, 'internal_server_error');
+  } catch {
+    // last resort fallback when logger is not attached
+  }
   const response: Record<string, unknown> = {
     error: 'InternalError',
     message: 'Erro interno do servidor',
