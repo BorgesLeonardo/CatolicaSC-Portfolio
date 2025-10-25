@@ -52,13 +52,12 @@ app.use(helmet({
       baseUri: ["'self'"],
       scriptSrc: [
         "'self'",
-        "'unsafe-inline'",
         'https://js.stripe.com',
         'https://*.clerk.com',
         'https://*.clerk.services',
       ],
       scriptSrcAttr: ["'none'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrc: ["'self'", 'https://fonts.googleapis.com'],
       imgSrc: [
         "'self'",
         'data:',

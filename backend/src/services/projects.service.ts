@@ -254,7 +254,21 @@ export class ProjectsService {
       attempt += 1;
       slugCandidate = appendNumericSuffix(base, attempt);
     }
-    // Fallback to a cuid suffix
-    return `${base}-${Math.random().toString(36).slice(2, 8)}`;
+    // Fallback to a random suffix using crypto when available
+    let suffix = '';
+    try {
+      const g: any = globalThis as any;
+      if (g.crypto && typeof g.crypto.getRandomValues === 'function') {
+        const arr = new Uint8Array(4);
+        g.crypto.getRandomValues(arr);
+        suffix = Array.from(arr).map((b: number) => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+      }
+    } catch {
+      // ignore and fall back to time-based suffix below
+    }
+    if (!suffix) {
+      suffix = Date.now().toString(36).slice(-8);
+    }
+    return `${base}-${suffix}`;
   }
 }
