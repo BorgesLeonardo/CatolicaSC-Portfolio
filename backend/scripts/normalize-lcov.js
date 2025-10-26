@@ -8,6 +8,9 @@ import fs from 'fs';
 import path from 'path';
 
 const inputPath = process.argv[2] || 'coverage/lcov.info';
+// Optional: --prefix=backend|frontend (default: backend)
+const prefixArg = process.argv.find((a) => a.startsWith('--prefix='));
+const projectPrefix = prefixArg ? prefixArg.split('=')[1] : 'backend';
 const absPath = path.resolve(process.cwd(), inputPath);
 
 if (!fs.existsSync(absPath)) {
@@ -24,9 +27,9 @@ const normalized = original
     let normalizedPath = p1.replace(/\\/g, '/');
     // Remove leading ./ if any
     normalizedPath = normalizedPath.replace(/^\.\//, '');
-    // Prefix with backend/ if starts with src/
+    // Prefix with chosen project dir if starts with src/
     if (normalizedPath.startsWith('src/')) {
-      normalizedPath = `backend/${normalizedPath}`;
+      normalizedPath = `${projectPrefix}/${normalizedPath}`;
     }
     return `SF:${normalizedPath}`;
   });
