@@ -6,6 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "listen": "stripe listen --forward-to localhost:3333/api/webhooks/stripe",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "echo 'Lint disabled for CI/CD'",

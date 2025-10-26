@@ -16,17 +16,11 @@ jest.mock('../../../infrastructure/prisma', () => ({
 }))
 
 // Mock the project stats service to avoid circular dependencies
-jest.mock('../../../services/project-stats.service', () => ({
-  projectStatsService: {
-    updateProjectStats: jest.fn(),
-    updateAllProjectsStats: jest.fn(),
-    validateProjectStats: jest.fn(),
-  },
-}))
+// Use the real service implementation for these tests
 
 const mockPrisma = prisma as any
 
-describe.skip('ProjectStatsService', () => {
+describe('ProjectStatsService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })

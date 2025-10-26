@@ -49,8 +49,10 @@ export const createContributionFromCheckoutSession = async (session: Stripe.Chec
     return created
   })
   
-  // Atualiza as estatísticas do projeto de forma consistente
-  await projectStatsService.updateProjectStats(projectId)
+  // Atualiza as estatísticas do projeto de forma consistente (não falhar se estatística falhar)
+  try {
+    await projectStatsService.updateProjectStats(projectId)
+  } catch {}
   // Broadcast realtime events
   try {
     const payload = {

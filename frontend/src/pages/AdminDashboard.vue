@@ -297,14 +297,14 @@ async function connectOnboard() {
   const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
   setAuthToken(token || null)
   const { url } = await connectService.onboard()
-  window.location.href = url
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function openConnectDashboard() {
   const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
   setAuthToken(token || null)
   const { url } = await connectService.dashboardLink()
-  window.location.href = url
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function loadConnectStatus() {

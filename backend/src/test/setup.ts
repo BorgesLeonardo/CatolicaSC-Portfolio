@@ -82,16 +82,7 @@ jest.mock('@clerk/express', () => ({
   getAuth: jest.fn(),
 }));
 
-// Mock dos services
-jest.mock('../services/contribution.service', () => ({
-  createContributionFromCheckoutSession: jest.fn(),
-}));
-
-jest.mock('../services/project-stats.service', () => ({
-  projectStatsService: {
-    updateAllProjectsStats: jest.fn(),
-  },
-}));
+// Não mockar serviços aqui; os testes unitários dos serviços precisam da implementação real.
 
 // Configuração global para testes
 beforeEach(() => {

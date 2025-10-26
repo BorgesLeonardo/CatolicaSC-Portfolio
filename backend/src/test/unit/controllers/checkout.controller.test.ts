@@ -26,7 +26,7 @@ describe('CheckoutController', () => {
       cancelUrl: 'https://example.com/cancel',
     };
 
-    it.skip('should create checkout session successfully', async () => {
+    it('should create checkout session successfully', async () => {
       const mockProject = {
         id: 'cm12345678901234567890',
         title: 'Test Project',
@@ -40,6 +40,8 @@ describe('CheckoutController', () => {
       (stripe.checkout.sessions.create as jest.Mock).mockResolvedValue(mockSession);
       (mockRequest as any).authUserId = 'user123';
 
+      // Provide valid body
+      mockRequest.body = validCheckoutData as any;
       await createCheckoutSession(mockRequest as Request, mockResponse as Response);
 
       expect(prisma.project.findUnique).toHaveBeenCalledWith({
@@ -78,7 +80,7 @@ describe('CheckoutController', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({ id: mockSession.id });
     });
 
-    it.skip('should create checkout session without user ID', async () => {
+    it('should create checkout session without user ID', async () => {
       const mockProject = {
         id: 'cm12345678901234567890',
         title: 'Test Project',
@@ -90,6 +92,7 @@ describe('CheckoutController', () => {
       (prisma.project.findUnique as jest.Mock).mockResolvedValue(mockProject);
       (stripe.checkout.sessions.create as jest.Mock).mockResolvedValue(mockSession);
 
+      mockRequest.body = validCheckoutData as any;
       await createCheckoutSession(mockRequest as Request, mockResponse as Response);
 
       expect(stripe.checkout.sessions.create).toHaveBeenCalledWith({

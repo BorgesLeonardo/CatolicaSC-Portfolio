@@ -41,6 +41,8 @@ export const errorHandler = (
   } catch {
     // last resort fallback when logger is not attached
   }
+  // Ensure console.error is called for visibility in tests and local dev
+  console.error('Internal Server Error:', error)
   const response: Record<string, unknown> = {
     error: 'InternalError',
     message: 'Erro interno do servidor',

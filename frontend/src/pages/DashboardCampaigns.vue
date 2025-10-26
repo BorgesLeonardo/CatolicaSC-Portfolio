@@ -157,12 +157,12 @@ watch([filterQ, filterStatus], async () => {
 
 async function connectOnboard() {
   const { url } = await connectService.onboard()
-  window.location.href = url
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function openConnectDashboard() {
   const { url } = await connectService.dashboardLink()
-  window.location.href = url
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function loadConnectStatus() {

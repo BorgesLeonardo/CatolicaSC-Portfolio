@@ -8,6 +8,7 @@ jest.mock('../../../infrastructure/prisma', () => ({
     $transaction: jest.fn(),
     contribution: {
       upsert: jest.fn(),
+      create: jest.fn(),
     },
   },
 }))
@@ -25,7 +26,7 @@ const mockPrisma = prisma as any
 const mockProjectStatsService = projectStatsService as any
 // Remove the mock reference since we're testing the actual function
 
-describe.skip('contribution.service', () => {
+describe('contribution.service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -59,7 +60,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
@@ -100,7 +102,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
@@ -154,7 +157,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
@@ -191,7 +195,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
@@ -228,7 +233,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
@@ -268,7 +274,8 @@ describe.skip('contribution.service', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const mockTx = {
           contribution: {
-            upsert: jest.fn().mockResolvedValue(mockContribution),
+            create: jest.fn().mockResolvedValue(mockContribution),
+            upsert: jest.fn(),
           },
         }
         return await callback(mockTx)
