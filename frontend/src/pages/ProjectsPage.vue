@@ -490,6 +490,13 @@ function openProject(id: string) {
   }
 }
 
+/* Dark mode: soften whites and raise contrast */
+[data-theme='dark'] .filters-section { background: rgba(15, 23, 42, 0.7); border-color: rgba(148,163,184,0.12); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+[data-theme='dark'] .search-section-wrapper { background: #0b1220; border-bottom-color: rgba(148,163,184,0.12); }
+[data-theme='dark'] .results-header { color: #cbd5e1; }
+[data-theme='dark'] .results-meta { color: #a3b2c5; }
+[data-theme='dark'] .view-toggle .q-btn { color: #cbd5e1; }
+
 .search-section {
   margin-bottom: 32px;
 }
@@ -610,6 +617,13 @@ function openProject(id: string) {
     font-weight: 500;
   }
 }
+
+/* Dark-mode contrast improvements for Projects listing */
+[data-theme='dark'] .results-count .count-number { color: #e5e7eb; }
+[data-theme='dark'] .results-count .count-label { color: #cbd5e1; }
+[data-theme='dark'] .results-meta { color: #a3b2c5; }
+[data-theme='dark'] .page-size-label { color: #cbd5e1; }
+[data-theme='dark'] .pagination-info { color: #cbd5e1; }
 
 .results-meta {
   display: flex;

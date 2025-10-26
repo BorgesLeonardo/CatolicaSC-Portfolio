@@ -118,5 +118,12 @@ watch([filterQ, filterStatus], async () => {
 })
 </script>
 
-
-
+<style scoped>
+/* Dark-mode contrast improvements for dashboard tables */
+[data-theme='dark'] .q-table thead th { color: #e5e7eb; }
+[data-theme='dark'] .q-table tbody td { color: #cbd5e1; }
+[data-theme='dark'] .q-input .q-field__native, 
+[data-theme='dark'] .q-select .q-field__native { color: #e5e7eb; }
+[data-theme='dark'] .q-input .q-field__label, 
+[data-theme='dark'] .q-select .q-field__label { color: #cbd5e1; }
+</style>

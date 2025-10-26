@@ -388,6 +388,15 @@ onMounted(() => { void loadConnectStatus() })
   }
 }
 
+/* Dark mode: reduce white cards and improve text */
+[data-theme='dark'] .dashboard-page { background: #0b1220; }
+[data-theme='dark'] .analytics-content, 
+[data-theme='dark'] .users-content, 
+[data-theme='dark'] .system-content, 
+[data-theme='dark'] .actions-content { color: #cbd5e1; }
+[data-theme='dark'] .chart-text { color: #cbd5e1; }
+[data-theme='dark'] .metric, [data-theme='dark'] .stat-item { background: rgba(17,24,39,0.6); }
+
 // === CARD SPECIFIC STYLES ===
 .analytics-content {
   display: flex;
@@ -438,6 +447,14 @@ onMounted(() => { void loadConnectStatus() })
   color: var(--color-text-muted);
   margin-top: 4px;
 }
+
+/* Dark-mode contrast improvements for Dashboard */
+[data-theme='dark'] .page-title { color: #e5e7eb; }
+[data-theme='dark'] .page-subtitle { color: #cbd5e1; }
+[data-theme='dark'] .metric-value { color: #e5e7eb; }
+[data-theme='dark'] .metric-label { color: #cbd5e1; }
+[data-theme='dark'] .stat-number { color: #e5e7eb; }
+[data-theme='dark'] .stat-label { color: #cbd5e1; }
 
 // Users Card
 .users-content {

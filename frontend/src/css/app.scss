@@ -38,6 +38,58 @@
   --gradient-subtle: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
 }
 
+// Dark theme tokens (do not change light palette)
+[data-theme='dark'] {
+  --color-text-strong: #e5e7eb;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-hint: #64748b;
+  --color-border: #0b1220; // subtle border on dark
+  --color-surface: #0b1220;
+  --color-surface-muted: #0a0f1a;
+  --color-surface-subtle: #0f172a;
+
+  --gradient-subtle: linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #111827 100%);
+}
+
+/* Compact layout */
+[data-compact='true'] .container { padding: 0 20px; }
+[data-compact='true'] .q-card { border-radius: 12px; }
+[data-compact='true'] .auth-btn { padding: 8px 16px; }
+[data-compact='true'] .action-btn { padding: 6px 12px; }
+
+/* Reduce motion */
+[data-reduce-motion='true'] *,
+[data-reduce-motion='true'] *::before,
+[data-reduce-motion='true'] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Reduce transparency */
+[data-reduce-transparency='true'] .modern-card,
+[data-reduce-transparency='true'] .modern-toolbar,
+[data-reduce-transparency='true'] .modern-drawer {
+  backdrop-filter: none !important;
+  background: var(--color-surface) !important;
+}
+[data-theme='dark'][data-reduce-transparency='true'] .modern-card,
+[data-theme='dark'][data-reduce-transparency='true'] .modern-toolbar,
+[data-theme='dark'][data-reduce-transparency='true'] .modern-drawer {
+  background: #0f172a !important;
+}
+
+/* High contrast */
+[data-high-contrast='true'] .q-btn:focus-visible,
+[data-high-contrast='true'] .q-field--focused .q-field__control {
+  outline: 3px solid #000;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+[data-high-contrast='true'] .nav-item--active { border-left-width: 4px; }
+[data-high-contrast='true'] .nav-btn.nav-active { font-weight: 800; }
+
 // === GLOBAL RESETS ===
 * {
   box-sizing: border-box;
@@ -48,6 +100,58 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+// Global dark overrides
+[data-theme='dark'] body {
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+}
+
+/* Dark mode high-contrast text overrides (light mode unchanged) */
+[data-theme='dark'] h1,
+[data-theme='dark'] h2,
+[data-theme='dark'] h3,
+[data-theme='dark'] h4,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .campaign-title,
+[data-theme='dark'] .author-name,
+[data-theme='dark'] .stat-number,
+[data-theme='dark'] .step-title {
+  color: #e5e7eb !important;
+}
+
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .testimonial-text,
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .stat-description,
+[data-theme='dark'] .step-description,
+[data-theme='dark'] .author-role {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .text-secondary { color: var(--color-text) !important; }
+[data-theme='dark'] .text-muted { color: #a3b2c5 !important; }
+[data-theme='dark'] .text-hint { color: #8aa0bb !important; }
+
+/* Index/Steps feature bullets improve visibility */
+[data-theme='dark'] .step-features li { color: #60a5fa !important; }
+
+/* Dark mode: Campaign card readability */
+[data-theme='dark'] .campaign-card .campaign-title { color: #e5e7eb !important; }
+[data-theme='dark'] .campaign-card .campaign-description { color: #cbd5e1 !important; }
+[data-theme='dark'] .campaign-card .stat-value { color: #e5e7eb !important; }
+[data-theme='dark'] .campaign-card .stat-label { color: #cbd5e1 !important; }
+[data-theme='dark'] .campaign-card .progress-bar { background: #22314f !important; }
+[data-theme='dark'] .campaign-card .raised-amount { color: #e5e7eb !important; }
+[data-theme='dark'] .campaign-card .raised-label { color: #cbd5e1 !important; }
+[data-theme='dark'] .campaign-card .progress-goal { color: #a3b2c5 !important; }
+
+/* Dark mode: common numbers contrast */
+[data-theme='dark'] .stat-number,
+[data-theme='dark'] .count-number,
+[data-theme='dark'] .goal-amount {
+  color: #e5e7eb !important;
 }
 
 html {
@@ -96,6 +200,18 @@ html {
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+}
+
+// Card overrides in dark
+[data-theme='dark'] .modern-card {
+  background: rgba(17, 24, 39, 0.7) !important;
+  border: 1px solid rgba(148, 163, 184, 0.08) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5) !important;
+
+  &--glass {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(148, 163, 184, 0.12) !important;
   }
 }
 
@@ -373,6 +489,20 @@ html {
   }
 }
 
+[data-theme='dark'] .modern-toolbar {
+  background: rgba(2, 6, 23, 0.7);
+  border-bottom-color: rgba(148, 163, 184, 0.12);
+
+  &.scrolled {
+    background: rgba(2, 6, 23, 0.9);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+  }
+
+  .q-toolbar-title {
+    color: #e2e8f0;
+  }
+}
+
 // === FILTERS SECTION ===
 .filters-section {
   @extend .modern-card--glass;
@@ -390,6 +520,10 @@ html {
   }
 }
 
+[data-theme='dark'] .filters-section {
+  background: rgba(17, 24, 39, 0.6) !important;
+}
+
 // === EMPTY STATE ===
 .empty-state {
   text-align: center;
@@ -397,7 +531,7 @@ html {
   
   .empty-icon {
     font-size: 5rem;
-    color: #cbd5e1;
+    color: #64748b;
     margin-bottom: 32px;
     opacity: 0.7;
   }
@@ -419,6 +553,14 @@ html {
     margin-left: auto;
     margin-right: auto;
   }
+}
+
+// Scrollbar in dark
+[data-theme='dark']::-webkit-scrollbar-track {
+  background: #0b1220;
+}
+[data-theme='dark']::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22314f 0%, #334155 100%);
 }
 
 // === ANIMATIONS & KEYFRAMES ===

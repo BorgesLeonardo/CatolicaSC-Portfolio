@@ -65,6 +65,46 @@
 
         <q-space />
 
+        <!-- Theme Toggle -->
+        <q-btn
+          outline
+          round
+          dense
+          :icon="themeIcon"
+          :aria-label="`Alternar tema (atual: ${themeLabel})`"
+          aria-haspopup="menu"
+          :aria-expanded="false"
+          @click="toggleTheme"
+          color="primary"
+          class="q-mr-sm hover-lift theme-toggle-btn"
+        >
+          <q-tooltip transition-show="fade" transition-hide="fade">
+            Tema: {{ themeLabel }}. Clique para alternar. Botão direito/toque longo para escolher.
+          </q-tooltip>
+          <q-menu context-menu touch-position>
+            <q-list style="min-width: 200px">
+              <q-item clickable v-close-popup @click="setThemeMode('light')">
+                <q-item-section avatar>
+                  <q-icon name="light_mode" />
+                </q-item-section>
+                <q-item-section>Claro</q-item-section>
+                <q-item-section side>
+                  <q-icon name="check" v-if="theme.mode === 'light'" />
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="setThemeMode('dark')">
+                <q-item-section avatar>
+                  <q-icon name="dark_mode" />
+                </q-item-section>
+                <q-item-section>Escuro</q-item-section>
+                <q-item-section side>
+                  <q-icon name="check" v-if="theme.mode === 'dark'" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+
         <!-- Auth Buttons -->
         <div class="auth-section q-gutter-sm row items-center">
           <SignedOut>
@@ -253,6 +293,22 @@
               </q-item-section>
             </q-item>
           </SignedIn>
+
+          <!-- Settings section (after Minha Conta) -->
+          <q-separator class="nav-separator" />
+          <q-item-label header class="nav-header">
+            <q-icon name="settings" size="sm" class="q-mr-xs" />
+            Configurações
+          </q-item-label>
+          <q-item clickable v-ripple to="/settings" class="nav-item" active-class="nav-item--active" @click="leftDrawerOpen = false">
+            <q-item-section avatar>
+              <q-icon name="tune" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="nav-label">Preferências</q-item-label>
+              <q-item-label caption class="nav-caption">Tema e interface</q-item-label>
+            </q-item-section>
+          </q-item>
         </q-list>
 
         <!-- Drawer CTA -->
@@ -293,6 +349,8 @@
       </main>
       <ModernFooter />
     </q-page-container>
+
+    <!-- Preferences Dialog removed; now a dedicated page (/settings) -->
   </q-layout>
 </template>
 
@@ -302,11 +360,14 @@ import { SignedIn, SignedOut, UserButton } from '@clerk/vue'
 import { useRoute, useRouter } from 'vue-router'
 import ModernFooter from 'src/components/ModernFooter.vue'
 import DynamicBreadcrumb from 'src/components/DynamicBreadcrumb.vue'
+import { useThemeStore } from 'src/stores/theme'
+import { Notify } from 'quasar'
 
 const route = useRoute()
 const router = useRouter()
 const leftDrawerOpen = ref(false)
 const isScrolled = ref(false)
+const theme = useThemeStore()
 
 // Show breadcrumb on pages other than home
 const showBreadcrumb = computed(() => {
@@ -364,6 +425,27 @@ function scrollToHowItWorks() {
     }
   }
 }
+
+// Theme controls
+const themeIcon = computed(() => {
+  return theme.isDark ? 'dark_mode' : 'light_mode'
+})
+
+const themeLabel = computed(() => (theme.isDark ? 'Escuro' : 'Claro'))
+
+type ThemeMode = 'light' | 'dark'
+
+function toggleTheme() {
+  theme.toggle()
+  Notify.create({ message: `Tema: ${themeLabel.value}`, timeout: 1200, position: 'top-right' })
+}
+
+function setThemeMode(mode: ThemeMode) {
+  theme.setMode(mode)
+  Notify.create({ message: `Tema: ${themeLabel.value}`, timeout: 1200, position: 'top-right' })
+}
+
+// preferences dialog removed; dedicated settings page used instead
 
 // Lifecycle
 onMounted(() => {
@@ -770,6 +852,21 @@ onUnmounted(() => {
   margin-left: 8px;
 }
 
+// Theme toggle visibility and contrast
+.theme-toggle-btn {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(30, 64, 175, 0.35) !important;
+  color: #1e40af !important;
+  &:hover { background: rgba(255,255,255,1); }
+}
+
+[data-theme='dark'] .theme-toggle-btn {
+  background: rgba(2,6,23,0.5);
+  border-color: rgba(148,163,184,0.5) !important;
+  color: #e2e8f0 !important;
+  &:hover { background: rgba(2,6,23,0.7); }
+}
+
 // === DRAWER STYLES ===
 .modern-drawer {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
@@ -969,6 +1066,60 @@ onUnmounted(() => {
   background: var(--gradient-subtle);
   min-height: calc(100vh - 70px);
 }
+
+// Dark specific tweaks
+[data-theme='dark'] .nav-btn {
+  color: #94a3b8;
+
+  &:hover {
+    background: rgba(148, 163, 184, 0.08);
+    color: #e2e8f0;
+  }
+  &.nav-active {
+    background: rgba(148, 163, 184, 0.12) !important;
+    color: #e2e8f0 !important;
+  }
+}
+
+[data-theme='dark'] .modern-drawer {
+  background: linear-gradient(135deg, rgba(2, 6, 23, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+[data-theme='dark'] .drawer-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(2, 6, 23, 0.5);
+}
+
+[data-theme='dark'] .drawer-close {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .nav-header {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .nav-item:hover {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+[data-theme='dark'] .nav-item--active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(30, 64, 175, 0.12) 100%);
+  border-left-color: #60a5fa;
+}
+
+[data-theme='dark'] .nav-label { color: #e2e8f0; }
+[data-theme='dark'] .nav-caption { color: #94a3b8; }
+
+[data-theme='dark'] .drawer-cta {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(30, 64, 175, 0.06) 100%);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+[data-theme='dark'] .drawer-footer { background: rgba(2, 6, 23, 0.5); }
+[data-theme='dark'] .footer-link { color: #94a3b8; }
+[data-theme='dark'] .footer-link:hover { color: #e2e8f0; }
 
 // === RESPONSIVE DESIGN ===
 @media (max-width: 1200px) {

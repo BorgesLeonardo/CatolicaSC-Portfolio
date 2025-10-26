@@ -1687,6 +1687,12 @@ function backToCover() {
   }
 }
 
+/* Dark mode: soften whites and raise contrast */
+[data-theme='dark'] .project-header { background: rgba(2,6,23,0.7); border-bottom-color: rgba(148,163,184,0.12); }
+[data-theme='dark'] .image-frame { background: #0f172a; box-shadow: 0 10px 30px -5px rgba(0,0,0,.6), 0 4px 12px -2px rgba(0,0,0,.5); }
+[data-theme='dark'] .modern-placeholder { background: linear-gradient(135deg, #0b1220 0%, #0f172a 100%); }
+[data-theme='dark'] .contribute-card { background: linear-gradient(135deg, #0b1220 0%, #0f172a 100%); border-color: rgba(148,163,184,0.12); }
+
 .goal-info {
   text-align: center;
   
@@ -1888,4 +1894,21 @@ function backToCover() {
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
   }
 }
+
+/* Dark-mode contrast improvements (light mode unchanged) */
+[data-theme='dark'] .project-title,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .card-title { color: #e5e7eb !important; }
+[data-theme='dark'] .project-description,
+[data-theme='dark'] .info-value { color: #cbd5e1 !important; }
+[data-theme='dark'] .info-label,
+[data-theme='dark'] .info-icon { color: #a3b2c5 !important; }
+[data-theme='dark'] .stat-item .stat-label,
+[data-theme='dark'] .stat-item .stat-sublabel { color: #cbd5e1 !important; }
+[data-theme='dark'] .goal-label { color: #cbd5e1 !important; }
+[data-theme='dark'] .stat-item .stat-value { color: #e5e7eb !important; }
+[data-theme='dark'] .progress-card { background: rgba(17,24,39,0.7); border-color: rgba(148,163,184,0.12); }
+[data-theme='dark'] .description-card,
+[data-theme='dark'] .comments-card,
+[data-theme='dark'] .info-card { background: rgba(17,24,39,0.7); border-color: rgba(148,163,184,0.12); }
 </style>

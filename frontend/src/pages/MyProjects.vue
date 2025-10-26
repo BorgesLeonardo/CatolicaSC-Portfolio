@@ -670,6 +670,12 @@ onMounted(fetchMyProjects)
   }
 }
 
+/* Dark-mode contrast improvements for My Projects */
+[data-theme='dark'] .page-title { color: #e5e7eb; }
+[data-theme='dark'] .page-subtitle { color: #cbd5e1; }
+[data-theme='dark'] .campaign-title { color: #e5e7eb; }
+[data-theme='dark'] .campaign-meta .meta-item { color: #cbd5e1; }
+
 // Action Buttons
 .q-card-actions {
   padding: 1rem;
@@ -688,6 +694,12 @@ onMounted(fetchMyProjects)
     }
   }
 }
+
+/* Dark mode: soften whites and raise contrast */
+[data-theme='dark'] .page-header { background: rgba(2,6,23,0.7); border-bottom-color: rgba(148,163,184,0.12); }
+[data-theme='dark'] .campaign-card { background: rgba(17,24,39,0.7) !important; border: 1px solid rgba(148,163,184,0.12) !important; }
+[data-theme='dark'] .card-image-frame { background: #0f172a; }
+[data-theme='dark'] .q-card-actions { background: rgba(2,6,23,0.4); }
 
 // Responsive Design
 @media (max-width: 768px) {
