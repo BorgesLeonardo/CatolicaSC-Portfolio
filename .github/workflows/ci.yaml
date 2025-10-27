@@ -59,11 +59,6 @@ jobs:
           npm pkg set scripts.postinstall="echo skip-postinstall-in-ci"
           npm ci --no-audit --no-fund
 
-      - name: Ensure optional platform deps for build tools
-        working-directory: frontend
-        run: |
-          npm i -D @rollup/rollup-linux-x64-gnu @esbuild/linux-x64 --no-audit --no-fund
-
       - name: Test frontend with coverage (Vitest)
         working-directory: frontend
         env:
