@@ -3,9 +3,9 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [
-    vue(),
     {
       name: 'vitest-ignore-vue-styles',
+      enforce: 'pre',
       resolveId(id: string) {
         if (id.includes('?vue&type=style')) return id
       },
@@ -13,6 +13,7 @@ export default defineConfig({
         if (id.includes('?vue&type=style')) return ''
       },
     },
+    vue(),
   ],
   test: {
     environment: 'jsdom',
