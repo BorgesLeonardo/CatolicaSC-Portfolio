@@ -11,6 +11,7 @@ jest.mock('../../../infrastructure/prisma', () => ({
     },
     user: {
       upsert: jest.fn(),
+      update: jest.fn(),
     },
     contribution: {
       create: jest.fn(),
@@ -213,6 +214,157 @@ describe('ContributionsService', () => {
         success_url: 'https://example.com/contrib/success?c=contribution-1',
         cancel_url: 'https://example.com/contrib/cancel?c=contribution-1',
       })
+    })
+
+    it('should throw when owner not connected to payouts', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: null },
+      }
+
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+
+      await expect(service.createCheckout(mockData, userId)).rejects.toThrow(
+        new AppError('Campaign owner not connected to payouts', 422)
+      )
+    })
+
+    it('should clear stale connect account and throw 422 when Stripe says missing', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_stale' },
+      }
+
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+      ;(mockStripe.accounts.retrieve as jest.Mock).mockRejectedValue({
+        message: 'No such account: acct_stale',
+        raw: { code: 'resource_missing' },
+        code: 'resource_missing',
+      })
+
+      await expect(service.createCheckout(mockData, userId)).rejects.toThrow(
+        new AppError('Campaign owner not connected to payouts', 422)
+      )
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'owner-1' },
+        data: { stripeAccountId: null },
+      })
+    })
+
+    it('should rethrow unexpected Stripe account errors', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_err' },
+      }
+
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+      const err = { message: 'rate limited', raw: { code: 'rate_limited' } }
+      ;(mockStripe.accounts.retrieve as jest.Mock).mockRejectedValue(err)
+
+      await expect(service.createCheckout(mockData, userId)).rejects.toBe(err as any)
+    })
+
+    it('should map destination/account errors from Stripe checkout to 422', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_123' },
+      }
+      const mockContribution = {
+        id: 'contribution-1',
+      }
+
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+      mockPrisma.user.upsert.mockResolvedValue({ id: userId } as any)
+      mockPrisma.contribution.create.mockResolvedValue(mockContribution as any)
+      ;(mockStripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123' })
+      ;(mockStripe.checkout.sessions.create as jest.Mock).mockRejectedValue({
+        raw: { code: 'account_unverified', message: 'destination account_unverified' },
+        message: 'destination account issue',
+      })
+
+      await expect(service.createCheckout(mockData, userId)).rejects.toThrow(
+        new AppError('Campaign owner not connected to payouts', 422)
+      )
+    })
+
+    it('should compute application fee from PLATFORM_FEE_PERCENT', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_123' },
+      }
+      const mockContribution = { id: 'c1' }
+      const mockSession = { id: 's1', url: 'u1' }
+
+      process.env.PLATFORM_FEE_PERCENT = '7.5'
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+      mockPrisma.user.upsert.mockResolvedValue({ id: userId } as any)
+      mockPrisma.contribution.create.mockResolvedValue(mockContribution as any)
+      ;(mockStripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123' })
+      ;(mockStripe.checkout.sessions.create as jest.Mock).mockResolvedValue(mockSession as any)
+      mockPrisma.contribution.update.mockResolvedValue({} as any)
+
+      await service.createCheckout(mockData, userId)
+
+      const call = (mockStripe.checkout.sessions.create as jest.Mock).mock.calls.pop()[0]
+      expect(call.payment_intent_data.application_fee_amount).toBe(75)
+    })
+
+    it('should not set application_fee_amount when percent is invalid', async () => {
+      const userId = 'user-1'
+      const mockProject = {
+        id: 'project-1',
+        title: 'Test',
+        deadline: new Date(Date.now() + 86400000),
+        deletedAt: null,
+        status: 'PUBLISHED',
+        ownerId: 'owner-1',
+        owner: { stripeAccountId: 'acct_123' },
+      }
+      const mockContribution = { id: 'c1' }
+      const mockSession = { id: 's1', url: 'u1' }
+
+      process.env.PLATFORM_FEE_PERCENT = 'not-a-number'
+      mockPrisma.project.findUnique.mockResolvedValue(mockProject as any)
+      mockPrisma.user.upsert.mockResolvedValue({ id: userId } as any)
+      mockPrisma.contribution.create.mockResolvedValue(mockContribution as any)
+      ;(mockStripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123' })
+      ;(mockStripe.checkout.sessions.create as jest.Mock).mockResolvedValue(mockSession as any)
+      mockPrisma.contribution.update.mockResolvedValue({} as any)
+
+      await service.createCheckout(mockData, userId)
+
+      const call = (mockStripe.checkout.sessions.create as jest.Mock).mock.calls.pop()[0]
+      expect(call.payment_intent_data.application_fee_amount).toBeUndefined()
     })
   })
 
