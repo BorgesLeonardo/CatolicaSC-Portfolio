@@ -1,162 +1,55 @@
-name: CI & SonarQube
+name: CI - Backend Tests and SonarCloud
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  NODE_VERSION: '20'
-  SONAR_HOST_URL: https://sonarcloud.io
 
 jobs:
-  build-test:
-    name: Install • Lint • Test • Build (${{ matrix.dir }})
+  test-and-analyze:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: [frontend, backend]
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # recomendado pelo Sonar (blame/PR decoration)
+          fetch-depth: 0 # full history for accurate Sonar new code/coverage
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: |
             backend/package-lock.json
-            frontend/package-lock.json
 
-      - name: Install
-        working-directory: ${{ matrix.dir }}
-        run: |
-          if [ "${{ matrix.dir }}" = "frontend" ]; then
-            # Fix for Rollup optional dependency issue
-            rm -rf node_modules package-lock.json
-            npm install
-          else
-            npm ci
-          fi
+      - name: Install dependencies (backend)
+        run: npm ci
 
-      - name: Lint (se existir)
-        working-directory: ${{ matrix.dir }}
-        run: npm run lint --if-present
-
-      - name: Test com cobertura (se existir)
-        working-directory: ${{ matrix.dir }}
-        run: |
-          if [ "${{ matrix.dir }}" = "backend" ] && npm run test:ci --if-present; then
-            echo "Backend tests with coverage completed"
-          elif [ "${{ matrix.dir }}" = "frontend" ] && npm run test:unit --if-present; then
-            echo "Frontend tests with coverage completed"
-          else
-            echo "No tests found or test command not available for ${{ matrix.dir }}"
-          fi
-
-      - name: Build (se existir)
-        working-directory: ${{ matrix.dir }}
-        run: |
-          if [ "${{ matrix.dir }}" = "backend" ]; then
-            # Generate Prisma client before building
-            npx prisma generate
-            npm run build --if-present
-          else
-            npm run build --if-present
-          fi
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.dir }}-coverage
-          path: |
-            ${{ matrix.dir }}/coverage/lcov.info
-            ${{ matrix.dir }}/coverage-unit/lcov.info
-          if-no-files-found: ignore
-
-  sonar:
-    name: SonarQube Scan & Quality Gate
-    needs: build-test
-    runs-on: ubuntu-latest
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: "*-coverage"
-          merge-multiple: true
-
-      - name: Posicionar lcov onde o Sonar espera
-        run: |
-          mkdir -p backend/coverage frontend/coverage-unit
-          if [ -f backend-coverage/lcov.info ]; then mv backend-coverage/lcov.info backend/coverage/lcov.info; fi
-          if [ -f frontend-coverage/lcov.info ]; then mv frontend-coverage/lcov.info frontend/coverage-unit/lcov.info; fi
-
-      - name: Preparar tsconfig do Quasar (frontend)
-        working-directory: frontend
-        run: |
-          # Workaround npm optional deps bug affecting rollup
-          rm -rf node_modules package-lock.json
-          npm install
-          # garante que .quasar/tsconfig.json exista
-          [ -f .quasar/tsconfig.json ] || npx quasar prepare
-
-      - name: SonarCloud Scan
-        if: ${{ env.SONAR_TOKEN }}
-        id: sonar-scan
-        uses: SonarSource/sonarcloud-github-action@v2
+      - name: Run tests with coverage (enforce >=80% lines/functions/statements)
         env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          NODE_ENV: test
+        run: npm run test:ci
+
+      - name: SonarCloud Scan (backend only)
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: >
-            -Dsonar.verbose=true
+          projectBaseDir: .
+          args: >-
             -Dsonar.projectKey=BorgesLeonardo_CatolicaSC-Portfolio
             -Dsonar.organization=catolicasc-portfolio
-            -Dsonar.typescript.ignoreParseErrors=true
+            -Dsonar.sources=backend/src
+            -Dsonar.tests=backend/src/test
+            -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info
+            -Dsonar.typescript.lcov.reportPaths=backend/coverage/lcov.info
+            -Dsonar.typescript.tsconfigPaths=backend/tsconfig.json
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.newCode.period=previous_version
             -Dsonar.qualitygate.wait=true
-
-      - name: Quality Gate Status
-        if: ${{ env.SONAR_TOKEN }}
-        continue-on-error: true
-        run: |
-          if [ -f ".scannerwork/report-task.txt" ]; then
-            echo "📊 SonarQube Analysis Report:"
-            cat .scannerwork/report-task.txt
-            
-            # Extract the task URL
-            TASK_URL=$(grep "ceTaskUrl" .scannerwork/report-task.txt | cut -d'=' -f2-)
-            DASHBOARD_URL=$(grep "dashboardUrl" .scannerwork/report-task.txt | cut -d'=' -f2-)
-            
-            echo ""
-            echo "🔗 Links úteis:"
-            echo "Dashboard: $DASHBOARD_URL"
-            echo "Task: $TASK_URL"
-          else
-            echo "❌ Arquivo report-task.txt não encontrado"
-          fi
