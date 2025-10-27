@@ -172,6 +172,78 @@ describe('ProjectsService', () => {
       await expect(service.create(validProjectData, 'user123'))
         .rejects.toThrow(new AppError('Category not found or inactive', 400));
     });
+
+    it('should throw ValidationError when DIRECT without goalCents', async () => {
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const data: CreateProjectData = {
+        title: 'Direct Without Goal',
+        description: 'desc',
+        fundingType: 'DIRECT',
+        // goalCents omitted
+        deadline: '2024-12-31T23:59:59Z',
+        categoryId: 'cm12345678901234567890',
+      } as any;
+
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+
+      await expect(service.create(data, 'user123')).rejects.toEqual(
+        new AppError('ValidationError', 422, expect.any(Object))
+      );
+      expect(prisma.project.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when RECURRING without subscription fields', async () => {
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const data: CreateProjectData = {
+        title: 'Recurring Invalid',
+        description: 'desc',
+        fundingType: 'RECURRING',
+        deadline: '2024-12-31T23:59:59Z',
+        categoryId: 'cm12345678901234567890',
+      } as any;
+
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+
+      await expect(service.create(data, 'user123')).rejects.toEqual(
+        new AppError('ValidationError', 422, expect.any(Object))
+      );
+      expect(prisma.project.create).not.toHaveBeenCalled();
+    });
+
+    it('should generate unique slug with numeric suffix when base is taken', async () => {
+      const mockCategory = { id: 'cat1', name: 'Technology', isActive: true };
+      const data: CreateProjectData = {
+        title: 'Test Project',
+        description: 'This is a test project description',
+        fundingType: 'DIRECT',
+        goalCents: 100000,
+        deadline: '2024-12-31T23:59:59Z',
+        categoryId: 'cm12345678901234567890',
+      };
+
+      (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'user123' });
+      (prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory);
+
+      // First check finds existing slug, second returns null => use "-2"
+      let findUniqueCall = 0;
+      (prisma.project.findUnique as jest.Mock).mockImplementation(({ where }: any) => {
+        if (where && 'slug' in where) {
+          findUniqueCall += 1;
+          return findUniqueCall === 1 ? Promise.resolve({ id: 'existing' }) : Promise.resolve(null);
+        }
+        return Promise.resolve(null);
+      });
+
+      (prisma.project.create as jest.Mock).mockImplementation((args: any) => {
+        expect(args.data.slug).toMatch(/test-project-2$/);
+        return { id: 'proj1', ...args.data };
+      });
+
+      const result = await service.create(data, 'user123');
+      expect(result.id).toBe('proj1');
+    });
   });
 
   describe('list', () => {

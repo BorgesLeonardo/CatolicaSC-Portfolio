@@ -140,6 +140,59 @@ describe('ProjectsController', () => {
       // Depending on validation, it may fail earlier. Accept either error forward
       expect(mockNext).toHaveBeenCalled();
     });
+
+    it('should reject DIRECT with goalCents below server-side range', async () => {
+      mockRequest.body = {
+        title: 'Valid Project Title',
+        description: 'This is a sufficiently long project description text.',
+        fundingType: 'DIRECT',
+        goalCents: 500, // abaixo de 1000
+        categoryId: 'cm12345678901234567890',
+        hasImage: true,
+      } as any;
+      (mockRequest as any).authUserId = 'user123';
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.any(AppError));
+    });
+
+    it('should reject RECURRING without subscription fields', async () => {
+      mockRequest.body = {
+        title: 'Recurring campaign',
+        description: 'This is a sufficiently long project description text.',
+        fundingType: 'RECURRING',
+        // missing subscriptionPriceCents and subscriptionInterval
+        endsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        categoryId: 'cm12345678901234567890',
+        hasImage: true,
+      } as any;
+      (mockRequest as any).authUserId = 'user123';
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.any(AppError));
+    });
+
+    it('should reject when minContributionCents is below 500', async () => {
+      mockRequest.body = {
+        title: 'Valid Project Title',
+        description: 'This is a sufficiently long project description text.',
+        fundingType: 'DIRECT',
+        goalCents: 100000,
+        minContributionCents: 499,
+        categoryId: 'cm12345678901234567890',
+        hasImage: true,
+      } as any;
+      (mockRequest as any).authUserId = 'user123';
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.any(AppError));
+    });
   });
 
   describe('list', () => {
@@ -366,6 +419,16 @@ describe('ProjectsController', () => {
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AppError));
       expect(mockService.update).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid videoUrl format by zod', async () => {
+      mockRequest.params = { id: 'cm12345678901234567890' } as any;
+      mockRequest.body = { videoUrl: 'notaurl' } as any;
+
+      await controller.update(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.update).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.any(AppError));
     });
   });
 
