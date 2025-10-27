@@ -53,9 +53,9 @@ jobs:
         working-directory: backend
         run: npm run test:ci
 
-      - name: Install frontend dependencies
+      - name: Install frontend dependencies (skip postinstall)
         working-directory: frontend
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test frontend with coverage (Vitest)
         working-directory: frontend
