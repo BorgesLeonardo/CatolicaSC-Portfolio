@@ -59,6 +59,12 @@ jobs:
           npm pkg set scripts.postinstall="echo skip-postinstall-in-ci"
           npm ci --no-audit --no-fund
 
+      - name: Stub Quasar tsconfig for Vitest
+        working-directory: frontend
+        run: |
+          mkdir -p .quasar
+          printf '{\n  "compilerOptions": {\n    "paths": {},\n    "types": []\n  }\n}\n' > .quasar/tsconfig.json
+
       - name: Test frontend with coverage (Vitest)
         working-directory: frontend
         env:
