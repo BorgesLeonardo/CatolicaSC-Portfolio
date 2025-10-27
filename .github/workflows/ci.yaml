@@ -53,12 +53,15 @@ jobs:
         working-directory: backend
         run: npm run test:ci
 
-      - name: Install frontend dependencies (skip postinstall)
+      - name: Install frontend dependencies (workaround optional deps)
         working-directory: frontend
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Test frontend with coverage (Vitest)
         working-directory: frontend
+        env:
+          # Force rollup to use JS implementation instead of native optional binary
+          ROLLUP_SKIP_NODEJS_NATIVE: true
         run: npm run coverage
 
       - name: Upload coverage artifact
