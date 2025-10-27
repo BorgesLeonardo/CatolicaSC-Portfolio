@@ -62,7 +62,6 @@ jobs:
       - name: Ensure optional platform deps for build tools
         working-directory: frontend
         run: |
-          npm config set optional true
           npm i -D @rollup/rollup-linux-x64-gnu @esbuild/linux-x64 --no-audit --no-fund
 
       - name: Test frontend with coverage (Vitest)
