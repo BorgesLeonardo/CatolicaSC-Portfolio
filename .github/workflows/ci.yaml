@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build-and-analyze:
-    name: Backend Test & SonarCloud
+    name: Backend + Frontend Tests & SonarCloud
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -31,7 +31,9 @@ jobs:
         with:
           node-version: 20.x
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Setup Java (for Sonar scanner)
         uses: actions/setup-java@v4
@@ -51,12 +53,22 @@ jobs:
         working-directory: backend
         run: npm run test:ci
 
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Test frontend with coverage (Vitest)
+        working-directory: frontend
+        run: npm run coverage
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage
-          path: backend/coverage/**
+          name: coverage-all
+          path: |
+            backend/coverage/**
+            frontend/coverage-unit/**
           if-no-files-found: warn
           retention-days: 7
 
