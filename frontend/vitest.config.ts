@@ -2,7 +2,18 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    {
+      name: 'vitest-ignore-vue-styles',
+      resolveId(id: string) {
+        if (id.includes('?vue&type=style')) return id
+      },
+      load(id: string) {
+        if (id.includes('?vue&type=style')) return ''
+      },
+    },
+  ],
   test: {
     environment: 'jsdom',
     globals: true,
