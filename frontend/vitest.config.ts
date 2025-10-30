@@ -6,7 +6,10 @@ export default defineConfig({
     {
       name: 'vitest-ignore-vue-styles',
       enforce: 'pre',
-      // Let Vite resolve normally; just short-circuit loading of style blocks
+      resolveId(id: string) {
+        if (id.includes('?vue&type=style')) return id
+      },
+      // Short-circuit loading of style blocks so tests don't require Sass
       load(id: string) {
         if (id.includes('?vue&type=style')) return ''
       },
