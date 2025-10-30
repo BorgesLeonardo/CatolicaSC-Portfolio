@@ -93,7 +93,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .animated-number {
   display: inline-block;
   font-variant-numeric: tabular-nums;
