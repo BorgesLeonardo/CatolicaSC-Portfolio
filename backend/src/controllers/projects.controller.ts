@@ -5,6 +5,8 @@ import { projectStatsService } from '../services/project-stats.service';
 import { AppError } from '../utils/AppError';
 import { createCampaignSchema } from '../schemas/campaign';
 import { sanitizeHtml } from '../utils/sanitize';
+import { prisma } from '../infrastructure/prisma';
+import { stripe } from '../utils/stripeClient';
 
 // Injeção de dependência para testes
 const projectsService = (global as any).__PROJECTS_SERVICE__ || new ProjectsService();
@@ -52,6 +54,30 @@ export class ProjectsController {
       }
 
       const ownerId: string = (req as any).authUserId;
+
+      // Block creation when the user is not connected to Stripe
+      const user = await prisma.user.findUnique({ where: { id: ownerId } });
+      const accountId = user?.stripeAccountId || null;
+      if (!accountId) {
+        throw new AppError('Conecte sua conta Stripe para criar campanhas', 422);
+      }
+      try {
+        const account = await stripe.accounts.retrieve(accountId);
+        const chargesEnabled = !!(account as any).charges_enabled;
+        const payoutsEnabled = !!(account as any).payouts_enabled;
+        if (!chargesEnabled || !payoutsEnabled) {
+          throw new AppError('Habilite recebimentos no Stripe para criar campanhas', 422);
+        }
+      } catch (err: any) {
+        const msg = String(err?.message || '');
+        const code = String((err?.raw as any)?.code || (err as any)?.code || '');
+        const isMissing = msg.includes('No such account') || msg.includes('does not have access to account') || code === 'resource_missing' || code === 'account_invalid';
+        if (isMissing) {
+          try { await prisma.user.update({ where: { id: ownerId }, data: { stripeAccountId: null } }); } catch {}
+          throw new AppError('Conecte sua conta Stripe para criar campanhas', 422);
+        }
+        throw err;
+      }
       const data = parse.data as any;
 
       // Additional server-side range enforcement by funding type

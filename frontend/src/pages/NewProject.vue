@@ -11,7 +11,29 @@
     </SignedOut>
 
     <SignedIn>
-      <q-card flat bordered class="q-pa-lg">
+      <q-card v-if="connectLoading" flat bordered class="q-pa-lg">
+        <div class="row items-center">
+          <q-spinner class="q-mr-sm" />
+          <div class="text-body2">Verificando conexão com Stripe...</div>
+        </div>
+      </q-card>
+
+      <q-card v-else-if="!connectStatus?.connected || !connectStatus?.chargesEnabled || !connectStatus?.payoutsEnabled" flat bordered class="q-pa-lg">
+        <div class="text-h6 q-mb-md">Habilite recebimentos no Stripe</div>
+        <div class="text-body2 text-muted q-mb-lg">
+          Para criar uma campanha, é necessário estar conectado ao Stripe e com cobranças e saques habilitados.
+        </div>
+        <div class="row q-col-gutter-sm">
+          <div class="col-auto">
+            <q-btn color="primary" label="Conectar ao Stripe" @click="connectOnboard" />
+          </div>
+          <div class="col-auto">
+            <q-btn flat label="Ir ao Dashboard" to="/dashboard" />
+          </div>
+        </div>
+      </q-card>
+
+      <q-card v-else flat bordered class="q-pa-lg">
         <div class="text-h6 q-mb-md">Nova Campanha</div>
         <div class="text-body2 text-muted q-mb-lg">
           <q-icon name="info" class="q-mr-xs" />
@@ -331,6 +353,7 @@ import { mergeDateTimeToISO } from 'src/utils/datetime'
 import { categoriesService } from 'src/services/categories'
 import { projectImagesService } from 'src/services/project-images'
 import { projectVideosService } from 'src/services/project-videos'
+import { connectService } from 'src/services/connect'
 import type { Category } from 'src/components/models'
 // Atualiza embedUrl quando videoUrl muda (YouTube/Vimeo)
 function computeEmbed(url: string): string {
@@ -353,6 +376,7 @@ const { getToken } = useAuth()
 
 const loading = ref(false)
 const loadingCategories = ref(false)
+const connectLoading = ref(true)
 
 // categorias disponíveis
 const categoryOptions = ref<Category[]>([])
@@ -390,6 +414,7 @@ const uploadingImages = ref(false)
 const useVideo = ref(false)
 const videoUrl = ref('')
 const embedUrl = ref('')
+const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payoutsEnabled: boolean } | null>(null)
 
 watch(videoUrl, (val) => {
   embedUrl.value = computeEmbed(val || '')
@@ -411,6 +436,20 @@ onMounted(async () => {
     })
   } finally {
     loadingCategories.value = false
+  }
+})
+
+onMounted(async () => {
+  connectLoading.value = true
+  try {
+    const token = await getToken.value?.()
+    setAuthToken(token || null)
+    const status = await connectService.status()
+    connectStatus.value = status
+  } catch {
+    connectStatus.value = { connected: false, chargesEnabled: false, payoutsEnabled: false }
+  } finally {
+    connectLoading.value = false
   }
 })
 
@@ -446,6 +485,13 @@ function onImageRejected(rejectedEntries: { file: File; failedPropValidation: st
     message: reasons.join(', '),
     timeout: 5000
   })
+}
+
+async function connectOnboard() {
+  const token = await getToken.value?.()
+  setAuthToken(token || null)
+  const { url } = await connectService.onboard()
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function getSubmitButtonLabel(): string {
@@ -748,6 +794,8 @@ async function submit() {
         fieldErrors[key] = msg
       }
       Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
+    } else if (status === 422 && resp?.message) {
+      Notify.create({ type: 'negative', message: resp.message })
     } else if (status === 400 && resp?.issues?.fieldErrors) {
       // mapeia erros do Zod para os campos
       const fe = resp.issues.fieldErrors
