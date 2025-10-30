@@ -227,9 +227,21 @@ async function subscribeNow() {
     } else {
       Notify.create({ type: 'negative', message: 'Falha ao iniciar assinatura.' })
     }
-  } catch {
-    // noop: removed debug log
-    Notify.create({ type: 'negative', message: 'Erro ao iniciar assinatura.' })
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { error?: string }; status?: number } }
+    const code = error?.response?.data?.error
+    if (code === 'ProjectClosed') {
+      Notify.create({ type: 'negative', message: 'Campanha encerrada.' })
+    } else if (error?.response?.status === 401) {
+      Notify.create({ type: 'warning', message: 'Sessão expirada. Entre novamente.' })
+    } else if (error?.response?.status === 404) {
+      Notify.create({ type: 'negative', message: 'Campanha não encontrada.' })
+    } else if (error?.response?.status === 422) {
+      // Mesmo alerta usado na contribuição única
+      Notify.create({ type: 'warning', message: 'Campanha não habilitada para receber pagamentos. O criador precisa conectar o Stripe.' })
+    } else {
+      Notify.create({ type: 'negative', message: 'Erro ao iniciar assinatura.' })
+    }
   }
 }
 
