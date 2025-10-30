@@ -61,7 +61,7 @@
               </div>
               <div class="trust-item">
                 <q-icon name="trending_up" color="white" size="sm" />
-                <span>Taxa de Sucesso 85%</span>
+                <span>Taxa de Sucesso {{ stats.successRatePct }}%</span>
               </div>
             </div>
           </div>

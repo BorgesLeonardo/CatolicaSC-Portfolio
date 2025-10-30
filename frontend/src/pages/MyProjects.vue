@@ -408,7 +408,7 @@ onMounted(fetchMyProjects)
                     <q-tooltip>Ver detalhes</q-tooltip>
                   </q-btn>
                   <q-btn 
-                    v-if="project.status !== 'ARCHIVED'"
+                    v-if="!isPast(project.deadline) && project.status !== 'ARCHIVED'"
                     flat
                     icon="pause_circle"
                     color="warning"
@@ -419,7 +419,7 @@ onMounted(fetchMyProjects)
                     <q-tooltip>Desativar campanha</q-tooltip>
                   </q-btn>
                   <q-btn 
-                    v-else
+                    v-else-if="!isPast(project.deadline)"
                     flat
                     icon="play_circle"
                     color="positive"

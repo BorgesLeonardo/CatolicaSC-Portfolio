@@ -46,6 +46,9 @@ const items = ref<Project[]>([])
 const loading = ref(false)
 const viewMode = ref<'grid' | 'list' | 'masonry'>('grid')
 
+// Plataforma: taxa de sucesso dinâmica
+const successRatePct = ref(0)
+
 const ownerId = computed(() => (onlyMine.value && isSignedIn.value ? user.value?.id : undefined))
 
 const categoryOptions = computed(() => 
@@ -77,6 +80,21 @@ async function fetchProjects() {
     items.value = data.items ?? []
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchPlatformStats() {
+  try {
+    // Utiliza a mesma lógica do IndexPage para os últimos 30 dias
+    const to = new Date()
+    const from = new Date(to)
+    from.setDate(from.getDate() - 30)
+    const platform = await http.get('/api/stats/platform', { params: { from: from.toISOString(), to: to.toISOString() } })
+    const p = platform.data as { successRatePct: number }
+    successRatePct.value = p.successRatePct || 0
+  } catch {
+    // noop
+    successRatePct.value = 0
   }
 }
 
@@ -181,7 +199,8 @@ function handleFavorite() {
 onMounted(async () => {
   await Promise.all([
     fetchCategories(),
-    fetchProjects()
+    fetchProjects(),
+    fetchPlatformStats()
   ])
 })
 watch([q, onlyActive, onlyMine, categoryId, sortBy, page, pageSize], fetchProjects)
@@ -224,7 +243,7 @@ function openProject(id: string) {
               <div class="stat-label">Categorias</div>
             </div>
             <div class="quick-stat">
-              <div class="stat-number">85%</div>
+              <div class="stat-number">{{ successRatePct }}%</div>
               <div class="stat-label">Taxa de Sucesso</div>
             </div>
           </div>
