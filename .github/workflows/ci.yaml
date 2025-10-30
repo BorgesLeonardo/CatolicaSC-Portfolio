@@ -2,6 +2,95 @@ name: CI
 
 on:
   push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests with coverage
+        working-directory: backend
+        run: npm run test:ci
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend unit tests with coverage
+        working-directory: frontend
+        run: npm run test:unit
+
+      - name: Ensure combined coverage ≥ 80%
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          function parseLcov(path) {
+            if (!fs.existsSync(path)) {
+              console.error(`Coverage file not found: ${path}`);
+              process.exit(1);
+            }
+            const content = fs.readFileSync(path, 'utf8');
+            let total = 0, covered = 0;
+            for (const line of content.split('\n')) {
+              if (line.startsWith('DA:')) {
+                const hits = Number(line.split(',')[1]);
+                total += 1;
+                if (hits > 0) covered += 1;
+              }
+            }
+            return { total, covered };
+          }
+          const files = [
+            'backend/coverage/lcov.info',
+            'frontend/coverage-unit/lcov.info',
+          ];
+          let total = 0, covered = 0;
+          for (const f of files) {
+            const r = parseLcov(f);
+            total += r.total;
+            covered += r.covered;
+          }
+          const pct = total ? (covered / total) * 100 : 0;
+          console.log(`Combined coverage: ${pct.toFixed(2)}% (${covered}/${total})`);
+          if (pct < 80) {
+            console.error('Combined coverage below 80%');
+            process.exit(1);
+          }
+          NODE
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectVersion=${{ github.run_number }}
+
+name: CI
+
+on:
+  push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
