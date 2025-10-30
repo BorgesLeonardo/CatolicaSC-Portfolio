@@ -6,9 +6,7 @@ export default defineConfig({
     {
       name: 'vitest-ignore-vue-styles',
       enforce: 'pre',
-      resolveId(id: string) {
-        if (id.includes('?vue&type=style')) return id
-      },
+      // Let Vite resolve normally; just short-circuit loading of style blocks
       load(id: string) {
         if (id.includes('?vue&type=style')) return ''
       },
