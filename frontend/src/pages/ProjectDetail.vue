@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuth } from '@clerk/vue'
+import { useAuth, useUser } from '@clerk/vue'
 import { http, setAuthToken } from 'src/utils/http'
 import { formatMoneyBRL, formatDateTimeBR, isPast, formatProgressPercentage, calculateDaysLeft } from 'src/utils/format'
 import { getImageUrl as buildImageUrl } from 'src/config/api'
@@ -13,12 +13,15 @@ import type { Project } from 'src/components/models'
 import { useProjectStats } from 'src/composables/useProjectStats'
 import { contributionsService } from 'src/services/contributions'
 import { Notify, Dialog } from 'quasar'
+import { useFavoritesStore } from 'src/stores/favorites'
 
 const route = useRoute()
 const router = useRouter()
 const id = String(route.params.id)
 
-const { user, getToken } = useAuth()
+const { getToken } = useAuth()
+const { user, isSignedIn } = useUser()
+const favorites = useFavoritesStore()
 const project = ref<Project | null>(null)
 const loading = ref(false)
 const deleteLoading = ref(false)
@@ -56,6 +59,19 @@ const daysLeft = computed(() => {
   if (!project.value) return 0
   return calculateDaysLeft(project.value.deadline)
 })
+
+const isFavorite = computed(() => favorites.isFavorite(id))
+
+function toggleFavorite() {
+  if (!project.value) return
+  if (!isSignedIn.value) {
+    const redirect = encodeURIComponent(`/projects/${id}`)
+    void router.push(`/sign-in?redirect=${redirect}`)
+    return
+  }
+  favorites.setUser(user.value?.id ?? null)
+  favorites.toggle(project.value)
+}
 
 // Image management
 const hasImages = computed(() => {
@@ -360,6 +376,7 @@ watch(() => user?.value?.id, (userId) => {
 })
 
 onMounted(() => {
+  favorites.setUser(user.value?.id ?? null)
   void fetchProject()
   // por padrão, manter capa (não iniciar vídeo automaticamente)
   showVideo.value = false
@@ -406,8 +423,10 @@ function backToCover() {
           <q-btn
             flat
             round
-            icon="favorite_border"
+            :icon="isFavorite ? 'favorite' : 'favorite_border'"
+            :color="isFavorite ? 'negative' : undefined"
             class="text-grey-7 icon-muted-text"
+            @click="toggleFavorite"
           />
         </div>
       </div>

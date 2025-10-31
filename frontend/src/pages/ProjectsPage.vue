@@ -10,10 +10,12 @@ import ModernLoading from 'src/components/ModernLoading.vue'
 import DynamicGrid from 'src/components/DynamicGrid.vue'
 import AdvancedSearch from 'src/components/AdvancedSearch.vue'
 import { categoriesService } from 'src/services/categories'
+import { useFavoritesStore } from 'src/stores/favorites'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
 const router = useRouter()
 const { isSignedIn, user } = useUser()
+const favorites = useFavoritesStore()
 const { updateStatsIfNeeded } = useProjectStats()
 
 // filtros
@@ -191,12 +193,18 @@ function handleSuggestion(suggestion: SearchSuggestion) {
 
 // Handlers de ações rápidas removidos
 
-function handleFavorite() {
-  // noop: removed debug log
-  // Implementar lógica de favoritos
+function handleFavorite(project: Project) {
+  if (!isSignedIn.value) {
+    const redirect = encodeURIComponent('/projects')
+    void router.push(`/sign-in?redirect=${redirect}`)
+    return
+  }
+  favorites.setUser(user.value?.id ?? null)
+  favorites.toggle(project)
 }
 
 onMounted(async () => {
+  favorites.setUser(user.value?.id ?? null)
   await Promise.all([
     fetchCategories(),
     fetchProjects(),
@@ -334,6 +342,7 @@ function openProject(id: string) {
             <template #default="{ item: project }">
               <CampaignCard
                 :project="project"
+                :is-favorite="favorites.isFavorite(project.id)"
                 @click="openProject"
                 @favorite="handleFavorite"
                 :class="{ 'campaign-card--list': viewMode === 'list' }"

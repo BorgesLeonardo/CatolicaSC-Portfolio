@@ -72,6 +72,20 @@ describe('MeController', () => {
     expect(json).toHaveBeenCalledWith({ topByRaised: [{ projectId: 'p1', title: 'T', raised: 100, goal: 200 }], byCategory: [{ category: 'C', count: 2, raised: 50 }] })
   })
 
+  it('campaignsMetrics SQL should filter soft-deleted projects', async () => {
+    prisma.$queryRaw.mockResolvedValueOnce([])
+    prisma.$queryRaw.mockResolvedValueOnce([])
+    const { req, res } = mockReqRes('u6')
+    await controller.campaignsMetrics(req as any, res as any)
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(2)
+    const firstSqlParts = prisma.$queryRaw.mock.calls[0][0] as TemplateStringsArray
+    const secondSqlParts = prisma.$queryRaw.mock.calls[1][0] as TemplateStringsArray
+    const firstSql = Array.isArray(firstSqlParts) ? firstSqlParts.join(' ') : String(firstSqlParts)
+    const secondSql = Array.isArray(secondSqlParts) ? secondSqlParts.join(' ') : String(secondSqlParts)
+    expect(firstSql).toContain('"deletedAt" IS NULL')
+    expect(secondSql).toContain('"deletedAt" IS NULL')
+  })
+
   it('campaignsList should paginate and map items', async () => {
     prisma.project.findMany.mockResolvedValueOnce([
       { id: 'p1', title: 'A', status: 'PUBLISHED', goalCents: 1000, raisedCents: 500, deadline: new Date(), contributions: [{ id: 'c1' }] },
@@ -80,6 +94,15 @@ describe('MeController', () => {
     const { req, res, json } = mockReqRes('u4', { page: '1', pageSize: '10', status: 'PUBLISHED', q: 'A' })
     await controller.campaignsList(req as any, res as any)
     expect(json).toHaveBeenCalledWith(expect.objectContaining({ total: 1, items: expect.any(Array) }))
+  })
+
+  it('campaignsList should exclude soft-deleted items in where clause', async () => {
+    prisma.project.findMany.mockResolvedValueOnce([])
+    prisma.project.count.mockResolvedValueOnce(0)
+    const { req, res } = mockReqRes('u7', { page: '1', pageSize: '10' })
+    await controller.campaignsList(req as any, res as any)
+    const args = prisma.project.findMany.mock.calls[0][0]
+    expect(args.where).toEqual(expect.objectContaining({ ownerId: 'u7', deletedAt: null }))
   })
 
   it('payouts should return empty structure', async () => {

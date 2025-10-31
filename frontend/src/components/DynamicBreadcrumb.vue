@@ -138,6 +138,7 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
     'projects': { label: 'Campanhas', icon: 'campaign' },
     'new': { label: 'Nova Campanha', icon: 'add_circle' },
     'me': { label: 'Minhas Campanhas', icon: 'campaign' },
+    'favorites': { label: 'Favoritos', icon: 'favorite' },
     'dashboard': { label: 'Dashboard', icon: 'dashboard' },
     'sign-in': { label: 'Entrar', icon: 'login' },
     'sign-up': { label: 'Cadastrar', icon: 'person_add' }
@@ -201,9 +202,9 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .dynamic-breadcrumb {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  border-bottom: 1px solid var(--color-border);
   padding: 12px 0;
   position: sticky;
   top: 70px;
@@ -271,7 +272,7 @@ onUnmounted(() => {
   &--active {
     .breadcrumb-current {
       .breadcrumb-text {
-        color: #0f172a;
+        color: var(--color-text-strong);
         font-weight: 600;
       }
     }
@@ -301,18 +302,18 @@ onUnmounted(() => {
 
 .breadcrumb-text {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .breadcrumb-icon {
-  color: #94a3b8;
+  color: var(--color-text-hint);
   transition: color 0.2s ease;
 }
 
 .breadcrumb-separator {
-  color: #cbd5e1;
+  color: var(--color-border);
   display: flex;
   align-items: center;
   margin: 0 4px;
@@ -339,7 +340,7 @@ onUnmounted(() => {
   width: 100%;
   justify-content: space-between;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text);
   
   .q-icon {
     transition: transform 0.2s ease;
@@ -383,7 +384,7 @@ onUnmounted(() => {
   }
 }
 
-// Dark mode removed - manual theme control only
+// Uses CSS variables defined in app.scss to adapt to light/dark modes
 
 // === ACCESSIBILITY ===
 @media (prefers-reduced-motion: reduce) {

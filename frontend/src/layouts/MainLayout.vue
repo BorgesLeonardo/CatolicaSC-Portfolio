@@ -279,6 +279,23 @@
             <q-item 
               clickable 
               v-ripple 
+              to="/favorites"
+              class="nav-item"
+              active-class="nav-item--active"
+              @click="leftDrawerOpen = false"
+            >
+              <q-item-section avatar>
+                <q-icon name="favorite" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="nav-label">Favoritos</q-item-label>
+                <q-item-label caption class="nav-caption">Campanhas salvas</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item 
+              clickable 
+              v-ripple 
               to="/dashboard"
               class="nav-item"
               active-class="nav-item--active"
@@ -355,19 +372,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { SignedIn, SignedOut, UserButton } from '@clerk/vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/vue'
 import { useRoute, useRouter } from 'vue-router'
 import ModernFooter from 'src/components/ModernFooter.vue'
 import DynamicBreadcrumb from 'src/components/DynamicBreadcrumb.vue'
 import { useThemeStore } from 'src/stores/theme'
 import { Notify } from 'quasar'
+import { useFavoritesStore } from 'src/stores/favorites'
 
 const route = useRoute()
 const router = useRouter()
 const leftDrawerOpen = ref(false)
 const isScrolled = ref(false)
 const theme = useThemeStore()
+const favorites = useFavoritesStore()
+const { isSignedIn, user } = useUser()
 
 // Show breadcrumb on pages other than home
 const showBreadcrumb = computed(() => {
@@ -425,6 +445,15 @@ function scrollToHowItWorks() {
     }
   }
 }
+
+onMounted(() => {
+  favorites.setUser(user.value?.id ?? null)
+})
+
+
+watch([isSignedIn, user], () => {
+  favorites.setUser(user.value?.id ?? null)
+})
 
 // Theme controls
 const themeIcon = computed(() => {
@@ -488,8 +517,13 @@ onUnmounted(() => {
 
 .logo-text {
   font-weight: 800;
-  color: white;
+  color: var(--color-primary);
   letter-spacing: -0.025em;
+}
+
+// Ensure good contrast in dark mode
+[data-theme='dark'] .logo-text {
+  color: white;
 }
 
 // === DYNAMIC MENU BUTTON ===
@@ -899,8 +933,12 @@ onUnmounted(() => {
 .drawer-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: white;
+  color: var(--color-primary);
   letter-spacing: -0.025em;
+}
+
+[data-theme='dark'] .drawer-title {
+  color: white;
 }
 
 .drawer-close {

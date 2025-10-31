@@ -163,6 +163,7 @@
             <CampaignCard
               :project="project"
               :featured="true"
+              :is-favorite="favorites.isFavorite(project.id)"
               @click="openProject"
               @favorite="handleFavorite"
             />
@@ -430,12 +431,16 @@ import ModernLoading from 'src/components/ModernLoading.vue'
 import DynamicGrid from 'src/components/DynamicGrid.vue'
 import ToastNotification from 'src/components/ToastNotification.vue'
 import { useProjectStats } from 'src/composables/useProjectStats'
+import { useFavoritesStore } from 'src/stores/favorites'
+import { useUser } from '@clerk/vue'
  
 
 const router = useRouter()
 const loading = ref(false)
 const featuredProjects = ref<Project[]>([])
 const { updateStatsIfNeeded } = useProjectStats()
+const favorites = useFavoritesStore()
+const { isSignedIn, user } = useUser()
 
 // Estatísticas dinâmicas da plataforma (carregadas da API)
 const stats = ref({
@@ -489,9 +494,14 @@ function openProject(id: string) {
   void router.push(`/projects/${id}`)
 }
 
-function handleFavorite() {
-  // noop: removed debug log
-  // Implementar lógica de favoritos
+function handleFavorite(project: Project) {
+  if (!isSignedIn.value) {
+    const redirect = encodeURIComponent('/')
+    void router.push(`/sign-in?redirect=${redirect}`)
+    return
+  }
+  favorites.setUser(user.value?.id ?? null)
+  favorites.toggle(project)
 }
 
 function formatNumber(num: number): string {
@@ -511,6 +521,7 @@ function scrollToHowItWorks() {
 
 onMounted(() => {
   void fetchFeaturedProjects()
+  favorites.setUser(user.value?.id ?? null)
 })
 
 watch(period, () => {

@@ -70,7 +70,8 @@
             flat
             dense
             round
-            icon="favorite_border"
+            :icon="isFavorite ? 'favorite' : 'favorite_border'"
+            :color="isFavorite ? 'negative' : undefined"
             size="sm"
             class="favorite-btn glass"
             @click.stop="toggleFavorite"
@@ -208,11 +209,13 @@ interface Props {
   project: Project
   featured?: boolean
   showFooter?: boolean
+  isFavorite?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   featured: false,
-  showFooter: true
+  showFooter: true,
+  isFavorite: false
 })
 
 const emit = defineEmits<{

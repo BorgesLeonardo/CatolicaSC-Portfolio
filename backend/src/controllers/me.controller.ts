@@ -89,7 +89,7 @@ export class MeController {
              (p."raisedCents"/100.0)::float8 as raised,
              (p."goalCents"/100.0)::float8 as goal
       FROM "Project" p
-      WHERE p."ownerId" = ${userId} AND p."status" = 'PUBLISHED'
+      WHERE p."ownerId" = ${userId} AND p."status" = 'PUBLISHED' AND p."deletedAt" IS NULL
       ORDER BY p."raisedCents" DESC
       LIMIT 5
     `
@@ -101,7 +101,7 @@ export class MeController {
              (SUM(p."raisedCents")/100.0)::float8 as raised
       FROM "Project" p
       LEFT JOIN "Category" c ON c.id = p."categoryId"
-      WHERE p."ownerId" = ${userId}
+      WHERE p."ownerId" = ${userId} AND p."deletedAt" IS NULL
       GROUP BY c.name
       ORDER BY raised DESC
     `
@@ -116,7 +116,7 @@ export class MeController {
     const pageNum = Math.max(1, parseInt(page, 10) || 1)
     const sizeNum = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 10))
 
-    const where: any = { ownerId: userId }
+    const where: any = { ownerId: userId, deletedAt: null }
     if (status) where.status = status as any
     if (q) where.title = { contains: q, mode: 'insensitive' as const }
 
