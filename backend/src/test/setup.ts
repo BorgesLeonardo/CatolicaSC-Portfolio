@@ -41,6 +41,8 @@ jest.mock('../infrastructure/prisma', () => ({
     },
     user: {
       upsert: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     $transaction: jest.fn(),
   },
@@ -72,6 +74,9 @@ jest.mock('../utils/stripeClient', () => ({
     },
     webhooks: {
       constructEvent: jest.fn(),
+    },
+    accounts: {
+      retrieve: jest.fn(),
     },
   },
 }));

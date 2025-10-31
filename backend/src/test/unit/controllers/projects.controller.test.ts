@@ -3,6 +3,8 @@ import { ProjectsController } from '../../../controllers/projects.controller';
 import { ProjectsService } from '../../../services/projects.service';
 import { projectStatsService } from '../../../services/project-stats.service';
 import { AppError } from '../../../utils/AppError';
+import { prisma } from '../../../infrastructure/prisma';
+import { stripe } from '../../../utils/stripeClient';
 
 // Mock dos services
 jest.mock('../../../services/projects.service');
@@ -74,6 +76,9 @@ describe('ProjectsController', () => {
       (mockRequest as any).authUserId = 'user123';
       mockService.create.mockResolvedValue(mockProject as any);
 
+      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user123', stripeAccountId: 'acct_123' })
+      ;(stripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123', charges_enabled: true, payouts_enabled: true })
+
       await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockService.create).toHaveBeenCalledTimes(1)
@@ -114,6 +119,9 @@ describe('ProjectsController', () => {
       (mockRequest as any).authUserId = 'user123';
 
       mockService.create.mockResolvedValue({ id: 'p1' } as any);
+
+      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user123', stripeAccountId: 'acct_123' })
+      ;(stripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123', charges_enabled: true, payouts_enabled: true })
 
       await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
 
