@@ -149,6 +149,45 @@ describe('ProjectsController', () => {
       expect(mockNext).toHaveBeenCalled();
     });
 
+    it('should reject when user is not connected to Stripe', async () => {
+      mockRequest.body = validProjectData;
+      (mockRequest as any).authUserId = 'user123';
+
+      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user123', stripeAccountId: null })
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 422 }));
+    });
+
+    it('should clear stale account and reject when Stripe account is missing', async () => {
+      mockRequest.body = validProjectData;
+      (mockRequest as any).authUserId = 'user123';
+
+      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user123', stripeAccountId: 'acct_stale' })
+      ;(stripe.accounts.retrieve as jest.Mock).mockRejectedValue(Object.assign(new Error('No such account'), { code: 'resource_missing' }))
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(prisma.user.update).toHaveBeenCalledWith({ where: { id: 'user123' }, data: { stripeAccountId: null } })
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 422 }));
+    });
+
+    it('should reject when charges or payouts are not enabled', async () => {
+      mockRequest.body = validProjectData;
+      (mockRequest as any).authUserId = 'user123';
+
+      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user123', stripeAccountId: 'acct_123' })
+      ;(stripe.accounts.retrieve as jest.Mock).mockResolvedValue({ id: 'acct_123', charges_enabled: false, payouts_enabled: true })
+
+      await controller.create(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 422 }));
+    });
+
     it('should reject DIRECT with goalCents below server-side range', async () => {
       mockRequest.body = {
         title: 'Valid Project Title',
