@@ -333,10 +333,10 @@ const statusOptions = [
 const sortOptions = [
   { label: 'Mais recentes', value: 'newest' },
   { label: 'Mais antigas', value: 'oldest' },
-  { label: 'Maior meta', value: 'goal-desc' },
-  { label: 'Menor meta', value: 'goal-asc' },
+  { label: 'Maior meta', value: 'goal_desc' },
+  { label: 'Menor meta', value: 'goal_asc' },
   { label: 'Mais populares', value: 'popular' },
-  { label: 'Terminando em breve', value: 'ending-soon' }
+  { label: 'Terminando em breve', value: 'deadline_asc' }
 ]
 
 // Computed
@@ -391,6 +391,8 @@ const clearSearch = () => {
   void nextTick(() => {
     searchInput.value?.focus()
   })
+  // Reexecuta busca com termo vazio para sincronizar resultados
+  handleSearch()
 }
 
 const toggleExpanded = () => {
@@ -420,6 +422,11 @@ const clearAllFilters = () => {
     sortBy: 'newest'
   }
   selectedQuickFilters.value = []
+  // Também limpar a barra de pesquisa e sugestões para evitar estado residual
+  searchQuery.value = ''
+  showSuggestions.value = false
+  // Aplica imediatamente o estado limpo
+  handleSearch()
 }
 
 const resetFilters = () => {

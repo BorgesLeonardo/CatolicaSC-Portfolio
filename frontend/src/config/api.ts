@@ -1,9 +1,7 @@
 // Configuração da API
 export const API_CONFIG = {
-  // URL base da API - em desenvolvimento usa localhost:3333, em produção usa a URL do backend
-  BASE_URL: process.env.NODE_ENV === 'production' 
-    ? 'https://your-backend-domain.com' 
-    : 'http://localhost:3333',
+  // URL base da API: usa VITE_API_BASE_URL quando disponível; fallback para localhost em dev
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333',
     
   // Endpoints
   ENDPOINTS: {

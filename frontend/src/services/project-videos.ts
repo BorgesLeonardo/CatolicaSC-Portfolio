@@ -4,9 +4,7 @@ export const projectVideosService = {
   async uploadVideo(projectId: string, file: File) {
     const form = new FormData()
     form.append('video', file)
-    const { data } = await http.post(`/api/projects/${projectId}/video`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const { data } = await http.post(`/api/projects/${projectId}/video`, form)
     return data as { message: string; videoUrl: string }
   },
 

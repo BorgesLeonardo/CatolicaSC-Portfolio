@@ -146,14 +146,17 @@ interface AdvancedFilters {
 
 function handleAdvancedSearch(query: string, filters: AdvancedFilters) {
   q.value = query
-  // Apply advanced filters
-  if (filters.category) categoryId.value = filters.category
-  if (filters.status) {
-    onlyActive.value = filters.status.includes('active')
-  }
-  if (filters.sortBy) sortBy.value = filters.sortBy
   
-  // Trigger search
+  // Categoria: zera quando não vier definida
+  categoryId.value = filters.category ?? ''
+  
+  // Status: por padrão manter somente ativas quando não especificado
+  onlyActive.value = filters.status ? filters.status.includes('active') : true
+  
+  // Ordenação: default para 'newest' se não vier
+  sortBy.value = filters.sortBy ?? 'newest'
+  
+  // Reinicia paginação e executa
   page.value = 1
   void fetchProjects()
 }
