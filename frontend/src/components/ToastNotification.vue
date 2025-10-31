@@ -84,6 +84,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { cryptoRandomUuid } from '../utils/crypto'
 
 interface ToastAction {
   label: string
@@ -119,7 +120,7 @@ const timers = new Map<string, number>()
 
 // Global toast function
 const showToast = (options: Omit<Toast, 'id'>) => {
-  const id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  const id = cryptoRandomUuid()
   const toast: Toast = {
     id,
     duration: 5000,
