@@ -32,9 +32,19 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// CORS configuration (strict)
+// Build allowed origins list from env (comma-separated) + localhost fallback
+const rawOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:9000')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean)
+const allowedOrigins = Array.from(new Set(rawOrigins))
+
+// CORS configuration (allowlist)
 app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:9000',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true) // allow non-browser / server-to-server
+    return callback(null, allowedOrigins.includes(origin))
+  },
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization','Idempotency-Key','X-Requested-With','X-Request-Id'],
@@ -62,7 +72,7 @@ app.use(helmet({
         "'self'",
         'data:',
         'blob:',
-        process.env.FRONTEND_ORIGIN || 'http://localhost:9000',
+        ...allowedOrigins,
         'https://images.unsplash.com',
         'https://*.clerk.com',
         'https://*.clerk.services',
@@ -70,7 +80,7 @@ app.use(helmet({
       fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
       connectSrc: [
         "'self'",
-        process.env.FRONTEND_ORIGIN || 'http://localhost:9000',
+        ...allowedOrigins,
         'https://api.stripe.com',
         'https://m.stripe.network',
         'https://js.stripe.com',

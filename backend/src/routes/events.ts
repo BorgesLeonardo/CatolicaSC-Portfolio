@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express'
-import { requireApiAuth } from '../middleware/auth'
 import { statsController } from '../controllers/stats.controller'
 
 // In-memory list of SSE clients
@@ -33,8 +32,8 @@ export function broadcastToOwner(ownerId: string, event: string, data: any) {
 
 const router = Router()
 
-// GET /api/events (SSE) — authenticated stream
-router.get('/events', requireApiAuth, (req: Request, res: Response) => {
+// GET /api/events (SSE) — public stream (no auth)
+router.get('/events', (req: Request, res: Response) => {
   // Allow CORS for SSE if needed
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache, no-transform')
