@@ -6,25 +6,25 @@ import hpp from 'hpp';
 import compression from 'compression';
 import { clerkMiddleware } from '@clerk/express';
 import { nanoid } from 'nanoid';
-import { prisma } from './infrastructure/prisma';
-import { maskEmail, maskCpfCnpj } from './utils/sanitize';
-import { logger } from './utils/logger';
-import { errorHandler } from './middleware/error';
-import { HealthController } from './controllers/health.controller';
+import { prisma } from './infrastructure/prisma.js';
+import { maskEmail, maskCpfCnpj } from './utils/sanitize.js';
+import { logger } from './utils/logger.js';
+import { errorHandler } from './middleware/error.js';
+import { HealthController } from './controllers/health.controller.js';
 
-import projectsRouter from './routes/projects';
-import projectImagesRouter from './routes/project-images';
-import projectVideosRouter from './routes/project-videos';
-import contributionsRouter from './routes/contributions';
-import subscriptionsRouter from './routes/subscriptions';
-import commentsRouter from './routes/comments';
-import checkoutRouter from './routes/checkout';
-import webhookRouter from './routes/webhook';
-import categoriesRouter from './routes/categories';
-import meRouter from './routes/me.routes'
-import connectRouter from './routes/connect'
-import eventsRouter from './routes/events'
-import { apiLimiter } from './middleware/rateLimit';
+import projectsRouter from './routes/projects.js';
+import projectImagesRouter from './routes/project-images.js';
+import projectVideosRouter from './routes/project-videos.js';
+import contributionsRouter from './routes/contributions.js';
+import subscriptionsRouter from './routes/subscriptions.js';
+import commentsRouter from './routes/comments.js';
+import checkoutRouter from './routes/checkout.js';
+import webhookRouter from './routes/webhook.js';
+import categoriesRouter from './routes/categories.js';
+import meRouter from './routes/me.routes.js'
+import connectRouter from './routes/connect.js'
+import eventsRouter from './routes/events.js'
+import { apiLimiter } from './middleware/rateLimit.js';
 
 const app = express();
 

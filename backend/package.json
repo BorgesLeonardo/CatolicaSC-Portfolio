@@ -2,7 +2,6 @@
   "name": "crowdfunding-backend",
   "version": "1.0.0",
   "description": "Backend API para Plataforma de Crowdfunding",
-  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
