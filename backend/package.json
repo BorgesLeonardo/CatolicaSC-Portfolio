@@ -9,6 +9,7 @@
     "listen": "stripe listen --forward-to localhost:3333/api/webhooks/stripe",
     "build": "tsc",
     "start": "node dist/server.js",
+    "postinstall": "prisma generate",
     "lint": "echo 'Lint disabled for CI/CD'",
     "typecheck": "tsc --noEmit",
     "test": "jest",
