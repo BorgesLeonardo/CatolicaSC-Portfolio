@@ -15,23 +15,16 @@ export interface ReorderImagesData {
 }
 
 export class ProjectImagesService {
-  async uploadImages(projectId: string, files: File[], token?: string): Promise<UploadImagesResponse> {
+  async uploadImages(projectId: string, files: File[]): Promise<UploadImagesResponse> {
     const formData = new FormData()
     
     files.forEach((file) => {
       formData.append('images', file)
     })
     
-    const headers: Record<string, string> = {
-      'Content-Type': 'multipart/form-data'
-    }
-    
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
-    
     const response = await http.post(`/api/projects/${projectId}/images`, formData, {
-      headers
+      // Let Axios set the proper multipart boundary automatically
+      timeout: 60000
     })
     
     return response.data
