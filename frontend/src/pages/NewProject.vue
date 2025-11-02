@@ -516,7 +516,8 @@ async function connectOnboard() {
   const token = await getToken.value?.()
   setAuthToken(token || null)
   const { url } = await connectService.onboard()
-  window.open(url, '_blank', 'noopener,noreferrer')
+  try { sessionStorage.setItem('connect_return_path', '/projects/new') } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+  window.location.assign(url)
 }
 
 function getSubmitButtonLabel(): string {

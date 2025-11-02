@@ -18,6 +18,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'contrib/cancel', component: () => import('pages/ContribCancel.vue') },
       { path: 'subscribe/success', component: () => import('pages/SubscribeSuccess.vue') },
       { path: 'subscribe/cancel', component: () => import('pages/SubscribeCancel.vue') },
+      { path: 'connect/return', component: () => import('pages/ConnectReturn.vue') },
+      { path: 'connect/refresh', component: () => import('pages/ConnectRefresh.vue') },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') },
     ],
   },
