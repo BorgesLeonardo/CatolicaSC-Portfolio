@@ -5,6 +5,20 @@ import { ProjectVideosController } from '../controllers/project-videos.controlle
 const router = Router();
 const controller = new ProjectVideosController();
 
+// Generate presigned URL for direct upload (if enabled)
+router.post(
+  '/:projectId/video/presign',
+  requireApiAuth,
+  controller.presignVideo.bind(controller)
+);
+
+// Finalize: link uploaded video URL to project
+router.post(
+  '/:projectId/video/finalize',
+  requireApiAuth,
+  controller.finalizeVideo.bind(controller)
+);
+
 // Upload single video
 router.post(
   '/:projectId/video',

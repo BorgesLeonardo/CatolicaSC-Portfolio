@@ -4,6 +4,7 @@ import { ProjectImagesService } from '../services/project-images.service';
 import { AppError } from '../utils/AppError';
 import { prisma } from '../infrastructure/prisma';
 import multer from 'multer';
+import { getPresignedPutUrl, getPublicBaseUrl, isS3Enabled } from '../lib/storage';
 
 const projectImagesService = new ProjectImagesService();
 
@@ -41,6 +42,100 @@ export class ProjectImagesController {
   private reorderSchema = z.object({
     imageIds: z.array(z.string().cuid()).min(1).max(5)
   });
+
+  // POST /api/:projectId/images/presign
+  async presignImages(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!isS3Enabled()) {
+        return res.status(501).json({ message: 'Presigned uploads not enabled' });
+      }
+
+      const params = this.idParamSchema.safeParse(req.params);
+      if (!params.success) {
+        throw new AppError('ValidationError', 400, params.error.flatten());
+      }
+
+      const bodySchema = z.object({
+        files: z.array(z.object({
+          filename: z.string().min(1),
+          contentType: z.string().min(1),
+          size: z.number().int().positive().max(5 * 1024 * 1024)
+        })).min(1).max(5)
+      });
+      const body = bodySchema.parse(req.body);
+
+      const userId: string = (req as any).authUserId;
+      const project = await prisma.project.findUnique({
+        where: { id: params.data.projectId },
+        select: { ownerId: true, deletedAt: true }
+      });
+      if (!project || project.deletedAt) throw new AppError('Project not found', 404);
+      if (project.ownerId !== userId) throw new AppError('Forbidden', 403);
+
+      const base = getPublicBaseUrl() as string;
+      const results: { uploadUrl: string; key: string; publicUrl: string }[] = [];
+      for (const f of body.files) {
+        const ext = (f.filename.match(/\.[^.]+$/)?.[0]) || '';
+        const key = `projects/${params.data.projectId}-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+        const uploadUrl = await getPresignedPutUrl({ key, contentType: f.contentType });
+        const publicUrl = `${base}/${key}`;
+        results.push({ uploadUrl, key, publicUrl });
+      }
+      return res.status(200).json({ items: results });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  // POST /api/:projectId/images/finalize
+  async finalizeImages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.idParamSchema.safeParse(req.params);
+      if (!params.success) {
+        throw new AppError('ValidationError', 400, params.error.flatten());
+      }
+
+      const bodySchema = z.object({
+        images: z.array(z.object({
+          publicUrl: z.string().url(),
+          originalName: z.string().min(1),
+          size: z.number().int().positive().max(5 * 1024 * 1024),
+          mimeType: z.string().min(1)
+        })).min(1).max(5)
+      });
+      const body = bodySchema.parse(req.body);
+
+      const userId: string = (req as any).authUserId;
+      const project = await prisma.project.findUnique({
+        where: { id: params.data.projectId },
+        select: { ownerId: true, deletedAt: true }
+      });
+      if (!project || project.deletedAt) throw new AppError('Project not found', 404);
+      if (project.ownerId !== userId) throw new AppError('Forbidden', 403);
+
+      const existingCount = await prisma.projectImage.count({ where: { projectId: params.data.projectId } });
+      let order = existingCount;
+      const created = [] as any[];
+      for (const img of body.images) {
+        const filename = img.publicUrl.split('/').pop() || img.originalName;
+        const rec = await prisma.projectImage.create({
+          data: {
+            projectId: params.data.projectId,
+            filename,
+            originalName: img.originalName,
+            url: img.publicUrl,
+            size: img.size,
+            mimeType: img.mimeType,
+            order: order++
+          }
+        });
+        created.push(rec);
+      }
+      return res.status(201).json({ message: 'Images linked', images: created });
+    } catch (error) {
+      return next(error);
+    }
+  }
 
   async uploadImages(req: Request, res: Response, next: NextFunction) {
     try {
