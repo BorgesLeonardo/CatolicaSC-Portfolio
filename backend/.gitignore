@@ -39,7 +39,6 @@ pids/
 coverage/
 
 # Prisma
-prisma/migrations/
 
 
 
