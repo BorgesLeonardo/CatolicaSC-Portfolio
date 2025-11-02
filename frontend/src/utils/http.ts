@@ -8,6 +8,10 @@ export const http = axios.create({
 // Controla redirecionamentos para evitar loops em produção
 let lastAuthRedirectAt = 0
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // Função para configurar o token manualmente quando necessário
 export function setAuthToken(token: string | null) {
   if (token) {
@@ -31,7 +35,12 @@ http.interceptors.response.use(
       try {
         const canGetToken = !!g?.Clerk?.session && typeof g.Clerk.session.getToken === 'function'
         if (canGetToken && !cfg.__retriedWithToken) {
-          const token: string | null | undefined = await g.Clerk.session.getToken()
+          // Tenta obter o token algumas vezes rapidamente (corrige race que some com DevTools)
+          let token: string | null | undefined = null
+          for (let i = 0; i < 3 && !token; i++) {
+            token = await g.Clerk.session.getToken()
+            if (!token) await sleep(180)
+          }
           if (token) {
             cfg.headers = { ...(cfg.headers || {}), Authorization: `Bearer ${token}` }
             cfg.__retriedWithToken = true
