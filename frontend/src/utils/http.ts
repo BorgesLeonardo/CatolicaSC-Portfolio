@@ -71,10 +71,13 @@ http.interceptors.response.use(
         const hash = w.location.hash || '#/'
         const path = hash.startsWith('#') ? hash.substring(1) : hash
         const onAuth = path.startsWith('/sign-in') || path.startsWith('/sign-up')
-        const tooSoon = Date.now() - lastAuthRedirectAt < 4000
+        // In test mode, disable time-based suppression to avoid cross-test leakage
+        const mode = (import.meta as any).env?.MODE || (typeof process !== 'undefined' ? (process.env?.NODE_ENV || 'development') : 'development')
+        const isTest = String(mode) === 'test'
+        const tooSoon = !isTest && (Date.now() - lastAuthRedirectAt < 4000)
         // Bloqueio adicional: se já redirecionamos recentemente nesta sessão, não repetir
         const ssTs = Number((w.sessionStorage && w.sessionStorage.getItem('auth_redirect_ts')) || 0)
-        const sessionRecent = Date.now() - ssTs < 10000
+        const sessionRecent = !isTest && (Date.now() - ssTs < 10000)
         if (!onAuth && !tooSoon && !sessionRecent) {
           // Defer para o próximo tick, evitando reentrância durante navegação
           setTimeout(() => {

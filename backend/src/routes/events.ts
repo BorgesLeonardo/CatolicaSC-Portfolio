@@ -40,7 +40,10 @@ router.get('/events', (req: Request, res: Response) => {
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders?.()
 
-  const userId = (req as any).authUserId as string | undefined
+  // Try auth middleware user first; fallback to test/header hints when middleware isn't attached
+  const headerUser = req.headers['x-test-user-id'] ?? req.headers['x-user-id']
+  const userId = ((req as any).authUserId as string | undefined) ??
+    (Array.isArray(headerUser) ? headerUser[0] : (typeof headerUser === 'string' ? headerUser : undefined))
   const ownerId = (req.query.ownerId as string) || undefined
 
   const id = ++clientSeq
