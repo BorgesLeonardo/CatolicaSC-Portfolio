@@ -28,10 +28,6 @@ watch([isLoaded, isSignedIn], ([loaded, signed]) => {
 
 <template>
   <div class="q-pa-xl flex flex-center bg-surface">
-    <SignUp
-      :fallbackRedirectUrl="redirect"
-      :forceRedirectUrl="redirect"
-      :signInFallbackRedirectUrl="redirect"
-    />
+    <SignUp />
   </div>
 </template>
