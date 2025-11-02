@@ -39,8 +39,12 @@ export class ConnectController {
         await prisma.user.update({ where: { id: userId }, data: { stripeAccountId: accountId } })
       }
 
-      const refreshUrl = process.env.CONNECT_REFRESH_URL || `${process.env.FRONTEND_ORIGIN || 'http://localhost:9000'}/connect/refresh`
-      const returnUrl = process.env.CONNECT_RETURN_URL || `${process.env.FRONTEND_ORIGIN || 'http://localhost:9000'}/connect/return`
+      // Build return/refresh URLs considering hash router when enabled via env
+      const base = (process.env.FRONTEND_ORIGIN || 'http://localhost:9000').replace(/\/$/, '')
+      const useHash = (process.env.APP_USE_HASH_ROUTER || 'false') === 'true'
+      const hashPrefix = useHash ? '/#' : ''
+      const refreshUrl = process.env.CONNECT_REFRESH_URL || `${base}${hashPrefix}/connect/refresh`
+      const returnUrl = process.env.CONNECT_RETURN_URL || `${base}${hashPrefix}/connect/return`
 
       const link = await stripe.accountLinks.create({
         account: accountId!,
