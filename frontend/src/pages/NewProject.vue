@@ -681,31 +681,50 @@ async function submit() {
       subscriptionInterval: form.subscriptionInterval,
     })
     
-    // Iniciar uploads em segundo plano (não bloquear redirecionamento)
-    const backgroundUploads: Promise<unknown>[] = []
+    // Se houver imagem selecionada, fazer upload dela
     if (!useVideo.value && selectedImage.value) {
-      backgroundUploads.push(
-        projectImagesService.uploadImages(response.data.id, [selectedImage.value])
-          .catch(() => {
-            Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload da imagem.' })
-          })
-      )
+      // noop: removed debug log
+      uploadingImages.value = true
+      
+      try {
+        await projectImagesService.uploadImages(
+          response.data.id, 
+          [selectedImage.value]
+        )
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
+        Notify.create({
+          type: 'warning',
+          message: 'Campanha criada, mas houve erro no upload da imagem.',
+          timeout: 3000
+        })
+      } finally {
+        uploadingImages.value = false
+      }
     }
+
+    // Se houver vídeo selecionado, fazer upload
     if (useVideo.value && selectedVideo.value) {
-      backgroundUploads.push(
-        projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
-          .catch(() => {
-            Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload do vídeo.' })
-          })
-      )
+      // noop: removed debug log
+      try {
+        await projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
+        Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload do vídeo.' })
+      }
     }
+
+    // Se houver capa selecionada, enviar como primeira imagem
     if (useVideo.value && selectedCover.value) {
-      backgroundUploads.push(
-        projectImagesService.uploadImages(response.data.id, [selectedCover.value]).catch(() => {})
-      )
+      try {
+        await projectImagesService.uploadImages(response.data.id, [selectedCover.value])
+        // noop: removed debug log
+      } catch {
+        // noop: removed debug log
+      }
     }
-    // Dispara sem aguardar
-    void Promise.allSettled(backgroundUploads)
 
     const createdProject = response.data
     // noop: removed debug log
