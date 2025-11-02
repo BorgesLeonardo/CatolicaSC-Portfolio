@@ -5,6 +5,9 @@ export const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333',
 })
 
+// Controla redirecionamentos para evitar loops em produção
+let lastAuthRedirectAt = 0
+
 // Função para configurar o token manualmente quando necessário
 export function setAuthToken(token: string | null) {
   if (token) {
@@ -39,13 +42,28 @@ http.interceptors.response.use(
         // ignore and fall through to redirect logic
       }
 
-      // 2) Evita loop e só redireciona se não estiver no sign-in/sign-up
+      // 2) Se já existe sessão e token disponível mas mesmo assim deu 401,
+      //    não redireciona — evita loop se o backend ainda estiver inicializando.
+      try {
+        const g2 = globalThis as unknown as { Clerk?: { session?: { getToken?: () => Promise<string | null | undefined> } } }
+        if (g2?.Clerk?.session && typeof g2.Clerk.session.getToken === 'function') {
+          const token = await g2.Clerk.session.getToken()
+          if (token) {
+            return Promise.reject(error)
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      // 3) Evita loop e só redireciona se não estiver no sign-in/sign-up
       const w = typeof window !== 'undefined' ? window : undefined
       if (w) {
         const hash = w.location.hash || '#/'
         const path = hash.startsWith('#') ? hash.substring(1) : hash
         const onAuth = path.startsWith('/sign-in') || path.startsWith('/sign-up')
-        if (!onAuth) {
+        const tooSoon = Date.now() - lastAuthRedirectAt < 4000
+        if (!onAuth && !tooSoon) {
           // Defer para o próximo tick, evitando reentrância durante navegação
           setTimeout(() => {
             const curHash = w.location.hash || '#/'
@@ -53,6 +71,7 @@ http.interceptors.response.use(
             const nowOnAuth = curPath.startsWith('/sign-in') || curPath.startsWith('/sign-up')
             if (!nowOnAuth) {
               const redirect = encodeURIComponent(curPath || '/')
+              lastAuthRedirectAt = Date.now()
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
           }, 0)
