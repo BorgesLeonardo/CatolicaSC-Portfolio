@@ -31,7 +31,7 @@
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@quasar/app-vite": "2.4.0",
-    "sass-embedded": "^1.92.1",
+    "sass": "^1.77.6",
     "@quasar/vite-plugin": "^1.8.0",
     "@vitejs/plugin-vue": "^5.1.2",
     "@testing-library/user-event": "^14.5.0",
@@ -53,9 +53,7 @@
     "vitest": "^1.6.0",
     "vue-tsc": "^2.0.29"
   },
-  "overrides": {
-    "sass": "npm:sass-embedded@1.92.1"
-  },
+  
   
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20",
