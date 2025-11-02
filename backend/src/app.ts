@@ -157,7 +157,11 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 /** ---------- Demais middlewares ---------- */
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
-app.use(clerkMiddleware());
+// Enable Clerk only when properly configured in environment
+const hasClerkConfig = Boolean(process.env.CLERK_SECRET_KEY || process.env.CLERK_JWT_VERIFICATION_KEY);
+if (hasClerkConfig) {
+  app.use(clerkMiddleware());
+}
 // Ensure every request has a request id
 app.use((req, res, next) => {
   const reqId = req.header('x-request-id') || nanoid();
