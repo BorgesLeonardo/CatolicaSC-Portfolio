@@ -46,9 +46,16 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   })
 
   // Strip Clerk redirect params after landing to avoid re-navigation loops
+  let isCleaning = false;
+
   Router.afterEach((to) => {
+    if (isCleaning) return;
     const hasClerkParams = 'after_sign_in_url' in to.query || 'after_sign_up_url' in to.query || 'redirect_url' in to.query
-    if (hasClerkParams) {
+    // Also defensively check raw hash for duplicated '#/?' or clerk params
+    const rawHash = typeof window !== 'undefined' ? window.location.hash : ''
+    const rawHasClerk = /[#&?](after_sign_in_url|after_sign_up_url|redirect_url)=/.test(rawHash) || rawHash.includes('#/?')
+    if (hasClerkParams || rawHasClerk) {
+      isCleaning = true;
       // Remove only Clerk-specific params, keep the path
       const cleanedQuery = { ...to.query }
       delete (cleanedQuery as Record<string, unknown>)['after_sign_in_url']
@@ -56,11 +63,11 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       delete (cleanedQuery as Record<string, unknown>)['redirect_url']
       // If no other params remain, replace with same path without query
       const hasOtherParams = Object.keys(cleanedQuery).length > 0
-      if (hasOtherParams) {
-        void Router.replace({ path: to.path, query: cleanedQuery })
-      } else {
-        void Router.replace({ path: to.path })
-      }
+      const nextLocation = hasOtherParams ? { path: to.path, query: cleanedQuery } : { path: to.path }
+      void Router.replace(nextLocation).finally(() => {
+        // Small delay to avoid re-entrancy if Clerk appends again immediately
+        setTimeout(() => { isCleaning = false }, 100)
+      })
     }
   })
 
