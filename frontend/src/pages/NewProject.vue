@@ -194,7 +194,7 @@
                     <div class="col-6 col-sm-4 col-md-3">
                       <div class="relative-position">
                         <q-img 
-                          :src="getImagePreview(selectedImage)" 
+                          :src="imagePreviewUrl" 
                           style="height: 200px; border-radius: 8px;"
                           fit="cover"
                           loading="lazy"
@@ -254,7 +254,7 @@
 
                 <div v-if="selectedVideo" class="q-mt-md">
                   <div class="text-caption text-muted q-mb-sm">Preview do vídeo:</div>
-                  <video :src="getVideoPreview(selectedVideo)" controls style="width: 100%; max-height: 360px; border-radius: 8px;" />
+                  <video :src="videoPreviewUrl" controls style="width: 100%; max-height: 360px; border-radius: 8px;" />
                 </div>
 
                 <div class="q-mt-lg">
@@ -273,7 +273,7 @@
                     </template>
                   </q-file>
                   <div v-if="selectedCover" class="q-mt-md">
-                    <q-img :src="getImagePreview(selectedCover)" style="height: 200px; border-radius: 8px;" fit="cover" />
+                    <q-img :src="coverPreviewUrl" style="height: 200px; border-radius: 8px;" fit="cover" />
                   </div>
                 </div>
               </div>
@@ -343,7 +343,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/vue'
 import { http, setAuthToken } from 'src/utils/http'
@@ -420,6 +420,39 @@ watch(videoUrl, (val) => {
   embedUrl.value = computeEmbed(val || '')
 })
 
+// Preview URLs (memoized to avoid reload on re-render)
+const imagePreviewUrl = ref<string | null>(null)
+const videoPreviewUrl = ref<string | null>(null)
+const coverPreviewUrl = ref<string | null>(null)
+
+function revokeUrl(url: string | null) {
+  if (url) {
+    URL.revokeObjectURL(url)
+  }
+}
+
+watch(selectedImage, (file) => {
+  // revoke previous then set new
+  revokeUrl(imagePreviewUrl.value)
+  imagePreviewUrl.value = file ? URL.createObjectURL(file) : null
+})
+
+watch(selectedVideo, (file) => {
+  revokeUrl(videoPreviewUrl.value)
+  videoPreviewUrl.value = file ? URL.createObjectURL(file) : null
+})
+
+watch(selectedCover, (file) => {
+  revokeUrl(coverPreviewUrl.value)
+  coverPreviewUrl.value = file ? URL.createObjectURL(file) : null
+})
+
+onUnmounted(() => {
+  revokeUrl(imagePreviewUrl.value)
+  revokeUrl(videoPreviewUrl.value)
+  revokeUrl(coverPreviewUrl.value)
+})
+
 // erros por campo (vindos do backend)
 const fieldErrors = reactive<Record<string, string>>({})
 
@@ -453,17 +486,8 @@ onMounted(async () => {
   }
 })
 
-// funções para manipular imagens
-function getImagePreview(file: File): string {
-  return URL.createObjectURL(file)
-}
-
 function removeImage() {
   selectedImage.value = null
-}
-
-function getVideoPreview(file: File): string {
-  return URL.createObjectURL(file)
 }
 
 function onImageRejected(rejectedEntries: { file: File; failedPropValidation: string }[]) {
