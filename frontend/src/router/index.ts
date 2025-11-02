@@ -49,8 +49,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
     try {
       // Wait for Clerk to finish loading to avoid false negatives
-      if (clerk.loaded && typeof (clerk.loaded as unknown as Promise<void>).then === 'function') {
-        await clerk.loaded
+      const loaded = (clerk as unknown as { loaded?: unknown }).loaded as unknown
+      if (typeof (loaded as { then?: unknown })?.then === 'function') {
+        await (loaded as Promise<void>)
       }
     } catch {
       // ignore loading errors; fall back to unsigned check
