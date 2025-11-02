@@ -197,7 +197,6 @@
                           :src="imagePreviewUrl" 
                           style="height: 200px; border-radius: 8px;"
                           fit="cover"
-                          loading="lazy"
                         >
                           <template v-slot:error>
                             <div class="text-negative text-caption text-center">
@@ -294,6 +293,8 @@
                     type="text"
                     inputmode="decimal"
                     :rules="[rules.required]"
+                    debounce="200"
+                    lazy-rules
                     :error="!!fieldErrors.subscriptionPriceCents"
                     :error-message="fieldErrors.subscriptionPriceCents"
                     dense
