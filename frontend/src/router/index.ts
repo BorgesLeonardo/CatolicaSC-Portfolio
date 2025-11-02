@@ -34,12 +34,29 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   });
 
   // Simple auth guard using Clerk global to protect routes with meta.requiresAuth
-  Router.beforeEach((to) => {
+  Router.beforeEach(async (to) => {
+    // Never block Clerk pages
+    if (to.path === '/sign-in' || to.path === '/sign-up') return true
+
     const requiresAuth = to.matched.some(r => (r.meta as unknown as { requiresAuth?: boolean })?.requiresAuth)
     if (!requiresAuth) return true
 
-    const w = (typeof window !== 'undefined' ? window : undefined) as unknown as { Clerk?: { user?: unknown } } | undefined
-    const isSignedIn = !!w?.Clerk?.user
+    const w = (typeof window !== 'undefined' ? window : undefined) as unknown as { Clerk?: { user?: unknown, loaded?: Promise<void> } } | undefined
+    const clerk = w?.Clerk
+
+    // If Clerk not initialized yet, allow navigation and let pages/components handle state
+    if (!clerk) return true
+
+    try {
+      // Wait for Clerk to finish loading to avoid false negatives
+      if (clerk.loaded && typeof (clerk.loaded as unknown as Promise<void>).then === 'function') {
+        await clerk.loaded
+      }
+    } catch {
+      // ignore loading errors; fall back to unsigned check
+    }
+
+    const isSignedIn = !!clerk.user
     if (isSignedIn) return true
 
     return { path: '/sign-in', query: { redirect: to.fullPath } }
