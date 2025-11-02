@@ -72,7 +72,10 @@ http.interceptors.response.use(
         const path = hash.startsWith('#') ? hash.substring(1) : hash
         const onAuth = path.startsWith('/sign-in') || path.startsWith('/sign-up')
         const tooSoon = Date.now() - lastAuthRedirectAt < 4000
-        if (!onAuth && !tooSoon) {
+        // Bloqueio adicional: se já redirecionamos recentemente nesta sessão, não repetir
+        const ssTs = Number((w.sessionStorage && w.sessionStorage.getItem('auth_redirect_ts')) || 0)
+        const sessionRecent = Date.now() - ssTs < 10000
+        if (!onAuth && !tooSoon && !sessionRecent) {
           // Defer para o próximo tick, evitando reentrância durante navegação
           setTimeout(() => {
             const curHash = w.location.hash || '#/'
@@ -81,6 +84,10 @@ http.interceptors.response.use(
             if (!nowOnAuth) {
               const redirect = encodeURIComponent(curPath || '/')
               lastAuthRedirectAt = Date.now()
+              try {
+                w.sessionStorage && w.sessionStorage.setItem('auth_redirect_ts', String(lastAuthRedirectAt))
+                w.sessionStorage && w.sessionStorage.setItem('auth_redirect_path', redirect)
+              } catch {}
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
           }, 0)

@@ -11,7 +11,14 @@ const signInUrl = `/sign-in?redirect=${encodeURIComponent(redirect)}`
 
 function goHome() {
   const target = typeof redirect === 'string' && redirect ? redirect : '/'
-  void router.replace(target)
+  try {
+    // Limpa flag de redirecionamento para evitar loops subsequentes
+    sessionStorage.removeItem('auth_redirect_ts')
+    sessionStorage.removeItem('auth_redirect_path')
+  } catch {}
+  if (router.currentRoute.value.fullPath !== target) {
+    void router.replace(target)
+  }
 }
 
 onMounted(() => {
