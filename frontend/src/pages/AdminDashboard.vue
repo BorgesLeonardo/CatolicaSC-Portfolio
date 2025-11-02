@@ -102,45 +102,7 @@
           
           <!-- Quick Actions Card -->
           
-          <DynamicCard
-            variant="default"
-            size="lg"
-            :elevated="true"
-            :animated="true"
-            title="Minhas assinaturas"
-            subtitle="Gerencie suas assinaturas recorrentes"
-            icon="autorenew"
-            icon-color="secondary"
-          >
-            <div class="q-pa-md">
-              <div v-if="subsLoading" class="row items-center q-col-gutter-sm">
-                <div class="col-auto"><q-spinner /></div>
-                <div class="col">Carregando assinaturas...</div>
-              </div>
-              <div v-else>
-                <div v-if="!mySubs.length" class="text-caption text-muted">Você não possui assinaturas ativas.</div>
-                <q-list v-else bordered separator>
-                  <q-item v-for="s in mySubs" :key="s.id">
-                    <q-item-section>
-                      <q-item-label class="text-weight-medium">{{ s.projectTitle }}</q-item-label>
-                      <q-item-label caption>
-                        {{ s.priceBRL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }} / {{ s.interval === 'YEAR' ? 'ano' : 'mês' }} · Início: {{ new Date(s.createdAt).toLocaleDateString('pt-BR') }}
-                      </q-item-label>
-                    </q-item-section>
-                    <q-item-section side top>
-                      <q-chip :color="s.status === 'ACTIVE' ? 'positive' : (s.status === 'PAST_DUE' ? 'warning' : (s.status === 'CANCELED' ? 'negative' : 'grey'))" text-color="white" dense>{{ s.status }}</q-chip>
-                    </q-item-section>
-                    <q-item-section side>
-                      <div class="row q-gutter-xs" v-if="s.cancelable">
-                        <q-btn dense color="negative" outline label="Cancelar agora" @click="() => cancelNow(s.id)" />
-                        <q-btn dense color="warning" outline label="Cancelar no fim do período" @click="() => cancelAtEnd(s.id)" />
-                      </div>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </div>
-            </div>
-          </DynamicCard>
+          
         </div>
         <!-- My Campaigns Table -->
         <div class="q-mt-xl">
@@ -195,8 +157,7 @@ import ExportCsvButton from 'src/components/dashboard/ExportCsvButton.vue'
 import { connectService } from 'src/services'
 import { useProjectStats } from 'src/composables/useProjectStats'
 import { useRealtimeDashboard } from 'src/composables/useRealtime'
-import { subscriptionsService } from 'src/services'
-import { Notify } from 'quasar'
+ 
 
 const refreshing = ref(false)
 const { updateStatsIfNeeded } = useProjectStats()
@@ -264,40 +225,7 @@ const tableRows = computed(() => {
   }))
 })
 
-const mySubs = ref<Array<{ id: string; status: string; priceBRL: number; interval: 'MONTH' | 'YEAR'; createdAt: string; projectId: string; projectTitle: string; cancelable: boolean }>>([])
-const subsLoading = ref(false)
-
-async function loadSubscriptions() {
-  subsLoading.value = true
-  try {
-    const res = await subscriptionsService.listMine(1, 50)
-    mySubs.value = res.items
-  } catch {
-    mySubs.value = []
-  } finally {
-    subsLoading.value = false
-  }
-}
-
-async function cancelNow(id: string) {
-  try {
-    await subscriptionsService.cancel(id, false)
-    Notify.create({ type: 'positive', message: 'Assinatura cancelada.' })
-    await loadSubscriptions()
-  } catch {
-    Notify.create({ type: 'negative', message: 'Falha ao cancelar.' })
-  }
-}
-
-async function cancelAtEnd(id: string) {
-  try {
-    await subscriptionsService.cancel(id, true)
-    Notify.create({ type: 'positive', message: 'Cancelamento agendado para o fim do período.' })
-    await loadSubscriptions()
-  } catch {
-    Notify.create({ type: 'negative', message: 'Falha ao agendar cancelamento.' })
-  }
-}
+ 
 
 async function refreshData() {
   if (!isSignedIn.value) return
@@ -309,7 +237,6 @@ async function refreshData() {
     store.fetchTimeseries(),
     store.fetchCampaignsMetrics(),
     store.fetchCampaignsList({ page: pagination.value.page, pageSize: pagination.value.rowsPerPage, status: filterStatus.value || undefined, q: filterQ.value || undefined }),
-    loadSubscriptions(),
   ])
   if (store.campaignsList) pagination.value.rowsNumber = store.campaignsList.total
   refreshing.value = false

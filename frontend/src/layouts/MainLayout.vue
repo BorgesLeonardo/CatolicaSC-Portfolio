@@ -309,6 +309,23 @@
                 <q-item-label caption class="nav-caption">Painel administrativo</q-item-label>
               </q-item-section>
             </q-item>
+
+            <q-item 
+              clickable 
+              v-ripple 
+              to="/subscriptions"
+              class="nav-item"
+              active-class="nav-item--active"
+              @click="leftDrawerOpen = false"
+            >
+              <q-item-section avatar>
+                <q-icon name="autorenew" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="nav-label">Assinaturas</q-item-label>
+                <q-item-label caption class="nav-caption">Gerenciar assinaturas</q-item-label>
+              </q-item-section>
+            </q-item>
           </SignedIn>
 
           <!-- Settings section (after Minha Conta) -->
