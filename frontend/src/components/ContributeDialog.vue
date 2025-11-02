@@ -31,8 +31,6 @@ async function submit() {
   loading.value = true
   try {
     const token = await getToken.value?.()
-    const successUrl = `${window.location.origin}/contrib/success?c=${encodeURIComponent(props.projectId)}`
-    const cancelUrl = `${window.location.origin}/contrib/cancel?c=${encodeURIComponent(props.projectId)}`
     // guarda projeto para página de cancelamento (somente se disponível)
     if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('last_contrib_project_id', props.projectId)
@@ -40,8 +38,6 @@ async function submit() {
     const { data } = await http.post<CheckoutResponse>('/api/contributions/checkout', {
       projectId: props.projectId,
       amountCents,
-      successUrl,
-      cancelUrl,
     }, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
