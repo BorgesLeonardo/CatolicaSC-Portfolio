@@ -33,5 +33,17 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  // Simple auth guard using Clerk global to protect routes with meta.requiresAuth
+  Router.beforeEach((to) => {
+    const requiresAuth = to.matched.some(r => (r.meta as unknown as { requiresAuth?: boolean })?.requiresAuth)
+    if (!requiresAuth) return true
+
+    const w = (typeof window !== 'undefined' ? window : undefined) as unknown as { Clerk?: { user?: unknown } } | undefined
+    const isSignedIn = !!w?.Clerk?.user
+    if (isSignedIn) return true
+
+    return { path: '/sign-in', query: { redirect: to.fullPath } }
+  })
+
   return Router;
 });
