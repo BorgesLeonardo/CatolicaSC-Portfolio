@@ -17,19 +17,39 @@ export function setAuthToken(token: string | null) {
 // Interceptor para tratar erros de resposta
 http.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Evita loop e só redireciona se não estiver no sign-in
+      // 1) Se houver sessão do Clerk, tente obter token e refazer a requisição UMA vez
+      type RetryableConfig = { headers?: Record<string, string>; __retriedWithToken?: boolean }
+      const cfg: RetryableConfig & Record<string, unknown> = (error.config || {}) as any
+      const g: any = globalThis as any
+      try {
+        const canGetToken = !!g?.Clerk?.session && typeof g.Clerk.session.getToken === 'function'
+        if (canGetToken && !cfg.__retriedWithToken) {
+          const token: string | null | undefined = await g.Clerk.session.getToken()
+          if (token) {
+            cfg.headers = { ...(cfg.headers || {}), Authorization: `Bearer ${token}` }
+            cfg.__retriedWithToken = true
+            return http.request(cfg as any)
+          }
+        }
+      } catch {
+        // ignore and fall through to redirect logic
+      }
+
+      // 2) Evita loop e só redireciona se não estiver no sign-in/sign-up
       const w = typeof window !== 'undefined' ? window : undefined
       if (w) {
         const hash = w.location.hash || '#/'
         const path = hash.startsWith('#') ? hash.substring(1) : hash
-        if (!path.startsWith('/sign-in')) {
+        const onAuth = path.startsWith('/sign-in') || path.startsWith('/sign-up')
+        if (!onAuth) {
           // Defer para o próximo tick, evitando reentrância durante navegação
           setTimeout(() => {
             const curHash = w.location.hash || '#/'
             const curPath = curHash.startsWith('#') ? curHash.substring(1) : curHash
-            if (!curPath.startsWith('/sign-in')) {
+            const nowOnAuth = curPath.startsWith('/sign-in') || curPath.startsWith('/sign-up')
+            if (!nowOnAuth) {
               const redirect = encodeURIComponent(curPath || '/')
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
@@ -44,7 +64,7 @@ http.interceptors.response.use(
 // Attach Idempotency-Key automatically for mutating requests when not set
 type StringHeaders = Record<string, string>;
 
-function ensureMutableStringHeaders(config: typeof http.defaults): StringHeaders {
+function ensureMutableStringHeaders(config: { headers?: unknown }): StringHeaders {
   const hdrs = (config.headers ?? {}) as unknown;
   if (typeof hdrs === 'object' && hdrs !== null) {
     return hdrs as StringHeaders;
