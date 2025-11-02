@@ -45,5 +45,24 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     return { path: '/sign-in', query: { redirect: to.fullPath } }
   })
 
+  // Strip Clerk redirect params after landing to avoid re-navigation loops
+  Router.afterEach((to) => {
+    const hasClerkParams = 'after_sign_in_url' in to.query || 'after_sign_up_url' in to.query || 'redirect_url' in to.query
+    if (hasClerkParams) {
+      // Remove only Clerk-specific params, keep the path
+      const cleanedQuery = { ...to.query }
+      delete (cleanedQuery as Record<string, unknown>)['after_sign_in_url']
+      delete (cleanedQuery as Record<string, unknown>)['after_sign_up_url']
+      delete (cleanedQuery as Record<string, unknown>)['redirect_url']
+      // If no other params remain, replace with same path without query
+      const hasOtherParams = Object.keys(cleanedQuery).length > 0
+      if (hasOtherParams) {
+        void Router.replace({ path: to.path, query: cleanedQuery })
+      } else {
+        void Router.replace({ path: to.path })
+      }
+    }
+  })
+
   return Router;
 });
