@@ -67,11 +67,14 @@ http.interceptors.response.use(
 type StringHeaders = Record<string, string>;
 
 function ensureMutableStringHeaders(config: { headers?: unknown }): StringHeaders {
-  const hdrs = (config.headers ?? {}) as unknown;
-  if (typeof hdrs === 'object' && hdrs !== null) {
-    return hdrs as StringHeaders;
+  const input = (config.headers ?? {}) as Record<string, unknown>
+  const output: StringHeaders = {}
+  for (const [key, value] of Object.entries(input)) {
+    if (typeof value === 'string') {
+      output[key] = value
+    }
   }
-  return {} as StringHeaders;
+  return output
 }
 
 type ClerkLike = { Clerk?: { session?: { getToken?: () => Promise<string | null | undefined> } } };
