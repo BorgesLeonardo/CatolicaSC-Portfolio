@@ -97,8 +97,19 @@ export class ContributionsService {
           userId,
         },
         payment_intent_data: paymentIntentData,
-        success_url: data.successUrl ?? `${process.env.APP_BASE_URL}/contrib/success?c=${contribution.id}`,
-        cancel_url: data.cancelUrl ?? `${process.env.APP_BASE_URL}/contrib/cancel?c=${contribution.id}`,
+        // Build frontend URL considering hash router when enabled via env
+        success_url: (() => {
+          if (data.successUrl) return data.successUrl
+          const base = (process.env.APP_BASE_URL || '').replace(/\/$/, '')
+          const hashPrefix = (process.env.APP_USE_HASH_ROUTER || 'false') === 'true' ? '/#' : ''
+          return `${base}${hashPrefix}/contrib/success?c=${contribution.id}`
+        })(),
+        cancel_url: (() => {
+          if (data.cancelUrl) return data.cancelUrl
+          const base = (process.env.APP_BASE_URL || '').replace(/\/$/, '')
+          const hashPrefix = (process.env.APP_USE_HASH_ROUTER || 'false') === 'true' ? '/#' : ''
+          return `${base}${hashPrefix}/contrib/cancel?c=${contribution.id}`
+        })(),
       });
     } catch (err: unknown) {
       const e = err as { message?: string; raw?: { code?: string; message?: string } };

@@ -104,8 +104,19 @@ export class SubscriptionsService {
           subscriptionId: subscription.id,
         },
       },
-      success_url: data.successUrl ?? `${process.env.APP_BASE_URL}/subscribe/success?s=${subscription.id}`,
-      cancel_url: data.cancelUrl ?? `${process.env.APP_BASE_URL}/subscribe/cancel?s=${subscription.id}`,
+      // Build frontend URL considering hash router when enabled via env
+      success_url: (() => {
+        if (data.successUrl) return data.successUrl
+        const base = (process.env.APP_BASE_URL || '').replace(/\/$/, '')
+        const hashPrefix = (process.env.APP_USE_HASH_ROUTER || 'false') === 'true' ? '/#' : ''
+        return `${base}${hashPrefix}/subscribe/success?s=${subscription.id}`
+      })(),
+      cancel_url: (() => {
+        if (data.cancelUrl) return data.cancelUrl
+        const base = (process.env.APP_BASE_URL || '').replace(/\/$/, '')
+        const hashPrefix = (process.env.APP_USE_HASH_ROUTER || 'false') === 'true' ? '/#' : ''
+        return `${base}${hashPrefix}/subscribe/cancel?s=${subscription.id}`
+      })(),
       metadata: {
         projectId: project.id,
         ownerId: project.ownerId,
