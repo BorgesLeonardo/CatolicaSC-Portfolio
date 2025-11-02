@@ -85,9 +85,13 @@ http.interceptors.response.use(
               const redirect = encodeURIComponent(curPath || '/')
               lastAuthRedirectAt = Date.now()
               try {
-                w.sessionStorage && w.sessionStorage.setItem('auth_redirect_ts', String(lastAuthRedirectAt))
-                w.sessionStorage && w.sessionStorage.setItem('auth_redirect_path', redirect)
-              } catch {}
+                if (w.sessionStorage) {
+                  w.sessionStorage.setItem('auth_redirect_ts', String(lastAuthRedirectAt))
+                  w.sessionStorage.setItem('auth_redirect_path', redirect)
+                }
+              } catch (_err) {
+                if (import.meta.env.DEV) console.debug(_err)
+              }
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
           }, 0)

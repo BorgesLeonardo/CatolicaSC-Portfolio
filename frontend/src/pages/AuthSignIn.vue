@@ -15,7 +15,9 @@ function goBack() {
     // Limpa flag de redirecionamento para evitar loops subsequentes
     sessionStorage.removeItem('auth_redirect_ts')
     sessionStorage.removeItem('auth_redirect_path')
-  } catch {}
+  } catch (_err) {
+    if (import.meta.env.DEV) console.debug(_err)
+  }
   if (router.currentRoute.value.fullPath !== target) {
     void router.replace(target)
   }
