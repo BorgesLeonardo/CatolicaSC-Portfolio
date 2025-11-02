@@ -5,18 +5,6 @@ import { ProjectImagesController } from '../controllers/project-images.controlle
 const router = Router();
 const projectImagesController = new ProjectImagesController();
 
-/** ---------- Presign e finalize (privado) ---------- */
-router.post(
-  '/:projectId/images/presign',
-  requireApiAuth,
-  projectImagesController.presignImages.bind(projectImagesController)
-);
-router.post(
-  '/:projectId/images/finalize',
-  requireApiAuth,
-  projectImagesController.finalizeImages.bind(projectImagesController)
-);
-
 /** ---------- Upload de imagens (privado) ---------- */
 router.post(
   '/:projectId/images', 

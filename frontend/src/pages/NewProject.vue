@@ -335,10 +335,6 @@
                 {{ uploadingImages ? 'Enviando imagem...' : 'Criando campanha...' }}
               </span>
             </div>
-            <div v-if="videoUploadProgress !== null" class="q-ml-md" style="min-width: 160px;">
-              <q-linear-progress :value="videoUploadProgress / 100" color="primary" rounded />
-              <div class="text-caption text-muted q-mt-xs">Vídeo: {{ videoUploadProgress }}%</div>
-            </div>
           </div>
         </q-form>
       </q-card>
@@ -420,7 +416,6 @@ const useVideo = ref(false)
 const videoUrl = ref('')
 const embedUrl = ref('')
 const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payoutsEnabled: boolean } | null>(null)
-const videoUploadProgress = ref<number | null>(null)
 
 watch(videoUrl, (val) => {
   embedUrl.value = computeEmbed(val || '')
@@ -735,40 +730,22 @@ async function submit() {
     }
 
     // Se houver vídeo/capa selecionados, iniciar uploads em paralelo em segundo plano (não bloquear criação)
-    if (useVideo.value) {
-      const bgUploads: Promise<unknown>[] = []
-      if (selectedVideo.value) {
-        // inicia upload com progresso
-        const startVideo = async () => {
-          try {
-            videoUploadProgress.value = 0
-            await projectVideosService.uploadVideo(
-              response.data.id,
-              selectedVideo.value,
-              (p) => { videoUploadProgress.value = p }
-            )
-            videoUploadProgress.value = 100
-            setTimeout(() => { videoUploadProgress.value = null }, 1200)
-          } catch {
-            videoUploadProgress.value = null
-            Notify.create({ type: 'warning', message: 'Vídeo: falha no upload em segundo plano.' })
-          }
-        }
-        bgUploads.push(startVideo())
-      }
-      if (selectedCover.value) {
-        bgUploads.push(
-          projectImagesService.uploadImages(response.data.id, [selectedCover.value]).catch(() => {
-            // noop: notificar discretamente; vídeo é o principal
-            Notify.create({ type: 'warning', message: 'Capa do vídeo: falha no upload.' })
-          })
-        )
-      }
-      // Executa sem aguardar; ao concluir, o backend atualizará as URLs do projeto
-      void Promise.allSettled(bgUploads)
+    // Se houver vídeo selecionado, fazer upload
+    if (useVideo.value && selectedVideo.value) {
       try {
-        Notify.create({ type: 'info', message: 'Upload de mídia em andamento em segundo plano.' })
-      } catch { void 0 }
+        await projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
+      } catch {
+        Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload do vídeo.' })
+      }
+    }
+
+    // Se houver capa selecionada, enviar como primeira imagem
+    if (useVideo.value && selectedCover.value) {
+      try {
+        await projectImagesService.uploadImages(response.data.id, [selectedCover.value])
+      } catch {
+        // noop: removed debug log
+      }
     }
 
     const createdProject = response.data
