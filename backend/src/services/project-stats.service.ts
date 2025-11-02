@@ -18,11 +18,11 @@ export class ProjectStatsService {
     })
 
     // Calcular valor total arrecadado
-    const raisedCents = contributions.reduce((sum, contrib) => sum + contrib.amountCents, 0)
+    const raisedCents = contributions.reduce((sum: number, contrib: any) => sum + contrib.amountCents, 0)
     
     // Calcular número de apoiadores únicos
     const uniqueContributors = new Set(
-      contributions.map(contrib => contrib.contributorId).filter(Boolean)
+      contributions.map((contrib: any) => contrib.contributorId).filter(Boolean)
     )
     const supportersCount = uniqueContributors.size
 
@@ -52,7 +52,7 @@ export class ProjectStatsService {
     for (let i = 0; i < projects.length; i += batchSize) {
       const batch = projects.slice(i, i + batchSize)
       
-      const promises = batch.map(async (project) => {
+      const promises = batch.map(async (project: any) => {
         try {
           const stats = await this.updateProjectStats(project.id)
           return stats
@@ -90,9 +90,9 @@ export class ProjectStatsService {
       }
     })
 
-    const correctRaisedCents = contributions.reduce((sum, contrib) => sum + contrib.amountCents, 0)
+    const correctRaisedCents = contributions.reduce((sum: number, contrib: any) => sum + contrib.amountCents, 0)
     const uniqueContributors = new Set(
-      contributions.map(contrib => contrib.contributorId).filter(Boolean)
+      contributions.map((contrib: any) => contrib.contributorId).filter(Boolean)
     )
     const correctSupportersCount = uniqueContributors.size
 

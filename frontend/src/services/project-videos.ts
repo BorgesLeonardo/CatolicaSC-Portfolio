@@ -1,4 +1,4 @@
-import { http } from 'src/utils/http'
+import { http } from '../utils/http'
 
 export const projectVideosService = {
   async uploadVideo(projectId: string, file: File) {

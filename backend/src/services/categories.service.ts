@@ -21,7 +21,7 @@ export class CategoriesService {
       }
     });
 
-    return categories.map(category => ({
+    return categories.map((category: any) => ({
       ...category,
       projectsCount: category._count.projects
     }));

@@ -67,7 +67,7 @@ export class MeController {
 
     // Query raw para performance e controle do período (Postgres)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const rows = await prisma.$queryRawUnsafe<Array<{ period: string; amount: number }>>(`
+    const rows = await prisma.$queryRawUnsafe(`
       SELECT to_char(date_trunc('month', c."createdAt"), 'YYYY-MM') AS period,
              (SUM(c."amountCents")/100.0)::float8 AS amount
       FROM "Contribution" c
@@ -75,7 +75,7 @@ export class MeController {
         AND c."createdAt" BETWEEN $2 AND $3
       GROUP BY 1
       ORDER BY 1 ASC
-    `, userId, fromDate, toDate)
+    `, userId, fromDate, toDate) as Array<{ period: string; amount: number }>
 
     res.json(rows)
   }
@@ -139,7 +139,7 @@ export class MeController {
       prisma.project.count({ where })
     ])
 
-    const mapped = items.map(p => ({
+    const mapped = items.map((p: any) => ({
       id: p.id,
       title: p.title,
       status: p.status,
@@ -190,7 +190,7 @@ export class MeController {
       prisma.contribution.count({ where })
     ])
 
-    const mapped = items.map(i => ({
+    const mapped = items.map((i: any) => ({
       id: i.id,
       amount: i.amountCents / 100,
       currency: i.currency,

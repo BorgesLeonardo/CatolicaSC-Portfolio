@@ -16,7 +16,7 @@ export const createContributionFromCheckoutSession = async (session: Stripe.Chec
   const sessionId = session.id
 
   // Use transaction to ensure data consistency
-  const contribution = await prisma.$transaction(async (tx) => {
+  const contribution = await prisma.$transaction(async (tx: any) => {
     // If we already created a PENDING contribution, update it
     if (contributionId) {
       const data: any = {

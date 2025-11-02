@@ -72,7 +72,9 @@ http.interceptors.response.use(
         const path = hash.startsWith('#') ? hash.substring(1) : hash
         const onAuth = path.startsWith('/sign-in') || path.startsWith('/sign-up')
         // In test mode, disable time-based suppression to avoid cross-test leakage
-        const mode = (import.meta as any).env?.MODE || (typeof process !== 'undefined' ? (process.env?.NODE_ENV || 'development') : 'development')
+        const mode = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE)
+          ? import.meta.env.MODE
+          : (typeof process !== 'undefined' ? (process.env?.NODE_ENV || 'development') : 'development')
         const isTest = String(mode) === 'test'
         const tooSoon = !isTest && (Date.now() - lastAuthRedirectAt < 4000)
         // Bloqueio adicional: se já redirecionamos recentemente nesta sessão, não repetir
