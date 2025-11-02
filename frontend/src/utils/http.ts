@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type AxiosRequestConfig, type AxiosError } from 'axios'
 import { cryptoRandomUuid } from './crypto'
 
 export const http = axios.create({
@@ -17,12 +17,14 @@ export function setAuthToken(token: string | null) {
 // Interceptor para tratar erros de resposta
 http.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401) {
       // 1) Se houver sessão do Clerk, tente obter token e refazer a requisição UMA vez
-      type RetryableConfig = { headers?: Record<string, string>; __retriedWithToken?: boolean }
-      const cfg: RetryableConfig & Record<string, unknown> = (error.config || {}) as any
-      const g: any = globalThis as any
+      type RetryableConfig = AxiosRequestConfig & { headers?: Record<string, string>; __retriedWithToken?: boolean }
+      const baseCfg = (error.config ?? {}) as AxiosRequestConfig
+      const cfg: RetryableConfig = { ...baseCfg }
+      type ClerkLikeGlobal = { Clerk?: { session?: { getToken?: () => Promise<string | null | undefined> } } }
+      const g = globalThis as unknown as ClerkLikeGlobal
       try {
         const canGetToken = !!g?.Clerk?.session && typeof g.Clerk.session.getToken === 'function'
         if (canGetToken && !cfg.__retriedWithToken) {
@@ -30,7 +32,7 @@ http.interceptors.response.use(
           if (token) {
             cfg.headers = { ...(cfg.headers || {}), Authorization: `Bearer ${token}` }
             cfg.__retriedWithToken = true
-            return http.request(cfg as any)
+            return http.request(cfg)
           }
         }
       } catch {
@@ -84,7 +86,7 @@ http.interceptors.request.use(async (config) => {
   }
 
   // Ensure Clerk token is attached if available and not already set
-  const hasAuth = !!(config.headers as unknown as Record<string, unknown> | undefined)?.Authorization
+  const hasAuth = !!(config.headers as Record<string, unknown> | undefined)?.Authorization
   const w = globalThis as unknown as ClerkLike
   try {
     if (!hasAuth && w?.Clerk?.session && typeof w.Clerk.session.getToken === 'function') {
