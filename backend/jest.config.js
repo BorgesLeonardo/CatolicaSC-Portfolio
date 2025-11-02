@@ -19,6 +19,8 @@ export default {
     '!src/test/**',
     '!src/server.ts',
     '!src/app.ts',
+    // Infra wrappers and SDK bindings are mocked in tests; exclude from coverage
+    '!src/lib/s3.ts',
     // Exclude modules that are difficult to branch-test deterministically
     '!src/routes/events.ts', // SSE stream with long-lived connections
     '!src/middleware/rateLimit.ts', // Wrapper over express-rate-limit with environment branches

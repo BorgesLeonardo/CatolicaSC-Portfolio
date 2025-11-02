@@ -22,6 +22,7 @@
     "seed:contributions": "tsx prisma/seed-contributions.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.922.0",
     "@clerk/express": "^1.0.0",
     "@prisma/client": "^5.7.1",
     "@types/multer": "^2.0.0",

@@ -3,6 +3,8 @@ import { AppError } from '../utils/AppError';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
+import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { s3, getBucketName, buildPublicUrl, tryExtractKeyFromUrl } from '../lib/s3';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -91,22 +93,25 @@ export class ProjectImagesService {
       // noop: removed debug log
 
       // Gerar nome único para o arquivo
-      const fileExtension = path.extname(file.originalname);
+      const fileExtension = path.extname(file.originalname) || '.jpg';
       const filename = `${projectId}-${Date.now()}-${i}${fileExtension}`;
-      const filepath = path.join(this.uploadDir, filename);
 
-      // noop: removed debug log
-
-      // Salvar arquivo no disco
+      // Upload para S3
+      const key = `projects/${projectId}/images/${filename}`;
       try {
-        await writeFile(filepath, file.buffer);
-      } catch (writeError) {
-        // noop: removed debug log
-        throw new AppError(`Failed to save file ${file.originalname}`, 500);
+        await s3.send(new PutObjectCommand({
+          Bucket: getBucketName(),
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          CacheControl: 'public, max-age=31536000, immutable'
+        }));
+      } catch (err) {
+        throw new AppError(`Failed to upload image ${file.originalname}`, 500);
       }
 
-      // URL pública da imagem
-      const url = `/uploads/projects/${filename}`;
+      // URL pública (CloudFront/Custom ou S3)
+      const url = buildPublicUrl(key);
 
       // Salvar no banco de dados
       // noop: removed debug log
@@ -166,13 +171,18 @@ export class ProjectImagesService {
       throw new AppError('Image not found', 404);
     }
 
-    // Remover arquivo do disco
-    const filepath = path.join(this.uploadDir, image.filename);
+    // Remover objeto do storage (S3) se possível
     try {
-      await unlink(filepath);
-    } catch (error) {
-      // noop: removed debug log
-      // Continua mesmo se não conseguir remover o arquivo
+      const maybeKey = tryExtractKeyFromUrl(image.url);
+      if (maybeKey) {
+        await s3.send(new DeleteObjectCommand({ Bucket: getBucketName(), Key: maybeKey }));
+      } else {
+        // Backward compatibility: remove arquivo local, se existir
+        const filepath = path.join(this.uploadDir, image.filename);
+        try { await unlink(filepath); } catch {}
+      }
+    } catch {
+      // noop: ignore storage deletion errors
     }
 
     // Remover do banco de dados
@@ -220,13 +230,18 @@ export class ProjectImagesService {
       where: { projectId }
     });
 
-    // Remover arquivos do disco
+    // Remover objetos do storage (S3) quando possível
     for (const image of images) {
-      const filepath = path.join(this.uploadDir, image.filename);
       try {
-        await unlink(filepath);
-      } catch (error) {
-        // noop: removed debug log
+        const maybeKey = tryExtractKeyFromUrl(image.url);
+        if (maybeKey) {
+          await s3.send(new DeleteObjectCommand({ Bucket: getBucketName(), Key: maybeKey }));
+        } else {
+          const filepath = path.join(this.uploadDir, image.filename);
+          try { await unlink(filepath); } catch {}
+        }
+      } catch {
+        // noop
       }
     }
 

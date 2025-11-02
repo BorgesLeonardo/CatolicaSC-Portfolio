@@ -83,3 +83,26 @@ Reinicie o servidor Dev para carregar o `.env`.
 
 10) Referência oficial
 - Stripe Webhooks: https://docs.stripe.com/webhooks
+
+## Media Storage (Imagens e Vídeos)
+
+Arquivos locais em `uploads/` não são persistentes em ambientes serverless/contêineres efêmeros. A API agora salva imagens e vídeos diretamente no S3 (ou compatível) e retorna URLs públicas.
+
+Variáveis de ambiente necessárias:
+
+```
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+S3_BUCKET=seu-bucket
+# Opcional: se usar CloudFront/domínio próprio para servir os arquivos
+ASSETS_BASE_URL=https://cdn.seudominio.com
+```
+
+Chaves geradas:
+- Imagens: `projects/{projectId}/images/{projectId}-{timestamp}-{i}.ext`
+- Vídeos: `projects/{projectId}/videos/{projectId}-{timestamp}.ext`
+
+Observações:
+- Se `ASSETS_BASE_URL` estiver definido, as URLs públicas usarão esse domínio; caso contrário, usarão o domínio padrão do S3.
+- A exclusão de mídia remove o objeto do S3 quando a URL pertence à base configurada. URLs antigas que comecem com `/uploads/` continuam sendo removidas do disco quando existentes.

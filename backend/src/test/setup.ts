@@ -81,6 +81,19 @@ jest.mock('../utils/stripeClient', () => ({
   },
 }));
 
+// Mock do S3 (evita chamadas reais e permite asserts previsíveis)
+jest.mock('../lib/s3', () => ({
+  s3: { send: jest.fn(async () => ({})) },
+  getBucketName: jest.fn(() => 'test-bucket'),
+  buildPublicBaseUrl: jest.fn(() => 'https://test-bucket.s3.local'),
+  buildPublicUrl: jest.fn((key: string) => `https://test-bucket.s3.local/${key}`),
+  tryExtractKeyFromUrl: jest.fn((url?: string | null) => {
+    if (!url) return null;
+    const base = 'https://test-bucket.s3.local/';
+    return url.startsWith(base) ? url.substring(base.length) : null;
+  }),
+}));
+
 // Mock do Clerk
 jest.mock('@clerk/express', () => ({
   clerkMiddleware: jest.fn(() => (req: any, res: any, next: any) => next()),

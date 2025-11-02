@@ -25,6 +25,7 @@ import meRouter from './routes/me.routes.js'
 import connectRouter from './routes/connect.js'
 import eventsRouter from './routes/events.js'
 import { apiLimiter } from './middleware/rateLimit.js';
+import { getPublicBaseUrl } from './lib/s3.js';
 
 const app = express();
 
@@ -76,7 +77,14 @@ app.use(helmet({
         'https://images.unsplash.com',
         'https://*.clerk.com',
         'https://*.clerk.services',
-      ],
+        (() => {
+          try {
+            const base = (process.env.ASSETS_BASE_URL || getPublicBaseUrl() || '').replace(/\/$/, '')
+            if (!base) return undefined as any
+            return new URL(base).origin
+          } catch { return undefined as any }
+        })(),
+      ].filter(Boolean) as any,
       fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
       connectSrc: [
         "'self'",
@@ -95,7 +103,17 @@ app.use(helmet({
         'https://*.clerk.com',
         'https://*.clerk.services',
       ],
-      mediaSrc: ["'self'", 'blob:'],
+      mediaSrc: [
+        "'self'",
+        'blob:',
+        (() => {
+          try {
+            const base = (process.env.ASSETS_BASE_URL || getPublicBaseUrl() || '').replace(/\/$/, '')
+            if (!base) return undefined as any
+            return new URL(base).origin
+          } catch { return undefined as any }
+        })(),
+      ].filter(Boolean) as any,
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
