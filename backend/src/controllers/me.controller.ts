@@ -202,6 +202,47 @@ export class MeController {
 
     res.json({ page: pageNum, pageSize: sizeNum, total, items: mapped })
   }
+
+  async subscriptionsList(req: Request, res: Response) {
+    const userId = (req as any).authUserId as string
+    const { page = '1', pageSize = '10' } = req.query as Record<string, string>
+    const pageNum = Math.max(1, parseInt(page, 10) || 1)
+    const sizeNum = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 10))
+
+    const where = { subscriberId: userId }
+
+    const [items, total] = await Promise.all([
+      prisma.subscription.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * sizeNum,
+        take: sizeNum,
+        select: {
+          id: true,
+          status: true,
+          priceCents: true,
+          interval: true,
+          createdAt: true,
+          stripeSubscriptionId: true,
+          project: { select: { id: true, title: true } },
+        }
+      }),
+      prisma.subscription.count({ where })
+    ])
+
+    const mapped = items.map((s: any) => ({
+      id: s.id,
+      status: s.status,
+      priceBRL: (s.priceCents || 0) / 100,
+      interval: s.interval,
+      createdAt: s.createdAt,
+      projectId: s.project.id,
+      projectTitle: s.project.title,
+      cancelable: s.status !== 'CANCELED' && !!s.stripeSubscriptionId,
+    }))
+
+    res.json({ page: pageNum, pageSize: sizeNum, total, items: mapped })
+  }
 }
 
 

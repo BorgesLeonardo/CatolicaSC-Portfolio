@@ -23,6 +23,9 @@ router.get('/me/campaigns/list', requireApiAuth, me.campaignsList.bind(me))
 // Payouts (se aplicável) — implementado de forma segura
 router.get('/me/payouts', requireApiAuth, me.payouts.bind(me))
 
+// Minhas assinaturas (recorrências)
+router.get('/me/subscriptions', requireApiAuth, me.subscriptionsList.bind(me))
+
 export default router
 
 

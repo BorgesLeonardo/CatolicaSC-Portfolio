@@ -128,6 +128,32 @@ export class SubscriptionsService {
 
     return { checkoutUrl: session.url!, subscriptionId: subscription.id };
   }
+
+  async cancelSubscription(subscriptionId: string, userId: string, cancelAtPeriodEnd = false) {
+    const subscription = await prisma.subscription.findUnique({ where: { id: subscriptionId } });
+    if (!subscription) {
+      throw new AppError('Subscription not found', 404);
+    }
+    if (subscription.subscriberId !== userId) {
+      throw new AppError('Forbidden', 403);
+    }
+
+    // If we have a Stripe subscription, cancel it
+    if (subscription.stripeSubscriptionId) {
+      if (cancelAtPeriodEnd) {
+        await stripe.subscriptions.update(subscription.stripeSubscriptionId, { cancel_at_period_end: true });
+      } else {
+        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+      }
+    }
+
+    const updated = await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: { status: 'CANCELED' },
+    });
+
+    return { id: updated.id, status: updated.status };
+  }
 }
 
 export const subscriptionsService = new SubscriptionsService();
