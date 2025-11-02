@@ -1,31 +1,34 @@
 <script setup lang="ts">
-import { SignIn, ClerkLoaded, ClerkLoading } from '@clerk/vue'
-import { useRoute } from 'vue-router'
-import { onMounted } from 'vue'
+import { SignIn, useAuth } from '@clerk/vue'
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
 
 const route = useRoute()
+const router = useRouter()
+const { isSignedIn, isLoaded } = useAuth()
 const redirect = (typeof route.query.redirect === 'string' && route.query.redirect) ? String(route.query.redirect) : '/'
 
-// Normalize URLs that accidentally contain a second hash before query ("#/sign-in#/?...")
+function goBack() {
+  const target = typeof redirect === 'string' && redirect ? redirect : '/'
+  void router.replace(target)
+}
+
 onMounted(() => {
-  const w = typeof window !== 'undefined' ? window : undefined
-  if (!w) return
-  const href = w.location.href
-  if (href.includes('#/?')) {
-    const fixed = href.replace('#/?', '?')
-    try { w.history.replaceState(null, '', fixed) } catch { w.location.replace(fixed) }
+  if (isLoaded.value && isSignedIn.value) {
+    goBack()
+  }
+})
+
+watch([isLoaded, isSignedIn], ([loaded, signed]) => {
+  if (loaded && signed) {
+    goBack()
   }
 })
 </script>
 
 <template>
-  <div class="q-pa-xl flex flex-center bg-surface" style="min-height: 60vh">
-    <ClerkLoaded>
-      <SignIn :afterSignInUrl="redirect" :afterSignUpUrl="redirect" redirectUrl="/sign-in" />
-    </ClerkLoaded>
-    <ClerkLoading>
-      <q-spinner color="primary" size="lg" />
-    </ClerkLoading>
+  <div class="q-pa-xl flex flex-center bg-surface">
+    <SignIn />
   </div>
   
 </template>

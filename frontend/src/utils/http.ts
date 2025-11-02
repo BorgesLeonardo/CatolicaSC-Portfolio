@@ -18,7 +18,25 @@ export function setAuthToken(token: string | null) {
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Não force redirecionamento global em 401 para evitar loops com Clerk; deixe a tela atual tratar
+    if (error.response?.status === 401) {
+      // Evita loop e só redireciona se não estiver no sign-in
+      const w = typeof window !== 'undefined' ? window : undefined
+      if (w) {
+        const hash = w.location.hash || '#/'
+        const path = hash.startsWith('#') ? hash.substring(1) : hash
+        if (!path.startsWith('/sign-in')) {
+          // Defer para o próximo tick, evitando reentrância durante navegação
+          setTimeout(() => {
+            const curHash = w.location.hash || '#/'
+            const curPath = curHash.startsWith('#') ? curHash.substring(1) : curHash
+            if (!curPath.startsWith('/sign-in')) {
+              const redirect = encodeURIComponent(curPath || '/')
+              w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
+            }
+          }, 0)
+        }
+      }
+    }
     return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   }
 )
