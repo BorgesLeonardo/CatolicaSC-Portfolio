@@ -12,10 +12,5 @@ export default boot(({ app, router }) => {
     // Let Clerk use the SPA router for redirects to avoid full page reloads
     routerPush: (to) => router.push(to as never),
     routerReplace: (to) => router.replace(to as never),
-    // Ensure Clerk knows our auth routes and default after-auth destinations
-    signInUrl: '/sign-in',
-    signUpUrl: '/sign-up',
-    afterSignInUrl: '/',
-    afterSignUpUrl: '/',
   })
 })

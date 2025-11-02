@@ -21,7 +21,7 @@ onMounted(() => {
 <template>
   <div class="q-pa-xl flex flex-center bg-surface" style="min-height: 60vh">
     <ClerkLoaded>
-      <SignIn :afterSignInUrl="redirect" :afterSignUpUrl="redirect" />
+      <SignIn :afterSignInUrl="redirect" :afterSignUpUrl="redirect" redirectUrl="/sign-in" />
     </ClerkLoaded>
     <ClerkLoading>
       <q-spinner color="primary" size="lg" />
