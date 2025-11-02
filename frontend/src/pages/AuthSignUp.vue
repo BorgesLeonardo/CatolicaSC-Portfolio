@@ -1,33 +1,13 @@
 <script setup lang="ts">
-import { SignUp, useAuth } from '@clerk/vue'
-import { useRoute, useRouter } from 'vue-router'
-import { onMounted, watch } from 'vue'
+import { SignUp } from '@clerk/vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
-const { isSignedIn, isLoaded } = useAuth()
 const redirect = (typeof route.query.redirect === 'string' && route.query.redirect) ? String(route.query.redirect) : '/'
-
-function goHome() {
-  const target = typeof redirect === 'string' && redirect ? redirect : '/'
-  void router.replace(target)
-}
-
-onMounted(() => {
-  if (isLoaded.value && isSignedIn.value) {
-    goHome()
-  }
-})
-
-watch([isLoaded, isSignedIn], ([loaded, signed]) => {
-  if (loaded && signed) {
-    goHome()
-  }
-})
 </script>
 
 <template>
   <div class="q-pa-xl flex flex-center bg-surface">
-    <SignUp />
+    <SignUp :afterSignUpUrl="redirect" :afterSignInUrl="redirect" />
   </div>
 </template>
