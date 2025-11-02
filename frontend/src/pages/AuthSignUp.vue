@@ -7,6 +7,7 @@ const route = useRoute()
 const router = useRouter()
 const { isSignedIn, isLoaded } = useAuth()
 const redirect = (typeof route.query.redirect === 'string' && route.query.redirect) ? String(route.query.redirect) : '/'
+const signInUrl = `/sign-in?redirect=${encodeURIComponent(redirect)}`
 
 function goHome() {
   const target = typeof redirect === 'string' && redirect ? redirect : '/'
@@ -29,9 +30,9 @@ watch([isLoaded, isSignedIn], ([loaded, signed]) => {
 <template>
   <div class="q-pa-xl flex flex-center bg-surface">
     <SignUp
-      :fallbackRedirectUrl="redirect"
-      :forceRedirectUrl="redirect"
-      :signInFallbackRedirectUrl="redirect"
+      :afterSignUpUrl="redirect"
+      :afterSignInUrl="redirect"
+      :signInUrl="signInUrl"
     />
   </div>
 </template>
