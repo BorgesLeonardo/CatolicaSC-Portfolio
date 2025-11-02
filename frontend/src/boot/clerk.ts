@@ -10,7 +10,7 @@ export default boot(({ app, router }) => {
   app.use(clerkPlugin, {
     publishableKey: PUBLISHABLE_KEY,
     // Let Clerk use the SPA router for redirects to avoid full page reloads
-    routerPush: router.push,
-    routerReplace: router.replace,
+    routerPush: (to) => router.push(to as never),
+    routerReplace: (to) => router.replace(to as never),
   })
 })
