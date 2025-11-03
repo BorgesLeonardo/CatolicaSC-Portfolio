@@ -5,7 +5,7 @@
     
     <q-header 
       class="modern-toolbar" 
-      :class="{ 'scrolled': isScrolled }"
+      :class="{ 'scrolled': isScrolled, 'drawer-open': leftDrawerOpen }"
       elevated
     >
       <q-toolbar class="q-px-lg">
@@ -28,7 +28,7 @@
           </q-btn>
         </div>
 
-        <q-toolbar-title class="q-ml-sm">
+        <q-toolbar-title class="q-ml-sm" shrink>
           <div class="row items-center no-wrap cursor-pointer" @click="toggleLeftDrawer">
             <div class="logo-container">
               <q-icon name="campaign" size="md" color="primary" class="q-mr-sm" />
@@ -38,7 +38,7 @@
         </q-toolbar-title>
 
         <!-- Desktop Navigation -->
-        <div class="gt-md desktop-nav">
+        <div class="gt-md desktop-nav toolbar-center">
           <nav class="nav-links">
             <q-btn 
               flat
@@ -62,93 +62,93 @@
             />
           </nav>
         </div>
+        <div class="toolbar-right">
+          <!-- Theme Toggle -->
+          <q-btn
+            v-if="false"
+            outline
+            round
+            dense
+            :icon="themeIcon"
+            :aria-label="`Alternar tema (atual: ${themeLabel})`"
+            aria-haspopup="menu"
+            :aria-expanded="false"
+            @click="toggleTheme"
+            color="primary"
+            class="q-mr-sm hover-lift theme-toggle-btn"
+          >
+            <q-tooltip transition-show="fade" transition-hide="fade">
+              Tema: {{ themeLabel }}. Clique para alternar. Botão direito/toque longo para escolher.
+            </q-tooltip>
+            <q-menu context-menu touch-position>
+              <q-list style="min-width: 200px">
+                <q-item clickable v-close-popup @click="setThemeMode('light')">
+                  <q-item-section avatar>
+                    <q-icon name="light_mode" />
+                  </q-item-section>
+                  <q-item-section>Claro</q-item-section>
+                  <q-item-section side>
+                    <q-icon name="check" v-if="theme.mode === 'light'" />
+                  </q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="setThemeMode('dark')">
+                  <q-item-section avatar>
+                    <q-icon name="dark_mode" />
+                  </q-item-section>
+                  <q-item-section>Escuro</q-item-section>
+                  <q-item-section side>
+                    <q-icon name="check" v-if="theme.mode === 'dark'" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
 
-        <q-space />
-
-        <!-- Theme Toggle -->
-        <q-btn
-          outline
-          round
-          dense
-          :icon="themeIcon"
-          :aria-label="`Alternar tema (atual: ${themeLabel})`"
-          aria-haspopup="menu"
-          :aria-expanded="false"
-          @click="toggleTheme"
-          color="primary"
-          class="q-mr-sm hover-lift theme-toggle-btn"
-        >
-          <q-tooltip transition-show="fade" transition-hide="fade">
-            Tema: {{ themeLabel }}. Clique para alternar. Botão direito/toque longo para escolher.
-          </q-tooltip>
-          <q-menu context-menu touch-position>
-            <q-list style="min-width: 200px">
-              <q-item clickable v-close-popup @click="setThemeMode('light')">
-                <q-item-section avatar>
-                  <q-icon name="light_mode" />
-                </q-item-section>
-                <q-item-section>Claro</q-item-section>
-                <q-item-section side>
-                  <q-icon name="check" v-if="theme.mode === 'light'" />
-                </q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup @click="setThemeMode('dark')">
-                <q-item-section avatar>
-                  <q-icon name="dark_mode" />
-                </q-item-section>
-                <q-item-section>Escuro</q-item-section>
-                <q-item-section side>
-                  <q-icon name="check" v-if="theme.mode === 'dark'" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
-
-        <!-- Auth Buttons -->
-        <div class="auth-section q-gutter-sm row items-center">
-          <SignedOut>
-            <q-btn 
-              flat 
-              label="Entrar" 
-              to="/sign-in" 
-              class="auth-btn auth-btn--secondary hover-lift"
-            />
-            <q-btn 
-              unelevated
-              label="Cadastrar" 
-              to="/sign-up"
-              color="primary"
-              class="auth-btn auth-btn--primary hover-lift"
-            />
-          </SignedOut>
-          <SignedIn>
-            <q-btn 
-              flat 
-              icon="add" 
-              label="Nova Campanha" 
-              to="/projects/new"
-              color="primary"
-              class="action-btn action-btn--create gt-sm hover-lift"
-            />
-            <q-btn 
-              flat 
-              icon="campaign" 
-              label="Minhas Campanhas" 
-              to="/me"
-              class="action-btn action-btn--campaigns gt-sm hover-lift"
-            />
-            <q-btn 
-              flat 
-              icon="dashboard" 
-              label="Dashboard" 
-              to="/dashboard"
-              class="action-btn action-btn--dashboard gt-sm hover-lift"
-            />
-            <div class="user-menu">
-              <UserButton />
-            </div>
-          </SignedIn>
+          <!-- Auth Buttons -->
+          <div class="auth-section q-gutter-sm row items-center">
+            <SignedOut>
+              <q-btn 
+                flat 
+                label="Entrar" 
+                to="/sign-in" 
+                class="auth-btn auth-btn--secondary hover-lift"
+              />
+              <q-btn 
+                unelevated
+                label="Cadastrar" 
+                to="/sign-up"
+                color="primary"
+                class="auth-btn auth-btn--primary hover-lift"
+              />
+            </SignedOut>
+            <SignedIn>
+              <q-btn 
+                flat 
+                icon="add" 
+                label="Nova Campanha" 
+                to="/projects/new"
+                color="primary"
+                class="action-btn action-btn--create gt-sm hover-lift"
+              />
+              <q-btn 
+                flat 
+                icon="campaign" 
+                label="Minhas Campanhas" 
+                to="/me"
+                class="action-btn action-btn--campaigns gt-sm hover-lift"
+              />
+              <q-btn 
+                flat 
+                icon="dashboard" 
+                label="Dashboard" 
+                to="/dashboard"
+                class="action-btn action-btn--dashboard gt-sm hover-lift"
+              />
+              <div class="user-menu">
+                <UserButton />
+              </div>
+            </SignedIn>
+          </div>
         </div>
       </q-toolbar>
     </q-header>
@@ -520,6 +520,7 @@ onUnmounted(() => {
   .q-toolbar {
     transition: all var(--transition-base);
     min-height: 70px;
+    position: relative; // allow absolute centering of desktop nav
   }
 }
 
@@ -790,6 +791,13 @@ onUnmounted(() => {
   margin: 0 32px;
 }
 
+.toolbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  transition: transform var(--transition-base);
+}
+
 .nav-links {
   display: flex;
   gap: 8px;
@@ -916,6 +924,17 @@ onUnmounted(() => {
   border-color: rgba(148,163,184,0.5) !important;
   color: #e2e8f0 !important;
   &:hover { background: rgba(2,6,23,0.7); }
+}
+
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+// Quando o drawer estiver aberto, empurra a navegação um pouco à direita
+.modern-toolbar.drawer-open .toolbar-center {
+  transform: translateX(150px);
 }
 
 // === DRAWER STYLES ===
@@ -1195,6 +1214,9 @@ onUnmounted(() => {
 @media (max-width: 1024px) {
   .desktop-nav {
     margin: 0 16px;
+    position: static; // fall back in smaller widths (hidden by gt-md)
+    left: auto;
+    transform: none;
   }
   
   .action-btn {
