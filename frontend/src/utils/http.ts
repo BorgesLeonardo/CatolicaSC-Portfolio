@@ -1,14 +1,8 @@
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios'
 import { cryptoRandomUuid } from './crypto'
 
-const resolvedBaseUrl =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== 'undefined' && window.location.protocol === 'https:'
-    ? ''
-    : 'http://localhost:3333')
-
 export const http = axios.create({
-  baseURL: resolvedBaseUrl,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333',
 })
 
 // Controla redirecionamentos para evitar loops em produção
