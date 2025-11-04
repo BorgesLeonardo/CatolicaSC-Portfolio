@@ -4,7 +4,11 @@ import { useDashboardStore } from 'src/stores/dashboard'
 export function useRealtimeDashboard(userId?: string, ownerId?: string) {
   let es: EventSource | null = null
   const store = useDashboardStore()
-  const apiBase = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:3333'
+  const apiBase =
+    import.meta.env?.VITE_API_BASE_URL ||
+    (typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? ''
+      : 'http://localhost:3333')
 
   function connect() {
     try {

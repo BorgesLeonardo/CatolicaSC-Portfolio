@@ -1,7 +1,11 @@
 // Configuração da API
 export const API_CONFIG = {
   // URL base da API: usa VITE_API_BASE_URL quando disponível; fallback para localhost em dev
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333',
+  BASE_URL:
+    import.meta.env.VITE_API_BASE_URL ||
+    (typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? ''
+      : 'http://localhost:3333'),
     
   // Endpoints
   ENDPOINTS: {
