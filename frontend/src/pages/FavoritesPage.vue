@@ -11,8 +11,10 @@ const router = useRouter()
 const { isSignedIn, user } = useUser()
 const favorites = useFavoritesStore()
 
-onMounted(() => {
+onMounted(async () => {
   favorites.setUser(user.value?.id ?? null)
+  // Atualiza dados dos favoritos (status/raised/etc.)
+  await favorites.refreshFromApi()
 })
 
 const items = computed<Project[]>(() => favorites.items)

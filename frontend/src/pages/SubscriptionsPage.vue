@@ -1,15 +1,16 @@
 <template>
-  <q-page class="bg-surface q-py-xl">
-    <div class="container">
-      <div class="row items-center q-mb-lg">
-        <div class="col">
-          <h2 class="section-title">Minhas Assinaturas</h2>
-          <div class="text-subtitle2 text-muted">Gerencie suas assinaturas recorrentes</div>
-        </div>
-        <div class="col-auto">
-          <q-btn color="primary" flat icon="refresh" label="Atualizar" :loading="loading" @click="reload" />
+  <q-page class="bg-surface">
+    <!-- Hero padrão -->
+    <section class="support-hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge"><q-icon name="autorenew" class="q-mr-xs" />Assinaturas</div>
+          <h1 class="hero-title">Minhas Assinaturas</h1>
+          <p class="hero-subtitle">Gerencie suas assinaturas recorrentes</p>
         </div>
       </div>
+    </section>
+    <div class="container q-py-xl">
 
       <DynamicCard variant="default" size="lg" :elevated="true" :animated="true">
         <div class="q-pa-md">
@@ -259,6 +260,18 @@ watch([q, statusFilter, intervalFilter], () => { page.value = 1 })
 <style scoped>
 .section-title { margin: 0; }
 .empty-state { text-align: center; }
+
+/* Hero padrão */
+.support-hero { 
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 40%, #f97316 100%);
+  color: #fff;
+  padding: 56px 0 44px;
+}
+.hero-content { text-align: center; max-width: 820px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items:center; gap:6px; background: rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.15); padding:6px 14px; border-radius:9999px; font-weight:600; margin-bottom: 14px; }
+.hero-title { font-size: clamp(2rem,4vw,3rem); font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+.hero-subtitle { opacity: .95; margin: 0; }
+[data-theme='dark'] .support-hero { background: linear-gradient(135deg, #0b1220 0%, #1e3a8a 40%, #9a3412 100%); }
 </style>
 
 

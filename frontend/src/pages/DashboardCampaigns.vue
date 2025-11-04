@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@clerk/vue'
 import { setAuthToken } from 'src/utils/http'
 import { connectService } from 'src/services'
@@ -62,6 +63,7 @@ import { useDashboardStore } from 'src/stores/dashboard'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
 const { getToken, isSignedIn } = useAuth()
+const route = useRoute()
 const { updateStatsIfNeeded } = useProjectStats()
 const store = useDashboardStore()
 
@@ -156,8 +158,9 @@ watch([filterQ, filterStatus], async () => {
 })
 
 async function connectOnboard() {
-  const { url } = await connectService.onboard()
-  try { sessionStorage.setItem('connect_return_path', '/projects/new') } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+  const returnPath = route.fullPath || '/dashboard/campaigns'
+  const { url } = await connectService.onboard(returnPath)
+  try { sessionStorage.setItem('connect_return_path', returnPath) } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
   window.location.assign(url)
 }
 

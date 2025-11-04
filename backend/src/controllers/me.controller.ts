@@ -65,31 +65,50 @@ export class MeController {
     const fromDate = from ? new Date(from) : new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1)
     const toDate = to ? new Date(to) : new Date()
 
-    // Query raw para performance e controle do período (Postgres)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const rows = await prisma.$queryRawUnsafe(`
-      SELECT to_char(date_trunc('month', c."createdAt"), 'YYYY-MM') AS period,
-             (SUM(c."amountCents")/100.0)::float8 AS amount
-      FROM "Contribution" c
-      WHERE c."contributorId" = $1 AND c."status" = 'SUCCEEDED'
-        AND c."createdAt" BETWEEN $2 AND $3
-      GROUP BY 1
-      ORDER BY 1 ASC
-    `, userId, fromDate, toDate) as Array<{ period: string; amount: number }>
+    // Primeiro tenta a consulta SQL (Postgres). Em testes, este caminho é o esperado.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const rows = await prisma.$queryRawUnsafe(`
+        SELECT to_char(date_trunc('month', c."createdAt"), 'YYYY-MM') AS period,
+               (SUM(c."amountCents")/100.0)::float8 AS amount
+        FROM "Contribution" c
+        WHERE c."contributorId" = $1 AND c."status" = 'SUCCEEDED'
+          AND c."createdAt" BETWEEN $2 AND $3
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `, userId, fromDate, toDate) as Array<{ period: string; amount: number }>
+      if (Array.isArray(rows)) {
+        return res.json(rows)
+      }
+    } catch (_) {
+      // fall through to in-memory aggregation
+    }
 
-    res.json(rows)
+    // Agregação em memória compatível com SQLite/dev
+    const items = await prisma.contribution.findMany({
+      where: { contributorId: userId, status: 'SUCCEEDED', createdAt: { gte: fromDate, lte: toDate } },
+      select: { createdAt: true, amountCents: true }
+    })
+    const map = new Map<string, number>()
+    for (const c of items) {
+      const d = new Date(c.createdAt)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const prev = map.get(key) || 0
+      map.set(key, prev + (c.amountCents || 0) / 100)
+    }
+    return res.json(Array.from(map.entries()).sort((a, b) => a[0] < b[0] ? -1 : 1).map(([period, amount]) => ({ period, amount })))
   }
 
   async campaignsMetrics(req: Request, res: Response) {
     const userId = (req as any).authUserId as string
 
-    // Top 5 por arrecadação
+    // Top 5 por arrecadação (inclui publicadas e desativadas; exclui removidas)
     const topRaw = await prisma.$queryRaw<Array<{ projectId: string; title: string; raised: number; goal: number }>>`
       SELECT p.id as "projectId", p.title,
              (p."raisedCents"/100.0)::float8 as raised,
              (p."goalCents"/100.0)::float8 as goal
       FROM "Project" p
-      WHERE p."ownerId" = ${userId} AND p."status" = 'PUBLISHED' AND p."deletedAt" IS NULL
+      WHERE p."ownerId" = ${userId} AND p."deletedAt" IS NULL
       ORDER BY p."raisedCents" DESC
       LIMIT 5
     `

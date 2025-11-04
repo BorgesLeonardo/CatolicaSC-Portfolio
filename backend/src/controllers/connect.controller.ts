@@ -46,10 +46,24 @@ export class ConnectController {
       const refreshUrl = process.env.CONNECT_REFRESH_URL || `${base}${hashPrefix}/connect/refresh`
       const returnUrl = process.env.CONNECT_RETURN_URL || `${base}${hashPrefix}/connect/return`
 
+      // Optional redirect target passed by frontend to ensure correct SPA page after returning
+      const redirectRaw = typeof req.body?.redirect === 'string' ? String(req.body.redirect) : ''
+      const redirect = redirectRaw && redirectRaw.startsWith('/') ? redirectRaw : ''
+      const appendRedirect = (url: string): string => {
+        if (!redirect) return url
+        try {
+          const u = new URL(url)
+          if (!u.searchParams.has('redirect')) u.searchParams.set('redirect', redirect)
+          return u.toString()
+        } catch {
+          return url + (url.includes('?') ? '&' : '?') + `redirect=${encodeURIComponent(redirect)}`
+        }
+      }
+
       const link = await stripe.accountLinks.create({
         account: accountId!,
-        refresh_url: refreshUrl,
-        return_url: returnUrl,
+        refresh_url: appendRedirect(refreshUrl),
+        return_url: appendRedirect(returnUrl),
         type: 'account_onboarding',
       })
 
@@ -68,10 +82,13 @@ export class ConnectController {
       }
       try {
         const account = await stripe.accounts.retrieve(user.stripeAccountId)
+        const chargesEnabled = !!(account as any).charges_enabled
+        const payoutsEnabled = !!(account as any).payouts_enabled
+        // Consider "connected" when the account exists; individual flags expose readiness
         return res.json({
           connected: true,
-          chargesEnabled: !!(account as any).charges_enabled,
-          payoutsEnabled: !!(account as any).payouts_enabled,
+          chargesEnabled,
+          payoutsEnabled,
           requirements: (account as any).requirements,
         })
       } catch (err: any) {

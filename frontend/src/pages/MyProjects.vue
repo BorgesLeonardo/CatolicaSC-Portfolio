@@ -11,10 +11,12 @@ import EditProjectDialog from 'src/components/EditProjectDialog.vue'
 import { contributionsService } from 'src/services/contributions'
 import { projectsService } from 'src/services/projects'
 import { useProjectStats } from 'src/composables/useProjectStats'
+import { useFavoritesStore } from 'src/stores/favorites'
 
 const { isSignedIn, getToken } = useAuth()
 const router = useRouter()
 const { updateStatsIfNeeded } = useProjectStats()
+const favorites = useFavoritesStore()
 
 const items = ref<Project[]>([])
 const loading = ref(false)
@@ -147,6 +149,12 @@ async function performDeactivate(project: Project) {
     const updated = await projectsService.update(project.id, { status: 'ARCHIVED' })
     const idx = items.value.findIndex(p => p.id === project.id)
     if (idx !== -1) items.value[idx] = updated
+    // Atualiza também nos favoritos, se presente
+    const favIdx = favorites.items.findIndex(p => p.id === project.id)
+    if (favIdx !== -1) {
+      favorites.items[favIdx] = { ...favorites.items[favIdx], ...updated }
+      favorites.privateSave()
+    }
     Notify.create({ type: 'positive', message: 'Campanha desativada' })
   } catch {
     Notify.create({ type: 'negative', message: 'Erro ao desativar campanha' })
@@ -175,6 +183,12 @@ async function performActivate(project: Project) {
     const updated = await projectsService.update(project.id, { status: 'PUBLISHED' })
     const idx = items.value.findIndex(p => p.id === project.id)
     if (idx !== -1) items.value[idx] = updated
+    // Atualiza também nos favoritos, se presente
+    const favIdx = favorites.items.findIndex(p => p.id === project.id)
+    if (favIdx !== -1) {
+      favorites.items[favIdx] = { ...favorites.items[favIdx], ...updated }
+      favorites.privateSave()
+    }
     Notify.create({ type: 'positive', message: 'Campanha ativada' })
   } catch {
     Notify.create({ type: 'negative', message: 'Erro ao ativar campanha' })
@@ -272,27 +286,16 @@ onMounted(fetchMyProjects)
 
 <template>
   <div class="my-projects-page bg-surface">
-    <!-- Header Section -->
-    <div class="page-header q-pa-lg">
+    <!-- Hero Section padrão -->
+    <section class="support-hero">
       <div class="container">
-        <div class="row items-center justify-between">
-          <div class="col">
-            <h1 class="page-title">Minhas Campanhas</h1>
-            <p class="page-subtitle">Gerencie suas campanhas de crowdfunding</p>
-          </div>
-          <div class="col-auto">
-            <q-btn
-              color="primary"
-              icon="add"
-              label="Nova Campanha"
-              @click="createNewProject"
-              size="lg"
-              class="create-btn"
-            />
-          </div>
+        <div class="hero-content">
+          <div class="hero-badge"><q-icon name="campaign" class="q-mr-xs" />Minhas Campanhas</div>
+          <h1 class="hero-title">Minhas Campanhas</h1>
+          <p class="hero-subtitle">Gerencie suas campanhas de crowdfunding</p>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Content Section -->
     <div class="page-content q-pa-lg">
@@ -484,6 +487,18 @@ onMounted(fetchMyProjects)
   min-height: 100vh;
   background: var(--gradient-subtle);
 }
+
+/* Hero padrão */
+.support-hero { 
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 40%, #f97316 100%);
+  color: #fff;
+  padding: 56px 0 44px;
+}
+.hero-content { text-align: center; max-width: 820px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items:center; gap:6px; background: rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.15); padding:6px 14px; border-radius:9999px; font-weight:600; margin-bottom: 14px; }
+.hero-title { font-size: clamp(2rem,4vw,3rem); font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+.hero-subtitle { opacity: .95; margin: 0; }
+[data-theme='dark'] .support-hero { background: linear-gradient(135deg, #0b1220 0%, #1e3a8a 40%, #9a3412 100%); }
 
 .page-header {
   background: rgba(255, 255, 255, 0.9);

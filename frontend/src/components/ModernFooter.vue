@@ -61,11 +61,11 @@
           <div class="footer-section">
             <h4 class="section-title">Categorias</h4>
             <ul class="footer-links">
-              <li><a href="#" class="footer-link">Tecnologia</a></li>
-              <li><a href="#" class="footer-link">Arte & Design</a></li>
-              <li><a href="#" class="footer-link">Educação</a></li>
-              <li><a href="#" class="footer-link">Saúde</a></li>
-              <li><a href="#" class="footer-link">Meio Ambiente</a></li>
+              <li><a href="#" class="footer-link" @click.prevent="goToCategory('Tecnologia')">Tecnologia</a></li>
+              <li><a href="#" class="footer-link" @click.prevent="goToCategory('Arte & Design')">Arte & Design</a></li>
+              <li><a href="#" class="footer-link" @click.prevent="goToCategory('Educação')">Educação</a></li>
+              <li><a href="#" class="footer-link" @click.prevent="goToCategory('Saúde')">Saúde</a></li>
+              <li><a href="#" class="footer-link" @click.prevent="goToCategory('Meio Ambiente')">Meio Ambiente</a></li>
             </ul>
           </div>
           
@@ -73,11 +73,11 @@
           <div class="footer-section">
             <h4 class="section-title">Suporte</h4>
             <ul class="footer-links">
-              <li><a href="#" class="footer-link">Central de Ajuda</a></li>
-              <li><a href="#" class="footer-link">Contato</a></li>
-              <li><a href="#" class="footer-link">FAQ</a></li>
-              <li><a href="#" class="footer-link">Guias</a></li>
-              <li><a href="#" class="footer-link">Blog</a></li>
+              <li><router-link to="/help" class="footer-link">Central de Ajuda</router-link></li>
+              <li><router-link to="/contact" class="footer-link">Contato</router-link></li>
+              <li><router-link to="/faq" class="footer-link">FAQ</router-link></li>
+              <li><router-link to="/guides" class="footer-link">Guias</router-link></li>
+              
             </ul>
           </div>
           
@@ -153,6 +153,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { slugify } from 'src/utils/slug'
 
 const router = useRouter()
 const email = ref('')
@@ -177,6 +178,10 @@ function scrollToHowItWorks() {
       element.scrollIntoView({ behavior: 'smooth' })
     }
   }
+}
+
+function goToCategory(name: string) {
+  void router.push({ path: '/projects', query: { category: slugify(name) } })
 }
 
 async function subscribeNewsletter() {

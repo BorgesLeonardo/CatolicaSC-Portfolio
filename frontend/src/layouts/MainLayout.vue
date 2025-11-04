@@ -29,12 +29,23 @@
         </div>
 
         <q-toolbar-title class="q-ml-sm" shrink>
-          <div class="row items-center no-wrap cursor-pointer" @click="toggleLeftDrawer">
-            <div class="logo-container">
-              <q-icon name="campaign" size="md" color="primary" class="q-mr-sm" />
-            </div>
+          <q-btn
+            flat
+            no-caps
+            padding="sm md"
+            class="brand-menu-btn hover-lift"
+            :class="{ 'menu-open': leftDrawerOpen }"
+            @click="toggleLeftDrawer"
+            aria-label="Abrir menu lateral"
+            aria-haspopup="menu"
+            :aria-expanded="leftDrawerOpen ? 'true' : 'false'"
+            role="button"
+          >
+            <q-icon name="campaign" size="md" color="primary" class="q-mr-sm" />
             <span class="text-h6 logo-text">Crowdfunding</span>
-          </div>
+            <q-badge class="q-ml-sm lt-md" color="primary" align="top">Menu</q-badge>
+            <q-tooltip transition-show="fade" transition-hide="fade">Abrir menu lateral</q-tooltip>
+          </q-btn>
         </q-toolbar-title>
 
         <!-- Desktop Navigation -->
@@ -122,28 +133,31 @@
               />
             </SignedOut>
             <SignedIn>
-              <q-btn 
-                flat 
-                icon="add" 
-                label="Nova Campanha" 
-                to="/projects/new"
-                color="primary"
-                class="action-btn action-btn--create gt-sm hover-lift"
-              />
-              <q-btn 
-                flat 
-                icon="campaign" 
-                label="Minhas Campanhas" 
-                to="/me"
-                class="action-btn action-btn--campaigns gt-sm hover-lift"
-              />
-              <q-btn 
-                flat 
-                icon="dashboard" 
-                label="Dashboard" 
-                to="/dashboard"
-                class="action-btn action-btn--dashboard gt-sm hover-lift"
-              />
+              <!-- Quick actions ocultadas na barra superior -->
+              <template v-if="false">
+                <q-btn 
+                  flat 
+                  icon="add" 
+                  label="Nova Campanha" 
+                  to="/projects/new"
+                  color="primary"
+                  class="action-btn action-btn--create gt-sm hover-lift"
+                />
+                <q-btn 
+                  flat 
+                  icon="campaign" 
+                  label="Minhas Campanhas" 
+                  to="/me"
+                  class="action-btn action-btn--campaigns gt-sm hover-lift"
+                />
+                <q-btn 
+                  flat 
+                  icon="dashboard" 
+                  label="Dashboard" 
+                  to="/dashboard"
+                  class="action-btn action-btn--dashboard gt-sm hover-lift"
+                />
+              </template>
               <div class="user-menu">
                 <UserButton />
               </div>
@@ -164,9 +178,18 @@
       <div class="drawer-content">
         <!-- Drawer Header -->
         <div class="drawer-header">
-          <div class="drawer-logo">
+          <div 
+            class="drawer-logo"
+            role="button"
+            tabindex="0"
+            aria-label="Ocultar menu"
+            @click="leftDrawerOpen = false"
+            @keydown.enter="leftDrawerOpen = false"
+            @keydown.space.prevent="leftDrawerOpen = false"
+          >
             <q-icon name="campaign" size="lg" color="primary" />
             <span class="drawer-title">Crowdfunding</span>
+            <q-tooltip transition-show="fade" transition-hide="fade">Ocultar menu lateral</q-tooltip>
           </div>
           <q-btn 
             flat 
@@ -368,7 +391,14 @@
           <div class="footer-links">
             <q-btn flat size="sm" label="Termos" class="footer-link" />
             <q-btn flat size="sm" label="Privacidade" class="footer-link" />
-            <q-btn flat size="sm" label="Suporte" class="footer-link" />
+            <q-btn 
+              flat 
+              size="sm" 
+              label="Suporte" 
+              class="footer-link" 
+              to="/help" 
+              @click="leftDrawerOpen = false" 
+            />
           </div>
         </div>
       </div>
@@ -442,6 +472,20 @@ function toggleLeftDrawer() {
   }
 }
 
+// Fallback: when app is using hash router but Stripe returns without '#/connect/...'
+// the server serves '/' and SPA lands on Home. Detect URL path and route accordingly.
+function handleConnectReturnFallback(): void {
+  const path = window.location.pathname || ''
+  const search = window.location.search || ''
+  if (path.startsWith('/connect/return') && router.currentRoute.value.path !== '/connect/return') {
+    void router.replace('/connect/return' + search)
+    return
+  }
+  if (path.startsWith('/connect/refresh') && router.currentRoute.value.path !== '/connect/refresh') {
+    void router.replace('/connect/refresh' + search)
+  }
+}
+
 function scrollToHowItWorks() {
   leftDrawerOpen.value = false
   
@@ -498,6 +542,10 @@ onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
+onMounted(() => {
+  handleConnectReturnFallback()
+})
+
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
@@ -540,6 +588,23 @@ onUnmounted(() => {
 }
 
 // Ensure good contrast in dark mode
+// === BRAND MENU BUTTON (logo acts as menu trigger) ===
+.brand-menu-btn {
+  border-radius: 9999px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &.menu-open {
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.35);
+  }
+}
+
+:deep(.q-dark) .brand-menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
 [data-theme='dark'] .logo-text {
   color: white;
 }
@@ -788,7 +853,14 @@ onUnmounted(() => {
 
 // === NAVIGATION STYLES ===
 .desktop-nav {
-  margin: 0 32px;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .toolbar-center {
@@ -933,9 +1005,7 @@ onUnmounted(() => {
 }
 
 // Quando o drawer estiver aberto, empurra a navegação um pouco à direita
-.modern-toolbar.drawer-open .toolbar-center {
-  transform: translateX(150px);
-}
+/* Removido ajuste de deslocamento ao abrir o drawer para manter a navegação centralizada */
 
 // === DRAWER STYLES ===
 .modern-drawer {
@@ -964,6 +1034,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 6px 8px;
+  transition: background 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    background: rgba(30, 64, 175, 0.06);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .drawer-title {

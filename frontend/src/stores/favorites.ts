@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { LocalStorage, Notify } from 'quasar'
 import type { Project } from 'src/components/models'
+import { projectsService } from 'src/services/projects'
 
 interface FavoritesState {
   userId: string | null
@@ -33,6 +34,20 @@ export const useFavoritesStore = defineStore('favorites', {
     load(): void {
       const stored = LocalStorage.getItem<Project[]>(storageKey(this.userId))
       this.items = Array.isArray(stored) ? stored : []
+    },
+    async refreshFromApi(): Promise<void> {
+      if (!this.items.length) return
+      const refreshed: Project[] = []
+      await Promise.all(this.items.map(async (p) => {
+        try {
+          const fresh = await projectsService.getById(p.id)
+          refreshed.push({ ...p, ...fresh })
+        } catch {
+          refreshed.push(p)
+        }
+      }))
+      this.items = refreshed
+      this.privateSave()
     },
     privateSave(): void {
       LocalStorage.set(storageKey(this.userId), this.items)

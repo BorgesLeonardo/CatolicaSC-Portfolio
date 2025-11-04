@@ -23,7 +23,7 @@ async function go() {
   try {
     const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
     setAuthToken(token || null)
-    const { url } = await connectService.onboard()
+    const { url } = await connectService.onboard('/projects/new')
     window.location.assign(url)
   } finally {
     loading.value = false

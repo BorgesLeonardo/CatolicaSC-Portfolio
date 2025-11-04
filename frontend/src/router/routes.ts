@@ -22,6 +22,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'connect/return', component: () => import('pages/ConnectReturn.vue') },
       { path: 'connect/refresh', component: () => import('pages/ConnectRefresh.vue') },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') },
+      { path: 'help', component: () => import('pages/SupportCenter.vue') },
+      { path: 'contact', component: () => import('pages/ContactPage.vue') },
+      { path: 'faq', component: () => import('pages/FaqPage.vue') },
+      { path: 'guides', component: () => import('pages/GuidesPage.vue') },
     ],
   },
   {

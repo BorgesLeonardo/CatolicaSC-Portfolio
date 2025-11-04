@@ -147,6 +147,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@clerk/vue'
 import { setAuthToken } from 'src/utils/http'
 import DynamicCard from 'src/components/DynamicCard.vue'
@@ -163,6 +164,7 @@ const refreshing = ref(false)
 const { updateStatsIfNeeded } = useProjectStats()
 const { getToken, isSignedIn } = useAuth()
 const store = useDashboardStore()
+const route = useRoute()
 
 const metrics = computed(() => store.metrics)
 const tsBarLabels = computed(() => store.timeseries.map(p => {
@@ -300,8 +302,9 @@ const connectStatus = ref<{ connected: boolean; chargesEnabled: boolean; payouts
 async function connectOnboard() {
   const token = await (typeof getToken === 'function' ? getToken() : getToken.value?.())
   setAuthToken(token || null)
-  const { url } = await connectService.onboard()
-  try { sessionStorage.setItem('connect_return_path', '/projects/new') } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+  const returnPath = route.fullPath || '/dashboard'
+  const { url } = await connectService.onboard(returnPath)
+  try { sessionStorage.setItem('connect_return_path', returnPath) } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
   window.location.assign(url)
 }
 

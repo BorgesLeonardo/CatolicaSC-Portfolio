@@ -1,5 +1,15 @@
 <template>
   <q-page class="bg-surface">
+  <!-- Hero padrão -->
+  <section class="support-hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge"><q-icon name="add_circle" class="q-mr-xs" />Nova Campanha</div>
+        <h1 class="hero-title">Nova Campanha</h1>
+        <p class="hero-subtitle">Preencha os detalhes da sua campanha</p>
+      </div>
+    </div>
+  </section>
   <div class="q-pa-md q-mx-auto" style="max-width: 760px">
     <SignedOut>
       <q-card flat bordered class="q-pa-lg">
@@ -34,7 +44,6 @@
       </q-card>
 
       <q-card v-else flat bordered class="q-pa-lg">
-        <div class="text-h6 q-mb-md">Nova Campanha</div>
         <div class="text-body2 text-muted q-mb-lg">
           <q-icon name="info" class="q-mr-xs" />
           Campos marcados com * são obrigatórios
@@ -515,7 +524,7 @@ function onImageRejected(rejectedEntries: { file: File; failedPropValidation: st
 async function connectOnboard() {
   const token = await getToken.value?.()
   setAuthToken(token || null)
-  const { url } = await connectService.onboard()
+  const { url } = await connectService.onboard('/projects/new')
   try { sessionStorage.setItem('connect_return_path', '/projects/new') } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
   window.location.assign(url)
 }
@@ -844,3 +853,19 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+.container { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+
+/* Hero padrão */
+.support-hero { 
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 40%, #f97316 100%);
+  color: #fff;
+  padding: 56px 0 44px;
+}
+.hero-content { text-align: center; max-width: 820px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items:center; gap:6px; background: rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.15); padding:6px 14px; border-radius:9999px; font-weight:600; margin-bottom: 14px; }
+.hero-title { font-size: clamp(2rem,4vw,3rem); font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+.hero-subtitle { opacity: .95; margin: 0; }
+[data-theme='dark'] .support-hero { background: linear-gradient(135deg, #0b1220 0%, #1e3a8a 40%, #9a3412 100%); }
+</style>

@@ -1,12 +1,18 @@
 <template>
-  <q-page padding>
-    <DynamicBreadcrumb :items="breadcrumbItems" />
+  <q-page>
+    <!-- Hero padrão -->
+    <section class="support-hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge"><q-icon name="settings" class="q-mr-xs" />Configurações</div>
+          <h1 class="hero-title">Configurações</h1>
+          <p class="hero-subtitle">Personalize o tema e as preferências de interface</p>
+        </div>
+      </div>
+    </section>
     <section class="q-py-lg bg-surface">
       <div class="container">
-        <div class="text-center q-mb-lg">
-          <h2 class="section-title">Configurações</h2>
-          <p class="section-subtitle">Personalize o tema e as preferências de interface</p>
-        </div>
+        
 
         <div class="row q-col-gutter-xl">
           <div class="col-12 col-md-6">
@@ -85,11 +91,6 @@
 <script setup lang="ts">
 import { useThemeStore } from 'src/stores/theme'
 import { Notify } from 'quasar'
-import DynamicBreadcrumb from 'src/components/DynamicBreadcrumb.vue'
-
-const breadcrumbItems = [
-  { label: 'Configurações', icon: 'settings' },
-]
 
 type ThemeMode = 'light' | 'dark'
 
@@ -137,6 +138,20 @@ function restoreDefaults() {
 </script>
 
 <style scoped>
+.container { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+
+/* Hero padrão */
+.support-hero { 
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 40%, #f97316 100%);
+  color: #fff;
+  padding: 56px 0 44px;
+}
+.hero-content { text-align: center; max-width: 820px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items:center; gap:6px; background: rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.15); padding:6px 14px; border-radius:9999px; font-weight:600; margin-bottom: 14px; }
+.hero-title { font-size: clamp(2rem,4vw,3rem); font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+.hero-subtitle { opacity: .95; margin: 0; }
+[data-theme='dark'] .support-hero { background: linear-gradient(135deg, #0b1220 0%, #1e3a8a 40%, #9a3412 100%); }
+
 .settings-card { overflow: hidden; }
 .theme-option {
   cursor: pointer;

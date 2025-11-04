@@ -3,17 +3,19 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { http } from 'src/utils/http'
 import { useUser } from '@clerk/vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import type { Project, ProjectResponse, Category } from 'src/components/models'
 import CampaignCard from 'src/components/CampaignCard.vue'
 import ModernLoading from 'src/components/ModernLoading.vue'
 import DynamicGrid from 'src/components/DynamicGrid.vue'
 import AdvancedSearch from 'src/components/AdvancedSearch.vue'
 import { categoriesService } from 'src/services/categories'
+import { slugify } from 'src/utils/slug'
 import { useFavoritesStore } from 'src/stores/favorites'
 import { useProjectStats } from 'src/composables/useProjectStats'
 
 const router = useRouter()
+const route = useRoute()
 const { isSignedIn, user } = useUser()
 const favorites = useFavoritesStore()
 const { updateStatsIfNeeded } = useProjectStats()
@@ -208,12 +210,50 @@ function handleFavorite(project: Project) {
 
 onMounted(async () => {
   favorites.setUser(user.value?.id ?? null)
+  // Carrega categorias primeiro para permitir pré-filtrar por nome via querystring
+  await fetchCategories()
+
+  // Aplica filtro de categoria vindo do rodapé (?category=slug ou nome)
+  const queryCategory = router.currentRoute.value.query.category as string | undefined
+  if (queryCategory) {
+    const normalized = slugify(queryCategory)
+    let match = categories.value.find(c => slugify(c.name) === normalized)
+    if (!match) {
+      match = categories.value.find(c => c.name.localeCompare(queryCategory, 'pt', { sensitivity: 'base' }) === 0)
+    }
+    if (match) categoryId.value = match.id
+  }
+
   await Promise.all([
-    fetchCategories(),
     fetchProjects(),
     fetchPlatformStats()
   ])
 })
+
+// Observa mudanças na query ?category= ao navegar dentro da mesma página
+watch(
+  () => route.query.category,
+  (newCategory) => {
+    const queryCategory = (newCategory as string | undefined) ?? ''
+    if (!categories.value.length) return
+    if (!queryCategory) {
+      if (categoryId.value !== '') {
+        categoryId.value = ''
+        page.value = 1
+      }
+      return
+    }
+    const normalized = slugify(queryCategory)
+    let match = categories.value.find(c => slugify(c.name) === normalized)
+    if (!match) {
+      match = categories.value.find(c => c.name.localeCompare(queryCategory, 'pt', { sensitivity: 'base' }) === 0)
+    }
+    if (match && match.id !== categoryId.value) {
+      categoryId.value = match.id
+      page.value = 1
+    }
+  }
+)
 watch([q, onlyActive, onlyMine, categoryId, sortBy, page, pageSize], fetchProjects)
 
 function openProject(id: string) {

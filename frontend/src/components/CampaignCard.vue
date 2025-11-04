@@ -33,8 +33,8 @@
         <!-- Status Badge -->
         <div class="badge-container badge-container--top-right">
           <q-badge 
-            :color="isPast(project.deadline) ? 'grey-7' : 'positive'" 
-            :label="isPast(project.deadline) ? 'Encerrada' : 'Ativa'"
+            :color="statusColor" 
+            :label="statusLabel"
             class="status-badge"
           />
         </div>
@@ -238,6 +238,17 @@ const progressPercentage = computed(() => {
 
 const daysLeft = computed(() => {
   return calculateDaysLeft(props.project.deadline)
+})
+
+// Status badge helpers (consider archived status)
+const isArchived = computed(() => props.project.status === 'ARCHIVED')
+const statusLabel = computed(() => {
+  if (isArchived.value) return 'Desativada'
+  return isPast(props.project.deadline) ? 'Encerrada' : 'Ativa'
+})
+const statusColor = computed(() => {
+  if (isArchived.value) return 'warning'
+  return isPast(props.project.deadline) ? 'grey-7' : 'positive'
 })
 
 // Subscription helpers

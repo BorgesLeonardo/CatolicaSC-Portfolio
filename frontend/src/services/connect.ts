@@ -1,8 +1,9 @@
 import { http } from '../utils/http'
 
 export class ConnectService {
-  async onboard(): Promise<{ url: string }> {
-    const { data } = await http.post<{ url: string }>('/api/connect/onboard')
+  async onboard(redirectPath?: string): Promise<{ url: string }> {
+    const payload = redirectPath ? { redirect: redirectPath } : undefined
+    const { data } = await http.post<{ url: string }>('/api/connect/onboard', payload)
     return data
   }
 

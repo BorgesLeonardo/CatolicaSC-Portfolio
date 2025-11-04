@@ -141,7 +141,12 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
     'favorites': { label: 'Favoritos', icon: 'favorite' },
     'dashboard': { label: 'Dashboard', icon: 'dashboard' },
     'sign-in': { label: 'Entrar', icon: 'login' },
-    'sign-up': { label: 'Cadastrar', icon: 'person_add' }
+    'sign-up': { label: 'Cadastrar', icon: 'person_add' },
+    'help': { label: 'Suporte', icon: 'support_agent' },
+    'faq': { label: 'FAQ', icon: 'quiz' },
+    'guides': { label: 'Guias', icon: 'menu_book' },
+    'subscriptions': { label: 'Assinaturas', icon: 'autorenew' }
+    , 'settings': { label: 'Configurações', icon: 'settings' }
   }
   
   let currentPath = ''
