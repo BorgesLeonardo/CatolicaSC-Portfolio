@@ -51,7 +51,12 @@ function hasTempAuthRedirectCookie(w: Window): boolean {
 export function clearTempAuthRedirectCookie(): void {
   try {
     if (typeof window !== 'undefined') {
+      const secure = window.location.protocol === 'https:'
+      // Clear both non-secure and secure variants to be safe across environments
       window.document.cookie = 'auth_redirect_suppress=; Max-Age=0; Path=/; SameSite=Lax'
+      if (secure) {
+        window.document.cookie = 'auth_redirect_suppress=; Max-Age=0; Path=/; SameSite=Lax; Secure'
+      }
     }
   } catch {
     // ignore

@@ -94,7 +94,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       removeSession('auth_redirect_ts')
       removeSession('auth_redirect_path')
       clearTempAuthRedirectCookie()
-      return next({ path: target, replace: true })
+      return next(target)
     }
 
     // Se temos um destino pendente salvo antes de ir para login, prioriza ele após login
@@ -107,7 +107,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         removeSession('auth_redirect_ts')
         removeSession('auth_redirect_path')
         clearTempAuthRedirectCookie()
-        return next({ path: decoded, replace: true })
+        return next(decoded)
       }
       // Se já estamos no destino, apenas limpa os marcadores
       removeSession('auth_redirect_ts')
