@@ -8,6 +8,41 @@ export const http = axios.create({
 // Controla redirecionamentos para evitar loops em produção
 let lastAuthRedirectAt = 0
 
+// Cookie helpers to suppress multiple auth redirects in a short window
+function setTempAuthRedirectCookie(w: Window, seconds = 10): void {
+  try {
+    const secure = w.location.protocol === 'https:'
+    const parts = [
+      'auth_redirect_suppress=1',
+      `Max-Age=${Math.max(1, Math.min(60, Math.floor(seconds)))}`,
+      'Path=/',
+      'SameSite=Lax',
+    ]
+    if (secure) parts.push('Secure')
+    w.document.cookie = parts.join('; ')
+  } catch {
+    // ignore cookie write failures
+  }
+}
+
+function hasTempAuthRedirectCookie(w: Window): boolean {
+  try {
+    return typeof w.document?.cookie === 'string' && /(?:^|; )auth_redirect_suppress=1(?:;|$)/.test(w.document.cookie)
+  } catch {
+    return false
+  }
+}
+
+export function clearTempAuthRedirectCookie(): void {
+  try {
+    if (typeof window !== 'undefined') {
+      window.document.cookie = 'auth_redirect_suppress=; Max-Age=0; Path=/; SameSite=Lax'
+    }
+  } catch {
+    // ignore
+  }
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -80,7 +115,8 @@ http.interceptors.response.use(
         // Bloqueio adicional: se já redirecionamos recentemente nesta sessão, não repetir
         const ssTs = Number((w.sessionStorage && w.sessionStorage.getItem('auth_redirect_ts')) || 0)
         const sessionRecent = !isTest && (Date.now() - ssTs < 10000)
-        if (!onAuth && !tooSoon && !sessionRecent) {
+        const cookieSuppressed = hasTempAuthRedirectCookie(w)
+        if (!onAuth && !tooSoon && !sessionRecent && !cookieSuppressed) {
           // Defer para o próximo tick, evitando reentrância durante navegação
           setTimeout(() => {
             const curHash = w.location.hash || '#/'
@@ -97,6 +133,8 @@ http.interceptors.response.use(
               } catch (_err) {
                 if (import.meta.env.DEV) console.debug(_err)
               }
+              // Set a short-lived cookie to suppress repeated redirects
+              setTempAuthRedirectCookie(w, 10)
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
           }, 0)
