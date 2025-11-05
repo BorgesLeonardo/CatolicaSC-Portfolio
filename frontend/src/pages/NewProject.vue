@@ -740,10 +740,15 @@ async function submit() {
     }
 
     // Se houver vídeo/capa selecionados, iniciar uploads em paralelo em segundo plano (não bloquear criação)
-    // Se houver vídeo selecionado, fazer upload
+    // Se houver vídeo selecionado, validar tamanho e fazer upload
     if (useVideo.value && selectedVideo.value) {
       try {
-        await projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
+        const maxBytes = 100 * 1024 * 1024 // 100MB (mesmo limite do backend)
+        if (selectedVideo.value.size > maxBytes) {
+          Notify.create({ type: 'negative', message: 'O vídeo excede o limite de 100MB.' })
+        } else {
+          await projectVideosService.uploadVideo(response.data.id, selectedVideo.value)
+        }
       } catch {
         Notify.create({ type: 'warning', message: 'Campanha criada, mas houve erro no upload do vídeo.' })
       }
