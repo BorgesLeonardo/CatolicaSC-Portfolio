@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/consent-record.schema.json",
+  "title": "ConsentRecord",
+  "description": "Modelo de registro de consentimento (LGPD) para cookies/SDKs",
+  "type": "object",
+  "properties": {
+    "consent_id": { "type": "string", "format": "uuid", "description": "UUID v4 do evento de consentimento" },
+    "user_id": { "type": ["string", "null"], "description": "Identificador do usuário, preferir hash/pseudônimo" },
+    "session_id": { "type": ["string", "null"], "description": "ID de sessão no momento do consentimento" },
+    "timestamp": { "type": "string", "format": "date-time", "description": "Momento do registro em ISO-8601 (UTC)" },
+    "ip": { "type": ["string", "null"], "description": "IP coletado somente se necessário. Preferir não armazenar em texto claro" },
+    "ip_hash": { "type": ["string", "null"], "description": "Hash do IP com sal (recomendado)" },
+    "user_agent": { "type": ["string", "null"], "description": "User-Agent do navegador/app" },
+    "locale": { "type": ["string", "null"], "description": "Locale do usuário (ex.: pt-BR)" },
+    "policy_version": { "type": "string", "description": "Versão da Política de Cookies vigente no momento" },
+    "source": { "type": "string", "enum": ["web", "app_ios", "app_android", "server"], "description": "Origem do registro" },
+    "choices": {
+      "type": "object",
+      "description": "Preferências por categoria e opcionalmente por fornecedor",
+      "properties": {
+        "categories": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "description": "Mapa categoria->true/false (necessary, performance, functional, advertising)"
+        },
+        "vendors": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "description": "Mapa vendor->true/false (ex.: google_analytics, meta_pixel, stripe)"
+        }
+      },
+      "required": ["categories"]
+    },
+    "evidences": {
+      "type": "object",
+      "properties": {
+        "screenshot_hash": { "type": ["string", "null"], "description": "Hash de captura de tela do banner (opcional)" },
+        "audit": { "type": ["string", "null"], "description": "Referência de log/trace interno" }
+      }
+    },
+    "revoked_at": { "type": ["string", "null"], "format": "date-time", "description": "Momento de revogação, quando aplicável" }
+  },
+  "required": ["consent_id", "timestamp", "policy_version", "source", "choices"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "consent_id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": null,
+      "session_id": "sess_abc123",
+      "timestamp": "2025-11-05T12:00:00Z",
+      "ip": null,
+      "ip_hash": "sha256:...",
+      "user_agent": "Mozilla/5.0 ...",
+      "locale": "pt-BR",
+      "policy_version": "1.0.0",
+      "source": "web",
+      "choices": {
+        "categories": {
+          "necessary": true,
+          "performance": false,
+          "functional": true,
+          "advertising": false
+        },
+        "vendors": {
+          "google_analytics": false,
+          "meta_pixel": false,
+          "stripe": true
+        }
+      },
+      "evidences": { "screenshot_hash": null, "audit": "log-123" },
+      "revoked_at": null
+    }
+  ]
+}

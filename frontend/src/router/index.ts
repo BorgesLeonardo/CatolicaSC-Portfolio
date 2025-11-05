@@ -35,7 +35,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   });
 
   // Centraliza redirecionamentos para evitar navegação extra/recarregadas
-  type ClerkLike = { Clerk?: { user?: unknown; session?: unknown } };
+  type ClerkUserLike = { id?: unknown }
+  type ClerkSessionLike = { user?: ClerkUserLike }
+  type ClerkLike = { Clerk?: { user?: ClerkUserLike; session?: ClerkSessionLike } };
   function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }

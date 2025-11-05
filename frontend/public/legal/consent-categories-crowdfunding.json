@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2025-11-05T00:00:00.000Z",
+  "categories": [
+    { "id": "necessary", "name": "Estritamente necessários", "required": true, "legal_basis": "execucao_contrato_ou_li" },
+    { "id": "performance", "name": "Desempenho/Analíticos", "required": false, "legal_basis": "consentimento" },
+    { "id": "functional", "name": "Funcionais", "required": false, "legal_basis": "consentimento" },
+    { "id": "advertising", "name": "Publicidade", "required": false, "legal_basis": "consentimento" }
+  ]
+}

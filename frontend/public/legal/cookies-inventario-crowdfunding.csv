@@ -1,0 +1,19 @@
+Nome,Tipo,Armazenamento,Categoria,Finalidade,Duração,Terceiro,Base legal,Coleta de dados,Notas
+_ga,cookie,first-party,Desempenho/Analíticos,Mensurar uso e performance (GA4),13 meses,Google,consentimento,IDs/cliente pseudonimizados; eventos de página,Ativar Consent Mode quando aplicável
+_ga_*,cookie,first-party,Desempenho/Analíticos,Atribuição e sessão (GA4),13 meses,Google,consentimento,Session ID; contagem de visitas,
+_gid,cookie,first-party,Desempenho/Analíticos,Diferenciar usuários (GA4),24 horas,Google,consentimento,IDs de sessão,
+_gcl_au,cookie,first-party,Publicidade,Mensuração de conversão (Google Ads),90 dias,Google,consentimento,Clicks/conversões,
+_fbp,cookie,first-party,Publicidade,Mensuração e personalização (Meta),90 dias,Meta,consentimento,Eventos de conversão,
+__stripe_mid,cookie,third-party,Estritamente necessários,Prevenir fraude e viabilizar pagamento,1 ano,Stripe,execucao_contrato_ou_li,Device fingerprint limitado,Necessário para checkout
+__stripe_sid,cookie,third-party,Estritamente necessários,Sessão de pagamento,sessão,Stripe,execucao_contrato_ou_li,Sessão de pagamento,Necessário para checkout
+mcheckout_*,cookie,third-party,Estritamente necessários,Fluxo de pagamento,sessão,Mercado Pago,execucao_contrato_ou_li,Sessão de checkout,
+rc::a,cookie,third-party,Estritamente necessários,Diferenciar humanos/bots (reCAPTCHA),variável,Google,li_seguranca,Interações com desafio,Necessário para segurança
+rc::c,cookie,third-party,Estritamente necessários,Diferenciar humanos/bots (reCAPTCHA),sessão,Google,li_seguranca,Estado do desafio,
+intercom-id-*,cookie,third-party,Funcionais,Suporte/atendimento,13 meses,Intercom,consentimento,ID de visitante,
+hubspotutk,cookie,third-party,Funcionais,CRM/relacionamento,13 meses,HubSpot,consentimento,ID de visitante,
+cookie_consent,cookie,first-party,Estritamente necessários,Registrar preferências de consentimento,13 meses,First-party,li,Preferências por categoria,Necessário para prova de consentimento
+consent_preferences,localStorage,first-party,Estritamente necessários,Armazenar preferências detalhadas,13 meses,First-party,li,Mapa de escolhas por categoria e vendor,Sincronizar com cookie_consent
+session_id,sessionStorage,first-party,Estritamente necessários,Manter sessão do usuário,sessão,First-party,execucao_contrato,ID de sessão,Apagado ao fechar o navegador
+Firebase Analytics,SDK,Android/iOS,Desempenho/Analíticos,Eventos de uso/atribuição,14 meses,Google,consentimento,IDs de dispositivo e eventos,Habilitar consent signals no app
+Appsflyer,SDK,Android/iOS,Publicidade,Atribuição de campanhas,24 meses,AppsFlyer,consentimento,IDs de dispositivo e cliques,Honrar opt-out de rastreamento
+OneSignal,SDK,Android/iOS,Funcionais,Push notifications,18 meses,OneSignal,consentimento,Token de push,Respeitar preferências de notificação

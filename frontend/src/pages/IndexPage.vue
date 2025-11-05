@@ -269,6 +269,72 @@
             </div>
           </div>
         </div>
+        
+        <!-- Donation Steps (3-step flow) -->
+        <div class="q-mt-xl">
+          <div class="text-center q-mb-lg">
+            <div class="section-badge fade-in-up">
+              <q-icon name="volunteer_activism" size="sm" class="q-mr-xs" color="secondary" />
+              Doar em 3 Passos
+            </div>
+            <p class="section-subtitle fade-in-up">
+              Em 3 passos simples, você realiza uma doação com segurança
+            </p>
+          </div>
+
+          <div class="steps-container--donation">
+            <div class="step-item fade-in-up stagger-animation">
+              <div class="step-card modern-card hover-lift step-card--choose">
+                <div class="step-icon">
+                  <q-icon name="search" size="2xl" color="info" />
+                </div>
+                <h3 class="step-title">Escolha a Campanha</h3>
+                <p class="step-description">
+                  Explore as campanhas disponíveis e selecione aquela que você deseja apoiar.
+                </p>
+                <ul class="step-features">
+                  <li>Categorias variadas</li>
+                  <li>Metas transparentes</li>
+                  <li>Progresso em tempo real</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="step-item fade-in-up stagger-animation">
+              <div class="step-card modern-card hover-lift step-card--amount">
+                <div class="step-icon">
+                  <q-icon name="attach_money" size="2xl" color="accent" />
+                </div>
+                <h3 class="step-title">Defina o Valor</h3>
+                <p class="step-description">
+                  Informe o valor que deseja doar. Você decide quanto contribuir.
+                </p>
+                <ul class="step-features">
+                  <li>Valores flexíveis</li>
+                  <li>Sem complicação</li>
+                  <li>Taxas transparentes</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="step-item fade-in-up stagger-animation">
+              <div class="step-card modern-card hover-lift step-card--pay">
+                <div class="step-icon">
+                  <q-icon name="volunteer_activism" size="2xl" color="positive" />
+                </div>
+                <h3 class="step-title">Contribua com Segurança</h3>
+                <p class="step-description">
+                  Finalize o pagamento com segurança via Stripe. Você recebe confirmação na hora.
+                </p>
+                <ul class="step-features">
+                  <li>Pagamento seguro</li>
+                  <li>Confirmação instantânea</li>
+                  <li>Recibo por e-mail</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -761,6 +827,16 @@ watch(period, () => {
   align-items: stretch;
 }
 
+// Donation steps: 3-column layout
+.steps-container--donation {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
 .step-item {
   position: relative;
   display: flex;
@@ -1085,6 +1161,11 @@ watch(period, () => {
     gap: 20px;
   }
   
+  .steps-container--donation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  
   .step-card {
     min-height: 440px;
     padding: 32px 24px;
@@ -1144,6 +1225,11 @@ watch(period, () => {
   }
   
   .steps-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  
+  .steps-container--donation {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }

@@ -26,6 +26,9 @@ const routes: RouteRecordRaw[] = [
       { path: 'contact', component: () => import('pages/ContactPage.vue') },
       { path: 'faq', component: () => import('pages/FaqPage.vue') },
       { path: 'guides', component: () => import('pages/GuidesPage.vue') },
+      { path: 'privacy', component: () => import('pages/PrivacyPolicy.vue'), meta: { breadcrumb: 'Política de Privacidade' } },
+      { path: 'terms', component: () => import('pages/TermsOfUse.vue'), meta: { breadcrumb: 'Termos de Uso' } },
+      { path: 'cookies', component: () => import('pages/CookiesPolicy.vue'), meta: { breadcrumb: 'Política de Cookies' } },
     ],
   },
   {

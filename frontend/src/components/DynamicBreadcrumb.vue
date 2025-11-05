@@ -147,39 +147,37 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
     'guides': { label: 'Guias', icon: 'menu_book' },
     'subscriptions': { label: 'Assinaturas', icon: 'autorenew' }
     , 'settings': { label: 'Configurações', icon: 'settings' }
+    , 'terms': { label: 'Termos de Uso', icon: 'gavel' }
+    , 'privacy': { label: 'Política de Privacidade', icon: 'policy' }
+    , 'cookies': { label: 'Política de Cookies', icon: 'cookie' }
   }
   
   let currentPath = ''
   
   pathSegments.forEach((segment, index) => {
     currentPath += `/${segment}`
-    
-    const routeInfo = routeLabels[segment]
     const isLast = index === pathSegments.length - 1
-    
-    if (routeInfo) {
-      breadcrumbs.push({
-        label: routeInfo.label,
-        icon: routeInfo.icon,
-        to: isLast ? undefined : currentPath
-      })
-    } else {
-      // Friendly label for detail pages that use an ID in the URL
-      const isProjectDetail = route.params?.id && pathSegments[0] === 'projects' && isLast
 
-      // If it's a project detail route, don't show the raw ID in the breadcrumb
-      const label = isProjectDetail
-        ? 'Detalhes'
-        : segment
+    // Prefer meta.breadcrumb from matched routes when available
+    const matched = route.matched.find(r => r.path === segment || ('/' + r.path) === currentPath)
+    const metaLabel = matched?.meta?.breadcrumb
+
+    const routeInfo = routeLabels[segment]
+
+    const label = metaLabel
+      ?? routeInfo?.label
+      ?? (segment
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')
-      
-      breadcrumbs.push({
-        label,
-        to: isLast ? undefined : currentPath
-      })
-    }
+          .join(' '))
+
+    const icon = routeInfo?.icon
+
+    breadcrumbs.push({
+      label,
+      icon,
+      to: isLast ? undefined : currentPath
+    })
   })
   
   return breadcrumbs

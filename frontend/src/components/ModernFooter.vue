@@ -132,9 +132,9 @@
           </div>
           
           <div class="legal-links">
-            <a href="#" class="legal-link">Termos de Uso</a>
-            <a href="#" class="legal-link">Política de Privacidade</a>
-            <a href="#" class="legal-link">Cookies</a>
+            <router-link to="/terms" class="legal-link">Termos de Uso</router-link>
+            <router-link to="/privacy" class="legal-link">Política de Privacidade</router-link>
+            <router-link to="/cookies" class="legal-link">Cookies</router-link>
           </div>
           
           <div class="payment-methods">

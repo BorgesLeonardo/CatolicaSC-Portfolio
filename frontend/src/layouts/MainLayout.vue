@@ -389,8 +389,8 @@
         <!-- Drawer Footer -->
         <div class="drawer-footer">
           <div class="footer-links">
-            <q-btn flat size="sm" label="Termos" class="footer-link" />
-            <q-btn flat size="sm" label="Privacidade" class="footer-link" />
+            <q-btn flat size="sm" label="Termos" class="footer-link" to="/terms" @click="leftDrawerOpen = false" />
+            <q-btn flat size="sm" label="Privacidade" class="footer-link" to="/privacy" @click="leftDrawerOpen = false" />
             <q-btn 
               flat 
               size="sm" 
@@ -414,6 +414,9 @@
       <ModernFooter />
     </q-page-container>
 
+    <!-- Terms Consent Modal -->
+    <TermsConsentDialog v-model="termsDialog" @accepted="onTermsAccepted" />
+
     <!-- Preferences Dialog removed; now a dedicated page (/settings) -->
   </q-layout>
 </template>
@@ -424,10 +427,12 @@ import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/vue'
 import { useRoute, useRouter } from 'vue-router'
 import ModernFooter from 'src/components/ModernFooter.vue'
 import DynamicBreadcrumb from 'src/components/DynamicBreadcrumb.vue'
+import TermsConsentDialog from 'src/components/TermsConsentDialog.vue'
 import { useThemeStore } from 'src/stores/theme'
 import { Notify } from 'quasar'
 import { useFavoritesStore } from 'src/stores/favorites'
 import { clearTempAuthRedirectCookie } from 'src/utils/http'
+import { hasAcceptedCurrentTerms } from 'src/utils/consent'
 
 const route = useRoute()
 const router = useRouter()
@@ -436,6 +441,8 @@ const isScrolled = ref(false)
 const theme = useThemeStore()
 const favorites = useFavoritesStore()
 const { isSignedIn, user } = useUser()
+
+const termsDialog = ref(false)
 
 // Show breadcrumb on pages other than home
 const showBreadcrumb = computed(() => {
@@ -525,8 +532,23 @@ function scrollToHowItWorks() {
   }
 }
 
+function ensureTermsAcceptance(): void {
+  const uid = user.value?.id
+  const signed = !!uid
+  if (signed) {
+    termsDialog.value = !hasAcceptedCurrentTerms(uid)
+  } else {
+    termsDialog.value = false
+  }
+}
+
+function onTermsAccepted(): void {
+  Notify.create({ message: 'Termos aceitos com sucesso.', timeout: 1200, position: 'top-right' })
+}
+
 onMounted(() => {
   favorites.setUser(user.value?.id ?? null)
+  ensureTermsAcceptance()
   // Se usuário já está logado ao montar o layout, limpa supressão/flags
   try {
     sessionStorage.removeItem('auth_redirect_ts')
@@ -539,11 +561,14 @@ onMounted(() => {
 watch([isSignedIn, user], ([signed]) => {
   favorites.setUser(user.value?.id ?? null)
   if (signed) {
+    ensureTermsAcceptance()
     try {
       sessionStorage.removeItem('auth_redirect_ts')
       sessionStorage.removeItem('auth_redirect_path')
       clearTempAuthRedirectCookie()
     } catch (_err) { void _err }
+  } else {
+    termsDialog.value = false
   }
 })
 

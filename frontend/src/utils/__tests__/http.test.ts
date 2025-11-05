@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { AxiosRequestConfig } from 'axios'
-import { http, setAuthToken } from '../http'
+import { http, setAuthToken, clearTempAuthRedirectCookie } from '../http'
 
 describe('http utils', () => {
   beforeEach(() => {
     setAuthToken(null)
+    clearTempAuthRedirectCookie()
   })
 
   it('setAuthToken sets and clears Authorization header', () => {
@@ -73,9 +74,8 @@ describe('http utils', () => {
     vi.useFakeTimers()
 
     const original = window.location
-    const replace = vi.fn()
     Object.defineProperty(window, 'location', {
-      value: { ...original, hash: '#/projects/123', replace, origin: 'http://localhost', pathname: '/' },
+      value: { ...original, hash: '#/projects/123', origin: 'http://localhost', pathname: '/' },
       writable: true,
       configurable: true,
     })
@@ -87,10 +87,9 @@ describe('http utils', () => {
     await Promise.resolve()
     vi.runAllTimers()
 
-    expect(replace).toHaveBeenCalledTimes(1)
-    const url = replace.mock.calls[0][0] as string
-    expect(url).toContain('#/sign-in?redirect=')
-    expect(decodeURIComponent(url.split('redirect=')[1])).toBe('/projects/123')
+    const hash = window.location.hash
+    expect(hash).toContain('#/sign-in?redirect=')
+    expect(decodeURIComponent(hash.split('redirect=')[1])).toBe('/projects/123')
 
     Object.defineProperty(window, 'location', { value: original })
     vi.useRealTimers()
@@ -100,9 +99,8 @@ describe('http utils', () => {
     vi.useFakeTimers()
 
     const original = window.location
-    const replace = vi.fn()
     Object.defineProperty(window, 'location', {
-      value: { ...original, hash: '', replace, origin: 'http://localhost', pathname: '/' },
+      value: { ...original, hash: '', origin: 'http://localhost', pathname: '/' },
       writable: true,
       configurable: true,
     })
@@ -113,8 +111,8 @@ describe('http utils', () => {
     await Promise.resolve()
     vi.runAllTimers()
 
-    const url = replace.mock.calls[0][0] as string
-    expect(decodeURIComponent(url.split('redirect=')[1])).toBe('/')
+    const hash = window.location.hash
+    expect(decodeURIComponent(hash.split('redirect=')[1])).toBe('/')
 
     Object.defineProperty(window, 'location', { value: original })
     vi.useRealTimers()
@@ -124,8 +122,7 @@ describe('http utils', () => {
     vi.useFakeTimers()
 
     const original = window.location
-    const replace = vi.fn()
-    const loc = { ...original, hash: '#/protected', replace, origin: 'http://localhost', pathname: '/' } as unknown as Location
+    const loc = { ...original, hash: '#/protected', origin: 'http://localhost', pathname: '/' } as unknown as Location
     Object.defineProperty(window, 'location', { value: loc, writable: true, configurable: true })
 
     const adapter = vi.fn().mockRejectedValue({ response: { status: 401 } })
@@ -138,7 +135,7 @@ describe('http utils', () => {
     await Promise.resolve()
     vi.runAllTimers()
 
-    expect(replace).not.toHaveBeenCalled()
+    expect(window.location.hash).toBe('#/sign-in')
 
     Object.defineProperty(window, 'location', { value: original })
     vi.useRealTimers()
