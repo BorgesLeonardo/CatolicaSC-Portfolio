@@ -6,8 +6,7 @@
     "description": "Especificação OpenAPI (Swagger) dos endpoints do backend."
   },
   "servers": [
-    { "url": "/" },
-    { "url": "https://render-backend-hb07.onrender.com" }
+    { "url": "https://api.catolicasc-portfolio.com" }
   ],
   "tags": [
     { "name": "Health" },
