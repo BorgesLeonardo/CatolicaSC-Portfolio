@@ -427,6 +427,7 @@ import DynamicBreadcrumb from 'src/components/DynamicBreadcrumb.vue'
 import { useThemeStore } from 'src/stores/theme'
 import { Notify } from 'quasar'
 import { useFavoritesStore } from 'src/stores/favorites'
+import { clearTempAuthRedirectCookie } from 'src/utils/http'
 
 const route = useRoute()
 const router = useRouter()
@@ -526,11 +527,24 @@ function scrollToHowItWorks() {
 
 onMounted(() => {
   favorites.setUser(user.value?.id ?? null)
+  // Se usuário já está logado ao montar o layout, limpa supressão/flags
+  try {
+    sessionStorage.removeItem('auth_redirect_ts')
+    sessionStorage.removeItem('auth_redirect_path')
+    clearTempAuthRedirectCookie()
+  } catch {}
 })
 
 
-watch([isSignedIn, user], () => {
+watch([isSignedIn, user], ([signed]) => {
   favorites.setUser(user.value?.id ?? null)
+  if (signed) {
+    try {
+      sessionStorage.removeItem('auth_redirect_ts')
+      sessionStorage.removeItem('auth_redirect_path')
+      clearTempAuthRedirectCookie()
+    } catch {}
+  }
 })
 
 // Theme controls

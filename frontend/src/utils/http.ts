@@ -8,6 +8,21 @@ export const http = axios.create({
 // Controla redirecionamentos para evitar loops em produção
 let lastAuthRedirectAt = 0
 
+function getRedirectSuppressTtlSeconds(): number {
+  try {
+    const raw = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_AUTH_REDIRECT_TTL_SECONDS)
+      ? String(import.meta.env.VITE_AUTH_REDIRECT_TTL_SECONDS)
+      : (typeof process !== 'undefined' ? process.env?.VITE_AUTH_REDIRECT_TTL_SECONDS : undefined)
+    const n = raw ? Number(raw) : NaN
+    if (!Number.isNaN(n) && Number.isFinite(n)) {
+      return Math.max(2, Math.min(60, Math.floor(n)))
+    }
+  } catch {
+    // ignore
+  }
+  return 10
+}
+
 // Cookie helpers to suppress multiple auth redirects in a short window
 function setTempAuthRedirectCookie(w: Window, seconds = 10): void {
   try {
@@ -134,7 +149,7 @@ http.interceptors.response.use(
                 if (import.meta.env.DEV) console.debug(_err)
               }
               // Set a short-lived cookie to suppress repeated redirects
-              setTempAuthRedirectCookie(w, 10)
+              setTempAuthRedirectCookie(w, getRedirectSuppressTtlSeconds())
               w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
             }
           }, 0)
