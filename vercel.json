@@ -1,0 +1,14 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/contrib/success", "destination": "/index.html" },
+    { "source": "/contrib/cancel", "destination": "/index.html" },
+    { "source": "/subscribe/success", "destination": "/index.html" },
+    { "source": "/subscribe/cancel", "destination": "/index.html" },
+    { "source": "/connect/return", "destination": "/index.html" },
+    { "source": "/connect/refresh", "destination": "/index.html" }
+  ]
+}
+
+
