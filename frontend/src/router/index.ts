@@ -36,12 +36,25 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   // Centraliza redirecionamentos para evitar navegação extra/recarregadas
   type ClerkLike = { Clerk?: { user?: unknown; session?: unknown } };
+  function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
   function isSignedInNow(): boolean {
     try {
       const g = globalThis as unknown as ClerkLike
       return !!(g?.Clerk?.user || g?.Clerk?.session)
     } catch {
       return false
+    }
+  }
+
+  async function waitForClerkAuthState(maxMs = 700): Promise<void> {
+    const stopAt = Date.now() + Math.max(100, maxMs)
+    // Espera curta para permitir que o Clerk hidrate/atualize estado
+    while (Date.now() < stopAt) {
+      if (isSignedInNow()) return
+      await sleep(50)
     }
   }
 
@@ -75,14 +88,23 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
   }
 
-  Router.beforeEach((to, _from, next) => {
-    const signed = isSignedInNow()
+  Router.beforeEach(async (to, _from, next) => {
     const isAuthPage = to.path === '/sign-in' || to.path === '/sign-up'
+    const pending = getSession('auth_redirect_path')
+    const recentAuthKickoffTs = Number(getSession('auth_redirect_ts') || 0)
+    const kickoffRecent = Date.now() - recentAuthKickoffTs < 3000
+
+    // Em cenários de login/logout rápidos (sem DevTools), espere estado do Clerk estabilizar
+    if (isAuthPage || pending || kickoffRecent) {
+      await waitForClerkAuthState(800)
+    }
+
+    const signed = isSignedInNow()
 
     // Debounce para evitar redirecionamentos duplicados encadeados
     const now = Date.now()
     const lastNavTs = Number(getSession('last_auth_nav_ts') || 0)
-    const debounced = now - lastNavTs < 500
+    const debounced = now - lastNavTs < 800
 
     // Se já está logado e acessa página de auth, volta para redirect ou home
     if (signed && isAuthPage && !debounced) {
@@ -98,7 +120,6 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
 
     // Se temos um destino pendente salvo antes de ir para login, prioriza ele após login
-    const pending = getSession('auth_redirect_path')
     if (signed && pending && !debounced) {
       const decoded = decodeURIComponent(pending)
       // Evita loop se já estamos no destino
