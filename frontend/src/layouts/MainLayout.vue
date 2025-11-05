@@ -483,6 +483,23 @@ function handleConnectReturnFallback(): void {
   }
   if (path.startsWith('/connect/refresh') && router.currentRoute.value.path !== '/connect/refresh') {
     void router.replace('/connect/refresh' + search)
+    return
+  }
+  // Also handle checkout/subscription return URLs when app uses hash router
+  if (path.startsWith('/contrib/success') && router.currentRoute.value.path !== '/contrib/success') {
+    void router.replace('/contrib/success' + search)
+    return
+  }
+  if (path.startsWith('/contrib/cancel') && router.currentRoute.value.path !== '/contrib/cancel') {
+    void router.replace('/contrib/cancel' + search)
+    return
+  }
+  if (path.startsWith('/subscribe/success') && router.currentRoute.value.path !== '/subscribe/success') {
+    void router.replace('/subscribe/success' + search)
+    return
+  }
+  if (path.startsWith('/subscribe/cancel') && router.currentRoute.value.path !== '/subscribe/cancel') {
+    void router.replace('/subscribe/cancel' + search)
   }
 }
 
