@@ -150,7 +150,11 @@ http.interceptors.response.use(
               }
               // Set a short-lived cookie to suppress repeated redirects
               setTempAuthRedirectCookie(w, getRedirectSuppressTtlSeconds())
-              w.location.replace(`${w.location.origin}${w.location.pathname}#/sign-in?redirect=${redirect}`)
+              // SPA-friendly: altera apenas o hash para evitar recarregar a página
+              const target = `#/sign-in?redirect=${redirect}`
+              if (w.location.hash !== target) {
+                w.location.hash = target
+              }
             }
           }, 0)
         }
