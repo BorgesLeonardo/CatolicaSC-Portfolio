@@ -98,7 +98,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
 
     // Se temos um destino pendente salvo antes de ir para login, prioriza ele após login
-    const pending = getSession('auth_redirect_path') as unknown as string | null
+    const pending = getSession('auth_redirect_path')
     if (signed && pending && !debounced) {
       const decoded = decodeURIComponent(pending)
       // Evita loop se já estamos no destino

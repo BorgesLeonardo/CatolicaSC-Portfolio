@@ -532,7 +532,7 @@ onMounted(() => {
     sessionStorage.removeItem('auth_redirect_ts')
     sessionStorage.removeItem('auth_redirect_path')
     clearTempAuthRedirectCookie()
-  } catch {}
+  } catch (_err) { void _err }
 })
 
 
@@ -543,7 +543,7 @@ watch([isSignedIn, user], ([signed]) => {
       sessionStorage.removeItem('auth_redirect_ts')
       sessionStorage.removeItem('auth_redirect_path')
       clearTempAuthRedirectCookie()
-    } catch {}
+    } catch (_err) { void _err }
   }
 })
 

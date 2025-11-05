@@ -19,7 +19,7 @@ function goTargetOnce() {
     sessionStorage.removeItem('auth_redirect_ts')
     sessionStorage.removeItem('auth_redirect_path')
     clearTempAuthRedirectCookie()
-  } catch {}
+  } catch (_err) { void _err }
   void router.replace(redirect || '/')
 }
 
