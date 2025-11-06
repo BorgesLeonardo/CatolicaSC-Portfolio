@@ -5,7 +5,8 @@ module.exports = {
       script: "backend/dist/server.js",
       instances: "max",
       exec_mode: "cluster",
-      env: { NODE_ENV: "production" }
+      env: { NODE_ENV: "production" },
+      env_production: { NODE_ENV: "production" }
     }
   ],
   deploy: {
@@ -22,7 +23,7 @@ module.exports = {
         "npm ci --prefix backend",
         "npm run build --prefix backend",
         "npm prune --omit=dev --prefix backend",
-        "pm2 reload ecosystem.config.js --env production"
+        "pm2 startOrReload ecosystem.config.js --env production"
       ].join(" && ")
     }
   }
