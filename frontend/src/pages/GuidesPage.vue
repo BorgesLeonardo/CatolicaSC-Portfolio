@@ -18,7 +18,7 @@
               <q-card-section>
                 <div class="text-subtitle1 q-mb-xs">{{ g.title }}</div>
                 <div class="text-caption text-grey-7 q-mb-md">{{ g.caption }}</div>
-                <q-btn label="Ler guia" color="primary" flat icon="menu_book" @click="noop" />
+                <q-btn :to="`/guides/${g.slug}`" label="LER GUIA" color="primary" flat icon="menu_book" />
               </q-card-section>
             </q-card>
           </div>
@@ -30,13 +30,11 @@
 
 <script setup lang="ts">
 const guides = [
-  { title: 'Como preparar a página da campanha', caption: 'Texto, imagens, vídeo e recompensas' },
-  { title: 'Melhores práticas para divulgação', caption: 'Como alcançar apoiadores' },
-  { title: 'Definindo meta e prazo', caption: 'Equilíbrio entre ambição e realismo' },
-  { title: 'Construindo confiança', caption: 'Transparência e atualizações' }
+  { title: 'Como preparar a página da campanha', caption: 'Texto, imagens, vídeo e recompensas', slug: 'prepare' },
+  { title: 'Melhores práticas para divulgação', caption: 'Como alcançar apoiadores', slug: 'promotion' },
+  { title: 'Definindo meta e prazo', caption: 'Equilíbrio entre ambição e realismo', slug: 'goal-deadline' },
+  { title: 'Construindo confiança', caption: 'Transparência e atualizações', slug: 'trust' }
 ]
-
-function noop() { /* placeholder */ }
 </script>
 
 <style scoped>

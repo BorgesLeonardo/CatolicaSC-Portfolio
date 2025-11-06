@@ -150,6 +150,7 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
     , 'terms': { label: 'Termos de Uso', icon: 'gavel' }
     , 'privacy': { label: 'Política de Privacidade', icon: 'policy' }
     , 'cookies': { label: 'Política de Cookies', icon: 'cookie' }
+    , 'trust': { label: 'Ler Guia', icon: 'menu_book' }
   }
   
   let currentPath = ''
