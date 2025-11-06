@@ -19,8 +19,9 @@ module.exports = {
       "pre-deploy": "mkdir -p /var/www/shared",
       "post-deploy": [
         "cp -n /var/www/shared/.env backend/.env || true",
-        "npm ci --omit=dev --prefix backend",
+        "npm ci --prefix backend",
         "npm run build --prefix backend",
+        "npm prune --omit=dev --prefix backend",
         "pm2 reload ecosystem.config.js --env production"
       ].join(" && ")
     }
