@@ -24,23 +24,26 @@ function getTestAuth(req: Request): AuthData | null {
 }
 
 async function syncUserProfile(userId: string): Promise<void> {
+  // Tenta obter dados completos do Clerk; se falhar, ainda garantimos o registro do usuário
+  let name: string | undefined
+  let email: string | undefined
   try {
-    const u = await clerkClient.users.getUser(userId);
-    const fullName = (u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ')).trim();
-    const name = fullName || undefined;
-    const email = (u.emailAddresses && u.emailAddresses[0]?.emailAddress) || undefined;
-
-    await prisma.user.upsert({
-      where: { id: userId },
-      update: {
-        ...(name ? { name } : {}),
-        ...(email ? { email } : {}),
-      },
-      create: { id: userId, name: name ?? null, email: email ?? null },
-    });
+    const u = await clerkClient.users.getUser(userId)
+    const fullName = (u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ')).trim()
+    name = fullName || undefined
+    email = (u.emailAddresses && u.emailAddresses[0]?.emailAddress) || undefined
   } catch {
-    // Best-effort sync; ignore failures
+    // Ignora falhas ao consultar Clerk; seguimos com apenas o ID
   }
+
+  await prisma.user.upsert({
+    where: { id: userId },
+    update: {
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+    },
+    create: { id: userId, name: name ?? null, email: email ?? null },
+  })
 }
 
 export async function requireApiAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
