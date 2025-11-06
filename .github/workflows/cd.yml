@@ -29,6 +29,11 @@ jobs:
           printf "Host target\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  StrictHostKeyChecking accept-new\n" \
             "${{ secrets.EC2_HOST }}" "${{ secrets.EC2_USER }}" > ~/.ssh/config
 
+      - name: Debug SSH reachability
+        run: |
+          set -x
+          ssh -o ConnectTimeout=10 target "echo SSH_OK" || exit 1
+
       # Primeira execução (idempotente). Se já tiver setup, ignora erro.
       - name: PM2 deploy setup
         run: pm2 deploy ecosystem.config.js production setup || true
