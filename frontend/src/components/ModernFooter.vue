@@ -369,6 +369,12 @@ async function subscribeNewsletter() {
   }
 }
 
+/* Light mode: make placeholder text white for better contrast on dark footer */
+[data-theme='light'] .newsletter-input :deep(.q-field__native::placeholder) {
+  color: #ffffff;
+  opacity: 1; // ensure browsers like Safari don't dim the placeholder
+}
+
 .newsletter-btn {
   color: #1e40af;
   
