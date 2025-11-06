@@ -15,7 +15,7 @@ module.exports = {
       ref: "origin/main",
       repo: "git@github.com:BorgesLeonardo/CatolicaSC-Portfolio.git",
       path: "/var/www/api-backend",
-      ssh_options: ["-o StrictHostKeyChecking=accept-new"],
+      ssh_options: ["StrictHostKeyChecking=accept-new"],
       "pre-deploy": "mkdir -p /var/www/shared",
       "post-deploy": [
         "cp -n /var/www/shared/.env backend/.env || true",
