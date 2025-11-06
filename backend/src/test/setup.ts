@@ -98,6 +98,17 @@ jest.mock('../lib/s3', () => ({
 jest.mock('@clerk/express', () => ({
   clerkMiddleware: jest.fn(() => (req: any, res: any, next: any) => next()),
   getAuth: jest.fn(),
+  clerkClient: {
+    users: {
+      getUser: jest.fn(async (id: string) => ({
+        id,
+        fullName: '',
+        firstName: undefined,
+        lastName: undefined,
+        emailAddresses: [],
+      })),
+    },
+  },
 }));
 
 // Não mockar serviços aqui; os testes unitários dos serviços precisam da implementação real.

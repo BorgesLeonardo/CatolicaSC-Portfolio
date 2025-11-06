@@ -3,9 +3,6 @@ import { getAuth } from '@clerk/express';
 import { requireApiAuth, requireAuth } from '../../../middleware/auth';
 import { AppError } from '../../../utils/AppError';
 
-// Mock do Clerk
-jest.mock('@clerk/express');
-
 describe('Auth Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -21,7 +18,7 @@ describe('Auth Middleware', () => {
   });
 
   describe('requireApiAuth', () => {
-    it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', () => {
+    it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
@@ -31,7 +28,7 @@ describe('Auth Middleware', () => {
         return undefined;
       });
 
-      requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('test_user_123');
       expect((mockRequest as any).authRole).toBe('admin');
@@ -40,7 +37,7 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should not bypass auth when x-test-auth-bypass is false', () => {
+    it('should not bypass auth when x-test-auth-bypass is false', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
@@ -51,7 +48,7 @@ describe('Auth Middleware', () => {
 
       (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
-      requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
@@ -59,13 +56,13 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should use default test user when no test headers provided', () => {
+    it('should use default test user when no test headers provided', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
       (mockRequest.header as jest.Mock).mockReturnValue(undefined);
 
-      requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('user_test_id');
       expect((mockRequest as any).authRole).toBe('user');
@@ -74,13 +71,13 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should authenticate with Clerk when not in test environment', () => {
+    it('should authenticate with Clerk when not in test environment', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
       (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
-      requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
@@ -88,20 +85,20 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should throw AppError when Clerk returns no userId', () => {
+    it('should throw AppError when Clerk returns no userId', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
       (getAuth as jest.Mock).mockReturnValue({ userId: null });
 
-      expect(() => {
-        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(new AppError('Unauthorized', 401));
+      await expect(
+        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext)
+      ).rejects.toBeInstanceOf(AppError);
 
       process.env = originalEnv;
     });
 
-    it('should throw AppError when Clerk throws an error', () => {
+    it('should throw AppError when Clerk throws an error', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
@@ -109,16 +106,16 @@ describe('Auth Middleware', () => {
         throw new Error('Clerk error');
       });
 
-      expect(() => {
-        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(new AppError('Unauthorized', 401));
+      await expect(
+        requireApiAuth(mockRequest as Request, mockResponse as Response, mockNext)
+      ).rejects.toBeInstanceOf(AppError);
 
       process.env = originalEnv;
     });
   });
 
   describe('requireAuth', () => {
-    it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', () => {
+    it('should bypass auth in test environment when TEST_BYPASS_AUTH is true', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
@@ -128,7 +125,7 @@ describe('Auth Middleware', () => {
         return undefined;
       });
 
-      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('test_user_123');
       expect((mockRequest as any).authRole).toBe('admin');
@@ -137,7 +134,7 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should not bypass auth when x-test-auth-bypass is false', () => {
+    it('should not bypass auth when x-test-auth-bypass is false', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
@@ -148,7 +145,7 @@ describe('Auth Middleware', () => {
 
       (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
-      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
@@ -156,13 +153,13 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should use default test user when no test headers provided', () => {
+    it('should use default test user when no test headers provided', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'test', TEST_BYPASS_AUTH: 'true' };
 
       (mockRequest.header as jest.Mock).mockReturnValue(undefined);
 
-      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('user_test_id');
       expect((mockRequest as any).authRole).toBe('user');
@@ -171,13 +168,13 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should authenticate with Clerk when not in test environment', () => {
+    it('should authenticate with Clerk when not in test environment', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
       (getAuth as jest.Mock).mockReturnValue({ userId: 'real_user_123' });
 
-      requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
+      await requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect((mockRequest as any).authUserId).toBe('real_user_123');
       expect(mockNext).toHaveBeenCalled();
@@ -185,20 +182,20 @@ describe('Auth Middleware', () => {
       process.env = originalEnv;
     });
 
-    it('should throw AppError when Clerk returns no userId', () => {
+    it('should throw AppError when Clerk returns no userId', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
       (getAuth as jest.Mock).mockReturnValue({ userId: null });
 
-      expect(() => {
-        requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(new AppError('Unauthorized', 401));
+      await expect(
+        requireAuth(mockRequest as Request, mockResponse as Response, mockNext)
+      ).rejects.toBeInstanceOf(AppError);
 
       process.env = originalEnv;
     });
 
-    it('should throw AppError when Clerk throws an error', () => {
+    it('should throw AppError when Clerk throws an error', async () => {
       const originalEnv = process.env;
       process.env = { ...originalEnv, NODE_ENV: 'production' };
 
@@ -206,9 +203,9 @@ describe('Auth Middleware', () => {
         throw new Error('Clerk error');
       });
 
-      expect(() => {
-        requireAuth(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(new AppError('Unauthorized', 401));
+      await expect(
+        requireAuth(mockRequest as Request, mockResponse as Response, mockNext)
+      ).rejects.toBeInstanceOf(AppError);
 
       process.env = originalEnv;
     });

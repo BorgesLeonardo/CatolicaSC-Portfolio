@@ -93,3 +93,6 @@ Changelog:
 - 1.0.0: Versão inicial, com inventário exemplo, fluxo de gestão e registro de consentimento.
 
 
+
+
+

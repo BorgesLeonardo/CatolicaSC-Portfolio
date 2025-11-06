@@ -17,3 +17,6 @@ session_id,sessionStorage,first-party,Estritamente necessários,Manter sessão d
 Firebase Analytics,SDK,Android/iOS,Desempenho/Analíticos,Eventos de uso/atribuição,14 meses,Google,consentimento,IDs de dispositivo e eventos,Habilitar consent signals no app
 Appsflyer,SDK,Android/iOS,Publicidade,Atribuição de campanhas,24 meses,AppsFlyer,consentimento,IDs de dispositivo e cliques,Honrar opt-out de rastreamento
 OneSignal,SDK,Android/iOS,Funcionais,Push notifications,18 meses,OneSignal,consentimento,Token de push,Respeitar preferências de notificação
+
+
+

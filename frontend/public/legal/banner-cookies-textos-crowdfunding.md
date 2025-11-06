@@ -39,3 +39,6 @@ Acessibilidade e boas práticas:
 - “Rejeitar tudo” com o mesmo destaque de “Aceitar tudo”.
 - Nenhuma categoria não necessária pré-selecionada.
 - Texto claro e objetivo, sem pressão ou dark patterns.
+
+
+

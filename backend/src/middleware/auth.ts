@@ -1,4 +1,4 @@
-import { getAuth } from '@clerk/express';
+import { getAuth, clerkClient } from '@clerk/express';
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
 import { prisma } from '../infrastructure/prisma';
@@ -23,7 +23,27 @@ function getTestAuth(req: Request): AuthData | null {
   return null;
 }
 
-export function requireApiAuth(req: Request, res: Response, next: NextFunction): void {
+async function syncUserProfile(userId: string): Promise<void> {
+  try {
+    const u = await clerkClient.users.getUser(userId);
+    const fullName = (u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ')).trim();
+    const name = fullName || undefined;
+    const email = (u.emailAddresses && u.emailAddresses[0]?.emailAddress) || undefined;
+
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {
+        ...(name ? { name } : {}),
+        ...(email ? { email } : {}),
+      },
+      create: { id: userId, name: name ?? null, email: email ?? null },
+    });
+  } catch {
+    // Best-effort sync; ignore failures
+  }
+}
+
+export async function requireApiAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   // Bypass para testes
   const testAuth = getTestAuth(req);
   if (testAuth) {
@@ -39,13 +59,14 @@ export function requireApiAuth(req: Request, res: Response, next: NextFunction):
       throw new AppError('Unauthorized', 401);
     }
     (req as any).authUserId = userId;
+    await syncUserProfile(userId);
     next();
   } catch (error) {
     throw new AppError('Unauthorized', 401);
   }
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   // Bypass para testes
   const testAuth = getTestAuth(req);
   if (testAuth) {
@@ -61,6 +82,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
       throw new AppError('Unauthorized', 401);
     }
     (req as any).authUserId = userId;
+    await syncUserProfile(userId);
     next();
   } catch (error) {
     throw new AppError('Unauthorized', 401);
