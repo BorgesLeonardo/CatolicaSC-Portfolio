@@ -2,11 +2,12 @@ module.exports = {
   apps: [
     {
       name: "api-backend",
-      script: "backend/dist/server.js",
+      cwd: "backend",
+      script: "dist/server.js",
       instances: 1,
       exec_mode: "fork",
-      env: { NODE_ENV: "production" },
-      env_production: { NODE_ENV: "production" }
+      env: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "backend/.env" },
+      env_production: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "backend/.env" }
     }
   ],
   deploy: {
