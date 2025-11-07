@@ -26,7 +26,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          printf "Host target\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  StrictHostKeyChecking accept-new\n" \
+          printf "Host target\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  IdentitiesOnly yes\n  StrictHostKeyChecking accept-new\n" \
             "${{ secrets.EC2_HOST }}" "${{ secrets.EC2_USER }}" > ~/.ssh/config
 
       - name: Debug SSH reachability
