@@ -41,9 +41,14 @@ export const useFavoritesStore = defineStore('favorites', {
       await Promise.all(this.items.map(async (p) => {
         try {
           const fresh = await projectsService.getById(p.id)
+          // Se a campanha foi removida (soft delete), não manter nos favoritos
+          if (fresh.deletedAt) {
+            return
+          }
           refreshed.push({ ...p, ...fresh })
         } catch {
-          refreshed.push(p)
+          // Se não for possível carregar (ex.: 404), remover dos favoritos
+          return
         }
       }))
       this.items = refreshed
