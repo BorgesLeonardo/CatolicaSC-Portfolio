@@ -6,8 +6,8 @@ module.exports = {
       script: "dist/server.js",
       instances: 1,
       exec_mode: "fork",
-      env: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "backend/.env" },
-      env_production: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "backend/.env" }
+      env: { NODE_ENV: "production" },
+      env_production: { NODE_ENV: "production" }
     }
   ],
   deploy: {
