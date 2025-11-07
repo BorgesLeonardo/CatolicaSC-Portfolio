@@ -54,6 +54,7 @@ describe('ProjectsController', () => {
         id: 'proj1', 
         ...validProjectData,
         deadline: new Date(validProjectData.deadline),
+        owner: { id: 'user123', name: 'John Doe' },
         category: {
           id: 'cm12345678901234567890',
           name: 'Technology',
@@ -331,6 +332,7 @@ describe('ProjectsController', () => {
         deadline: new Date(),
         imageUrl: 'https://example.com/image.jpg',
         categoryId: 'cm12345678901234567890',
+        owner: { id: 'user123', name: 'John Doe' },
         category: {
           id: 'cm12345678901234567890',
           name: 'Technology',
@@ -379,6 +381,7 @@ describe('ProjectsController', () => {
           deadline: new Date(),
           imageUrl: 'https://example.com/image.jpg',
           categoryId: 'cm12345678901234567890',
+          owner: { id: 'user123', name: 'John Doe' },
           category: {
             id: 'cm12345678901234567890',
             name: 'Technology',

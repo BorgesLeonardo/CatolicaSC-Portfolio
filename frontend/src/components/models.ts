@@ -32,6 +32,10 @@ export interface ProjectImage {
 export interface Project {
   id: string;
   ownerId: string;
+  owner?: {
+    id: string;
+    name?: string | null;
+  };
   categoryId?: string;
   title: string;
   description?: string;

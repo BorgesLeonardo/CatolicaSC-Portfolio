@@ -263,10 +263,11 @@ describe('ProjectsService', () => {
         orderBy: { createdAt: 'desc' },
         skip: 0,
         take: 10,
-        include: {
+        include: expect.objectContaining({
           category: true,
           images: { orderBy: { order: 'asc' } },
-        }
+          owner: { select: { id: true, name: true } },
+        })
       });
       expect(result).toEqual({
         page: 1,
@@ -305,10 +306,11 @@ describe('ProjectsService', () => {
         orderBy: { createdAt: 'desc' },
         skip: 5, // (page - 1) * pageSize
         take: 5,
-        include: {
+        include: expect.objectContaining({
           category: true,
           images: { orderBy: { order: 'asc' } },
-        }
+          owner: { select: { id: true, name: true } },
+        })
       });
       expect(result).toEqual({
         page: 2,
@@ -334,10 +336,11 @@ describe('ProjectsService', () => {
         orderBy: { createdAt: 'desc' },
         skip: 0, // Clamped to 1, so (1-1)*10 = 0
         take: 50, // Clamped to 50
-        include: {
+        include: expect.objectContaining({
           category: true,
           images: { orderBy: { order: 'asc' } },
-        }
+          owner: { select: { id: true, name: true } },
+        })
       });
     });
   });
@@ -357,10 +360,11 @@ describe('ProjectsService', () => {
 
       expect(prisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: 'proj1' },
-        include: {
+        include: expect.objectContaining({
           category: true,
           images: { orderBy: { order: 'asc' } },
-        }
+          owner: { select: { id: true, name: true } },
+        })
       });
       expect(result).toEqual(mockProject);
     });
@@ -401,10 +405,11 @@ describe('ProjectsService', () => {
       expect(prisma.project.findMany).toHaveBeenCalledWith({
         where: { ownerId: 'user123', deletedAt: null },
         orderBy: { createdAt: 'desc' },
-        include: {
+        include: expect.objectContaining({
           category: true,
           images: { orderBy: { order: 'asc' } },
-        }
+          owner: { select: { id: true, name: true } },
+        })
       });
       expect(result).toEqual({ items: mockProjects });
     });

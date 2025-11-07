@@ -490,7 +490,7 @@ function backToCover() {
                       <q-icon name="autorenew" size="xs" class="q-mr-xs" /> Assinatura
                     </q-badge>
                     <div class="text-caption text-muted">
-                      Por <strong>Criador</strong> • {{ formatDateTimeBR(project.createdAt) }}
+                      Por <strong>{{ project.owner?.name || 'Criador' }}</strong> • {{ formatDateTimeBR(project.createdAt) }}
                     </div>
                   </div>
                   <h1 class="project-title">{{ project.title }}</h1>

@@ -138,6 +138,7 @@ export class ProjectsService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
+          owner: { select: { id: true, name: true } },
           category: true,
           images: {
             orderBy: { order: 'asc' }
@@ -154,6 +155,7 @@ export class ProjectsService {
     const project = await prisma.project.findUnique({ 
       where: { id },
       include: {
+        owner: { select: { id: true, name: true } },
         category: true,
         images: {
           orderBy: { order: 'asc' }
@@ -173,6 +175,7 @@ export class ProjectsService {
       where: { ownerId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: {
+        owner: { select: { id: true, name: true } },
         category: true,
         images: {
           orderBy: { order: 'asc' }

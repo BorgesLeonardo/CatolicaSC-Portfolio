@@ -168,7 +168,7 @@
         <div class="footer-info">
           <div class="creator-info">
             <q-icon name="person" size="sm" class="icon-muted" />
-            <span class="creator-name">{{ project.creatorName || 'Criador' }}</span>
+            <span class="creator-name">{{ project.owner?.name || 'Criador' }}</span>
           </div>
           <div class="creation-date">
             <q-icon name="schedule" size="sm" class="icon-muted" />
