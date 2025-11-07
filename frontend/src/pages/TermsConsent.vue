@@ -7,7 +7,6 @@
 					<h1 class="hero-title">Você precisa aceitar os Termos para continuar</h1>
 					<p class="hero-subtitle">Leia atentamente os Termos de Uso. Para usar a plataforma, é necessário concordar com a versão vigente.</p>
 					<div class="hero-actions">
-						<q-btn color="primary" unelevated label="Ver Termos (arquivo público)" href="/legal/termos-uso-crowdfunding.md" target="_blank" />
 						<q-btn flat color="white" icon="policy" label="Ver Política de Privacidade" to="/privacy" />
 					</div>
 				</div>

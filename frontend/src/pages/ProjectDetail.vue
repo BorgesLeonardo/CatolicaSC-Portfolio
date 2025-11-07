@@ -1,6 +1,6 @@
 <!-- src/pages/ProjectDetail.vue -->
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth, useUser } from '@clerk/vue'
 import { http, setAuthToken } from 'src/utils/http'
@@ -14,6 +14,7 @@ import { useProjectStats } from 'src/composables/useProjectStats'
 import { contributionsService } from 'src/services/contributions'
 import { Notify, Dialog } from 'quasar'
 import { useFavoritesStore } from 'src/stores/favorites'
+import { useBreadcrumbStore } from 'src/stores/breadcrumb'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +23,7 @@ const id = String(route.params.id)
 const { getToken } = useAuth()
 const { user, isSignedIn } = useUser()
 const favorites = useFavoritesStore()
+const breadcrumb = useBreadcrumbStore()
 const project = ref<Project | null>(null)
 const loading = ref(false)
 const deleteLoading = ref(false)
@@ -201,6 +203,8 @@ async function fetchProject() {
     const { data } = await http.get<Project>(`/api/projects/${id}`)
     // noop: removed debug log
     project.value = data
+    // Update breadcrumb title with project title
+    try { breadcrumb.setProjectTitle(data.title) } catch { /* noop */ }
     
     // Check if project has contributions (for delete permission)
     if (project.value) {
@@ -213,6 +217,7 @@ async function fetchProject() {
     }
   } catch {
     project.value = null
+    try { breadcrumb.clear() } catch { /* noop */ }
   } finally {
     loading.value = false
   }
@@ -269,6 +274,7 @@ function editProject() {
 
 function handleProjectUpdated(updatedProject: Project) {
   project.value = updatedProject
+  try { breadcrumb.setProjectTitle(updatedProject.title) } catch { /* noop */ }
   Notify.create({
     type: 'positive',
     message: 'Campanha atualizada com sucesso!',
@@ -380,6 +386,10 @@ onMounted(() => {
   void fetchProject()
   // por padrão, manter capa (não iniciar vídeo automaticamente)
   showVideo.value = false
+})
+
+onBeforeUnmount(() => {
+  try { breadcrumb.clear() } catch { /* noop */ }
 })
 
 function backToCover() {

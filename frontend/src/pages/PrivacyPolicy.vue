@@ -9,7 +9,6 @@
 					<h1 class="hero-title">Política de Privacidade</h1>
 					<p class="hero-subtitle">Como tratamos seus dados pessoais e como você pode exercer seus direitos.</p>
 					<div class="hero-actions">
-						<q-btn color="primary" unelevated label="Baixar .md" type="a" href="/legal/politica-privacidade-crowdfunding.md" target="_blank" />
 						<q-btn flat color="white" icon="print" label="Imprimir" @click="printPage" />
 						<q-btn flat color="white" icon="cookie" label="Gerenciar Cookies" @click="openCookiesDialog" />
 						<q-btn outline color="white" icon="mail" label="Contato do DPO" :href="`mailto:${dpoEmail}`" />
@@ -23,10 +22,7 @@
 			<div class="container">
 				<q-banner inline-actions class="bg-orange-2 text-orange-10 q-mb-lg">
 					<strong>TODOs para validar:</strong>
-					<span class="q-ml-sm">{{PLATAFORMA_URL}}, {{CONTROLADORA_RAZAO_SOCIAL}}, {{CONTROLADORA_CNPJ}}, {{ENCARREGADO_NOME}}/{{ENCARREGADO_EMAIL}}/{{ENCARREGADO_CANAL}}, {{FORO_CIDADE_UF}}.</span>
-					<template #action>
-						<q-btn flat color="orange-10" label="Ver arquivo público" type="a" href="/legal/politica-privacidade-crowdfunding.md" target="_blank" />
-					</template>
+					<span class="q-ml-sm">{{PLATAFORMA_URL}}, {{CONTROLADORA_RAZAO_SOCIAL}}, {{CONTROLADORA_CNPJ}}, {{ENCARREGADO_NOME}}/{{ dpoEmail }}/{{ENCARREGADO_CANAL}}, {{FORO_CIDADE_UF}}.</span>
 				</q-banner>
 
 				<!-- Sumário (mobile) -->
@@ -55,7 +51,7 @@
 					<q-card-section>
 						<h3 class="section-heading"><q-icon name="info" class="q-mr-sm" />1. Quem somos</h3>
 						<p><strong>Controladora:</strong> {{CONTROLADORA_RAZAO_SOCIAL}} (CNPJ: {{CONTROLADORA_CNPJ}}), com sede em {{CONTROLADORA_ENDERECO}}. Operamos a plataforma <strong>{{PLATAFORMA_NOME}}</strong> em <strong>{{PLATAFORMA_URL}}</strong>.</p>
-						<p><strong>Encarregado/DPO:</strong> {{ENCARREGADO_NOME}} — {{ENCARREGADO_EMAIL}} — {{ENCARREGADO_CANAL}}.</p>
+						<p><strong>Encarregado/DPO:</strong> {{ENCARREGADO_NOME}} — {{ dpoEmail }} — {{ENCARREGADO_CANAL}}.</p>
 						<p>Seguimos a LGPD, o Marco Civil da Internet e normas da ANPD.</p>
 					</q-card-section>
 				</q-card>
@@ -144,7 +140,7 @@
 							<li><strong>Técnicos:</strong> TLS, criptografia em repouso quando aplicável, segregação, backups, monitoramento, MFA admin.</li>
 							<li><strong>Organizacionais:</strong> menor privilégio, gestão de acesso, logs, treinamentos.</li>
 						</ul>
-						<p>Incidentes relevantes serão comunicados à ANPD e aos titulares. Canal: {{ENCARREGADO_EMAIL}} (SLA inicial até 72h úteis).</p>
+						<p>Incidentes relevantes serão comunicados à ANPD e aos titulares. Canal: {{ dpoEmail }} (SLA inicial até 72h úteis).</p>
 					</q-card-section>
 				</q-card>
 
@@ -169,7 +165,7 @@
 				<q-card flat bordered class="section-card q-mb-lg" id="direitos">
 					<q-card-section>
 						<h3 class="section-heading"><q-icon name="how_to_reg" class="q-mr-sm" />9. Direitos dos titulares</h3>
-						<p>Para exercer seus direitos (acesso, correção, portabilidade, eliminação, informação, revogação, oposição), contate: {{ENCARREGADO_EMAIL}} / {{ENCARREGADO_CANAL}}. Resposta em até 15 dias, mediante comprovação de identidade.</p>
+						<p>Para exercer seus direitos (acesso, correção, portabilidade, eliminação, informação, revogação, oposição), contate: {{ dpoEmail }} / {{ENCARREGADO_CANAL}}. Resposta em até 15 dias, mediante comprovação de identidade.</p>
 					</q-card-section>
 				</q-card>
 
@@ -190,7 +186,7 @@
 						<q-card flat bordered class="section-card q-mb-lg" id="contato">
 					<q-card-section>
 						<h3 class="section-heading"><q-icon name="contact_mail" class="q-mr-sm" />12. Contato do Encarregado/DPO</h3>
-						<p>{{ENCARREGADO_NOME}} — {{ENCARREGADO_EMAIL}} — {{ENCARREGADO_CANAL}}</p>
+						<p>{{ENCARREGADO_NOME}} — {{ dpoEmail }} — {{ENCARREGADO_CANAL}}</p>
 					</q-card-section>
 				</q-card>
 
@@ -289,7 +285,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-const dpoEmail = '{{ENCARREGADO_EMAIL}}'
+const dpoEmail = 'le.borges@catolicasc.edu.br'
 const showBackToTop = ref(false)
 const activeId = ref<string>('quem-somos')
 const cookieDialog = ref(false)

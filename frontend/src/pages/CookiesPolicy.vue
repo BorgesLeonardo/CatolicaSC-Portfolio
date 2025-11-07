@@ -9,7 +9,6 @@
 					<h1 class="hero-title">Política de Cookies</h1>
 					<p class="hero-subtitle">Como utilizamos cookies e tecnologias semelhantes e como você pode gerenciá-los.</p>
 					<div class="hero-actions">
-						<q-btn color="primary" unelevated label="Ver arquivo público (.md)" href="/legal/politica-de-cookies-crowdfunding.md" target="_blank" />
 						<q-btn outline color="white" icon="table_view" label="Inventário (CSV)" href="/legal/cookies-inventario-crowdfunding.csv" target="_blank" />
 						<q-btn flat color="white" icon="print" label="Imprimir" @click="printPage" />
 						<q-btn flat color="white" icon="tune" label="Gerenciar Cookies" @click="openCookiesDialog" />

@@ -89,6 +89,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useBreadcrumbStore } from 'src/stores/breadcrumb'
 
 interface BreadcrumbItem {
   label: string
@@ -111,6 +112,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const route = useRoute()
 const mobileDropdownOpen = ref(false)
+const breadcrumbStore = useBreadcrumbStore()
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
   if (props.items) {
@@ -132,6 +134,7 @@ const currentPageLabel = computed(() => {
 function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
   const pathSegments = route.path.split('/').filter(segment => segment)
   const breadcrumbs: BreadcrumbItem[] = []
+  const projectTitle = breadcrumbStore.projectTitle
   
   // Map common routes to readable labels
   const routeLabels: Record<string, { label: string; icon?: string }> = {
@@ -155,6 +158,10 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
   
   let currentPath = ''
   
+  const paramValues = Object.values(route.params)
+    .flatMap(v => Array.isArray(v) ? v : [v])
+    .map(v => String(v))
+
   pathSegments.forEach((segment, index) => {
     currentPath += `/${segment}`
     const isLast = index === pathSegments.length - 1
@@ -165,12 +172,23 @@ function generateBreadcrumbsFromRoute(): BreadcrumbItem[] {
 
     const routeInfo = routeLabels[segment]
 
-    const label = metaLabel
+    let label = metaLabel
       ?? routeInfo?.label
       ?? (segment
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' '))
+
+    // Hide raw IDs in breadcrumb: if a segment equals a route param value (e.g., :id),
+    // replace it with a friendly label.
+    if (paramValues.includes(segment)) {
+      // Special-case common resources for better UX
+      if (pathSegments[index - 1] === 'projects') {
+        label = projectTitle || 'Campanha'
+      } else {
+        label = 'Detalhes'
+      }
+    }
 
     const icon = routeInfo?.icon
 

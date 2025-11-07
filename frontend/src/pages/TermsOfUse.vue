@@ -9,7 +9,6 @@
 					<h1 class="hero-title">Termos de Uso</h1>
 					<p class="hero-subtitle">Regras de uso da plataforma, responsabilidades e direitos.</p>
 					<div class="hero-actions">
-						<q-btn color="primary" unelevated label="Baixar .md" type="a" href="/legal/termos-uso-crowdfunding.md" target="_blank" />
 						<q-btn flat color="white" icon="print" label="Imprimir" @click="printPage" />
 						<q-btn outline color="white" icon="policy" label="Ver Privacidade" to="/privacy" />
 						<q-btn flat color="white" icon="cookie" label="Gerenciar Cookies" @click="openCookiesDialog" />
@@ -23,9 +22,6 @@
 				<q-banner inline-actions class="bg-orange-2 text-orange-10 q-mb-lg">
 					<strong>TODOs para validar:</strong>
 					<span class="q-ml-sm">{{PLATAFORMA_URL}}, {{CONTROLADORA_RAZAO_SOCIAL}}, {{GATEWAYS_PAGAMENTO}}, {{FORO_CIDADE_UF}}.</span>
-					<template #action>
-						<q-btn flat color="orange-10" label="Ver arquivo público" type="a" href="/legal/termos-uso-crowdfunding.md" target="_blank" />
-					</template>
 				</q-banner>
 
 				<!-- Sumário (mobile) -->
