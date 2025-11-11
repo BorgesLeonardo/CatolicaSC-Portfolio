@@ -1,8 +1,8 @@
 {
   "name": "crowdfunding-frontend",
   "version": "0.0.1",
-  "description": "Plataforma de Crowdfunding - Frontend",
-  "productName": "Crowdfunding",
+  "description": "Just Founders - Frontend",
+  "productName": "Just Founders",
   "author": "borgesleonardo <leonardoboges.pereira@outlook.com>",
   "type": "module",
   "private": true,

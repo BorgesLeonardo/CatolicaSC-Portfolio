@@ -1,6 +1,6 @@
 > CAIXA DE AVISO — TODOs pendentes para validação
 >
-> - {{PLATAFORMA_NOME}}: Crowdfunding (pode ser atualizado com o nome oficial)
+> - {{PLATAFORMA_NOME}}: Just Founders (pode ser atualizado com o nome oficial)
 > - {{PLATAFORMA_URL}}: TODO: https://www.seu-dominio.com
 > - {{CONTROLADORA_RAZAO_SOCIAL}}: TODO: Razão social completa da empresa controladora
 > - {{CONTROLADORA_CNPJ}}: TODO: 00.000.000/0001-00
@@ -131,6 +131,14 @@ Changelog:
 - v1.0.0 (05/11/2025): Versão inicial dos Termos, incluindo KYC/antifraude e política de reembolsos.
 
 Versão 1.0.0 — Atualizada em 05/11/2025
+
+
+
+
+
+
+
+
 
 
 

@@ -15,7 +15,7 @@
           <div class="col-12 col-md-10 col-lg-8 text-center hero-content">
             <div class="hero-badge fade-in-up">
               <q-icon name="rocket_launch" size="sm" class="q-mr-xs" />
-              Plataforma de Crowdfunding
+              Just Founders
             </div>
             
             <h1 class="hero-title fade-in-up stagger-animation">

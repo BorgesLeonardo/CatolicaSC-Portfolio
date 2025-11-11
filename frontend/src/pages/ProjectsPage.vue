@@ -276,7 +276,7 @@ function openProject(id: string) {
             Explore Projetos
           </div>
           
-          <h1 class="header-title fade-in-up">Campanhas de <span class="gradient-text">Crowdfunding</span></h1>
+          <h1 class="header-title fade-in-up">Campanhas de <span class="gradient-text">Just Founders</span></h1>
           
           <p class="header-subtitle fade-in-up">
             Descubra projetos incríveis e ajude a transformar ideias em realidade. 

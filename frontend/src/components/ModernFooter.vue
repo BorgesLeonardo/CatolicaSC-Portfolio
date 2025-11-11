@@ -8,7 +8,7 @@
           <div class="footer-brand">
             <div class="brand-logo">
               <q-icon name="campaign" size="lg" color="primary" />
-              <span class="brand-name">Crowdfunding</span>
+              <span class="brand-name">Just Founders</span>
             </div>
             <p class="brand-description">
               Transformando ideias em realidade através do poder da comunidade. 
@@ -128,7 +128,7 @@
       <div class="container">
         <div class="footer-bottom-content">
           <div class="copyright">
-            <p>&copy; {{ currentYear }} Crowdfunding. Todos os direitos reservados.</p>
+            <p>&copy; {{ currentYear }} Just Founders. Todos os direitos reservados.</p>
           </div>
           
           <div class="legal-links">

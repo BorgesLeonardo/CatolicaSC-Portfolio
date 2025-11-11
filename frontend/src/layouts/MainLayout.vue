@@ -42,7 +42,7 @@
             role="button"
           >
             <q-icon name="campaign" size="md" color="primary" class="q-mr-sm" />
-            <span class="text-h6 logo-text">Crowdfunding</span>
+            <span class="text-h6 logo-text">Just Founders</span>
             <q-badge class="q-ml-sm lt-md" color="primary" align="top">Menu</q-badge>
             <q-tooltip transition-show="fade" transition-hide="fade">Abrir menu lateral</q-tooltip>
           </q-btn>
@@ -188,7 +188,7 @@
             @keydown.space.prevent="leftDrawerOpen = false"
           >
             <q-icon name="campaign" size="lg" color="primary" />
-            <span class="drawer-title">Crowdfunding</span>
+            <span class="drawer-title">Just Founders</span>
             <q-tooltip transition-show="fade" transition-hide="fade">Ocultar menu lateral</q-tooltip>
           </div>
           <q-btn 
