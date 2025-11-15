@@ -1,3 +1,5 @@
+import 'dotenv/config';
+import 'newrelic';
 import app from './app.js';
 import { logger } from './utils/logger.js';
 

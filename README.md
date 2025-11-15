@@ -38,8 +38,12 @@ Objetivos Específicos:
 
 
 ## Documentação adicional:
-- [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Descri%C3%A7%C3%A3o-Projeto)
-- [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
+- [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/2.-Descri%C3%A7%C3%A3o-Projeto)
+- [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/3.-Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
+- [Teste](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/4.-Testes)
+- [Apêndices](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/5.-Ap%C3%AAndices)
+- [Deploy](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/6.-Deploy)
+- [Ferramentas de Qualidade e Observabilidade](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/7.-Ferramentas-de-Qualidade-e-Observabilidade)
 - [Próximos Passos](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Pr%C3%B3ximos-Passos)
 
 
