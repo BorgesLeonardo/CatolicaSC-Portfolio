@@ -1,5 +1,5 @@
 <template>
-  <q-page>
+  <q-page class="bg-surface">
     <!-- Hero padronizado -->
     <section class="support-hero">
       <div class="container">

@@ -1,5 +1,5 @@
 <template>
-	<q-page>
+	<q-page class="bg-surface">
 		<section class="legal-hero">
 			<div class="container">
 				<div class="hero-content">
@@ -100,6 +100,7 @@ function scrollTo(id: string) {
 .section-card { border-radius: 14px; }
 [data-theme='dark'] .legal-hero { background: linear-gradient(135deg, #0b1220 0%, #1e3a8a 40%, #9a3412 100%); }
 </style>
+
 
 
 
