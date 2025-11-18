@@ -8,17 +8,17 @@ Data de Entrega: 29/11/2025.
 
 ## Resumo
 
-Este documento apresenta o desenvolvimento de uma plataforma web de crowdfunding que permite aos usuários criarem campanhas de financiamento coletivo e apoiar projetos de terceiros. A solução combina tecnologias modernas como Vue.js (Quasar), Node.js, PostgreSQL e integração com Stripe para pagamentos, oferecendo uma experiência intuitiva e segura para criadores e apoiadores. O projeto demonstra a aplicação prática de princípios de Engenharia de Software, incluindo arquitetura escalável, segurança da informação, design responsivo e integração com serviços externos.
+Este repositório contém uma plataforma web de crowdfunding que permite criar campanhas e realizar apoios financeiros com segurança. A solução é uma SPA construída com Quasar/Vue 3 (TypeScript) e um backend em Node.js 20 + Express, com persistência em PostgreSQL via Prisma. A autenticação e a gestão de contas são delegadas ao Clerk; pagamentos usam Stripe Checkout e Stripe Connect (com assinaturas opcionais). O projeto aplica boas práticas de Engenharia de Software: arquitetura modular, segurança e validação (Zod), testes automatizados e CI/CD, métricas/observabilidade (SonarCloud e New Relic) e UI responsiva focada em UX.
 
 ## 1. Introdução
 
 **Contexto**
 
-O crowdfunding emergiu como uma técnica revolucionária de financiamento coletivo, permitindo que indivíduos e organizações obtenham recursos financeiros através da colaboração voluntária de uma comunidade online. Com o avanço tecnológico e a crescente conectividade digital, este modelo se consolidou globalmente, democratizando o acesso ao financiamento para projetos inovadores, causas sociais e empreendimento criativos.
+O crowdfunding tornou-se um mecanismo relevante de financiamento coletivo, permitindo que indivíduos e organizações obtenham recursos por meio da colaboração de uma comunidade online. Com a conectividade atual, o modelo viabiliza desde causas sociais até produtos inovadores, exigindo plataformas seguras, escaláveis e fáceis de usar.
 
 **Justificativa**
 
-A criação de uma plataforma web de crowdfunding representa uma excelente oportunidade para aplicar na prática os fundamentos da Engenharia de Software. Este tipo de sistema exige a integração de diversos conceitos técnicos essenciais: arquitetura de software robusta, segurança da informação, gerenciamento eficiente de dados, design responsivo focado na experiência do usuário, e integração confiável com serviços externos como gateways de pagamento. Além disso, o projeto permite explorar aspectos de escalabilidade, performance e conformidade com regulamentações de proteção de dados.
+A construção desta plataforma permite aplicar, de ponta a ponta, fundamentos de Engenharia de Software: arquitetura monolítica bem definida, integração com provedores externos (Clerk/Stripe), modelagem relacional consistente, validações robustas, testes automatizados e pipeline de entrega contínua. Também endereça requisitos de segurança e conformidade (LGPD, boas práticas OWASP) e metas de performance/observabilidade.
 
 **Objetivos**
 
@@ -28,13 +28,16 @@ A criação de uma plataforma web de crowdfunding representa uma excelente oport
 
 Objetivos Específicos:
 
-* Implementar sistema de autenticação seguro com gerenciamento de usuários via Clerk
-* Criar interface moderna e responsiva utilizando Quasar Framework (Vue.js)
-* Desenvolver API RESTful robusta com Node.js e Express
-* Integrar sistema de pagamentos confiável através do Stripe
-* Implementar funcionalidades de comentários e interação social
-* Garantir persistência segura de dados com PostgreSQL
-* Estabelecer pipeline de CI/CD com testes automatizados
+* Implementar autenticação/conta com Clerk (UI no frontend, validação JWT no backend).
+* Construir interface responsiva com Quasar/Vue 3 e Composition API (TypeScript).
+* Expor API RESTful com Express + Prisma, validações com Zod e documentação OpenAPI.
+* Integrar pagamentos com Stripe Checkout e Stripe Connect (repasse ao criador) e assinaturas recorrentes opcionais.
+* Implementar criação/edição de campanhas com categorias, galeria de imagens/vídeo e comentários públicos.
+* Garantir persistência e consistência no PostgreSQL (migrations/índices com Prisma).
+* Disponibilizar eventos/métricas em tempo real (SSE) quando aplicável.
+* Estabelecer testes automatizados (Jest/Vitest) com cobertura combinada ≥ 80% e análise contínua no SonarCloud.
+* Instrumentar observabilidade do backend com New Relic (APM) e logs estruturados.
+* Automatizar build/test/deploy via GitHub Actions e Vercel (frontend).
 
 
 ## Documentação adicional:
