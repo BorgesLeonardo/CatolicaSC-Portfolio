@@ -39,19 +39,6 @@ Objetivos Específicos:
 * Instrumentar observabilidade do backend com New Relic (APM) e logs estruturados.
 * Automatizar build/test/deploy via GitHub Actions e Vercel (frontend).
 
-
-## Documentação adicional:
-- [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/2.-Descri%C3%A7%C3%A3o-Projeto)
-- [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/3.-Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
-- [Teste](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/4.-Testes)
-- [Apêndices](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/5.-Ap%C3%AAndices)
-- [Deploy](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/6.-Deploy)
-- [Ferramentas de Qualidade e Observabilidade](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/7.-Ferramentas-de-Qualidade-e-Observabilidade)
-- [Próximos Passos](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/Pr%C3%B3ximos-Passos)
-
-
-
-
 ## FAQ
 
 > [!NOTE]
