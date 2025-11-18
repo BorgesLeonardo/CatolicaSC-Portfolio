@@ -1,4 +1,4 @@
-# Crowdfunding
+# Plataforma de Crowdfunding Just Founders
 
 Nome do Estudante: Leonardo Pereira Borges.
 
@@ -8,7 +8,7 @@ Data de Entrega: 29/11/2025.
 
 ## Resumo
 
-Este repositório contém uma plataforma web de crowdfunding que permite criar campanhas e realizar apoios financeiros com segurança. A solução é uma SPA construída com Quasar/Vue 3 (TypeScript) e um backend em Node.js 20 + Express, com persistência em PostgreSQL via Prisma. A autenticação e a gestão de contas são delegadas ao Clerk; pagamentos usam Stripe Checkout e Stripe Connect (com assinaturas opcionais). O projeto aplica boas práticas de Engenharia de Software: arquitetura modular, segurança e validação (Zod), testes automatizados e CI/CD, métricas/observabilidade (SonarCloud e New Relic) e UI responsiva focada em UX.
+Este repositório contém uma plataforma de crowdfunding que permite criar campanhas e realizar apoios financeiros com segurança. A solução é uma SPA construída com Quasar/Vue 3 (TypeScript) e um backend em Node.js 20 + Express, com persistência em PostgreSQL via Prisma. A autenticação e a gestão de contas são delegadas ao Clerk; pagamentos usam Stripe Checkout e Stripe Connect (com assinaturas opcionais). O projeto aplica boas práticas de Engenharia de Software: arquitetura modular, segurança e validação (Zod), testes automatizados e CI/CD, métricas/observabilidade (SonarCloud e New Relic) e UI responsiva focada em UX.
 
 ## 1. Introdução
 
