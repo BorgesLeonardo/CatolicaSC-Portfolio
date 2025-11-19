@@ -9,10 +9,7 @@ import { s3, getBucketName, buildPublicUrl, tryExtractKeyFromUrl } from '../lib/
 import { prisma } from '../infrastructure/prisma';
 import { AppError } from '../utils/AppError';
 
-const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
-const mkdir = promisify(fs.mkdir);
-const exists = (p: string) => new Promise<boolean>(resolve => fs.access(p, fs.constants.F_OK, err => resolve(!err)));
 
 // Multer config: single video up to 100MB
 const upload = multer({
@@ -29,17 +26,6 @@ export class ProjectVideosController {
   private idParamSchema = z.object({
     projectId: z.string().cuid({ message: 'Project ID inválido' }),
   });
-
-  private getUploadDir(): string {
-    return path.join(process.cwd(), 'uploads', 'projects', 'videos');
-  }
-
-  private async ensureUploadDir(): Promise<void> {
-    const dir = this.getUploadDir();
-    if (!(await exists(dir))) {
-      await mkdir(dir, { recursive: true });
-    }
-  }
 
   async uploadVideo(req: Request, res: Response, next: NextFunction) {
     try {

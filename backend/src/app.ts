@@ -268,7 +268,6 @@ app.use((req, res, next) => {
 });
 
 /** ---------- Servir arquivos estáticos ---------- */
-app.use('/uploads', express.static('uploads'));
 
 // Health check endpoint
 const healthController = new HealthController();

@@ -6,9 +6,7 @@ import { promisify } from 'util';
 import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { s3, getBucketName, buildPublicUrl, tryExtractKeyFromUrl } from '../lib/s3';
 
-const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
-const mkdir = promisify(fs.mkdir);
 
 export interface CreateProjectImageData {
   projectId: string;
@@ -30,20 +28,7 @@ export interface UploadedImageFile {
 export class ProjectImagesService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads', 'projects');
 
-  constructor() {
-    // Garantir que o diretório de upload existe (síncronamente)
-    this.ensureUploadDir();
-  }
-
-  private ensureUploadDir() {
-    try {
-      if (!fs.existsSync(this.uploadDir)) {
-        fs.mkdirSync(this.uploadDir, { recursive: true });
-      }
-    } catch (error) {
-      // noop: removed debug log
-    }
-  }
+  constructor() {}
 
   async uploadImages(projectId: string, files: UploadedImageFile[]): Promise<any[]> {
     // noop: removed debug log
