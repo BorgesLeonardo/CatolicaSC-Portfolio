@@ -13,7 +13,7 @@ module.exports = {
   deploy: {
     production: {
       user: "ubuntu",
-      host: "18.228.241.117",
+      host: "56.125.164.212",
       ref: "origin/main",
       repo: "git@github.com:BorgesLeonardo/CatolicaSC-Portfolio.git",
       path: "/var/www/api-backend",
