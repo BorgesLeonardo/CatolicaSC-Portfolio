@@ -8,7 +8,7 @@ Data de Entrega: 29/11/2025.
 
 ## Resumo
 
-Este repositório contém uma plataforma de crowdfunding que permite criar campanhas e realizar apoios financeiros com segurança. A solução é uma SPA construída com Quasar/Vue 3 (TypeScript) e um backend em Node.js 20 + Express, com persistência em PostgreSQL via Prisma. A autenticação e a gestão de contas são delegadas ao Clerk; pagamentos usam Stripe Checkout e Stripe Connect (com assinaturas opcionais). O projeto aplica boas práticas de Engenharia de Software: arquitetura modular, segurança e validação (Zod), testes automatizados e CI/CD, métricas/observabilidade (SonarCloud e New Relic) e UI responsiva focada em UX.
+Este repositório contém uma plataforma de crowdfunding chamada de Just Founders, que permite criar campanhas e realizar apoios financeiros com segurança. A solução é uma SPA construída com Quasar/Vue 3 (TypeScript) e um backend em Node.js 20 + Express, com persistência em PostgreSQL via Prisma. A autenticação e a gestão de contas são delegadas ao Clerk; pagamentos usam Stripe Checkout e Stripe Connect (com assinaturas opcionais). O projeto aplica boas práticas de Engenharia de Software: arquitetura modular, segurança e validação (Zod), testes automatizados e CI/CD, métricas/observabilidade (SonarCloud e New Relic) e UI responsiva focada em UX.
 
 ## 1. Introdução
 
@@ -47,6 +47,7 @@ Objetivos Específicos:
 ### Atalhos
 
 - [Documentação (Wiki)](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki)
+- [Resumo](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/1.-Resumo)
 - [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/2.-Descri%C3%A7%C3%A3o-Projeto)
 - [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/3.-Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
 - [Testes](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/4.-Testes)
@@ -119,7 +120,7 @@ npm run listen    # usa Stripe CLI e encaminha para /api/webhooks/stripe
 <summary><strong>Como funciona a autenticação (Clerk)?</strong></summary>
 
 - Frontend usa Clerk Vue SDK com `VITE_CLERK_PUBLISHABLE_KEY`.
-- Backend valida o token via `@clerk/express`. Para testes automatizados há bypass controlado por env/headers (ver `backend/src/middleware/auth.ts`).
+- Backend valida o token via `@clerk/express`.
 </details>
 
 <details>
