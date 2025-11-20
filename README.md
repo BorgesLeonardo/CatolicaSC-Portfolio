@@ -47,6 +47,7 @@ Objetivos Específicos:
 ### Atalhos
 
 - [Documentação (Wiki)](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki)
+- [Resumo](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/1.-Resumo)
 - [Descrição do Projeto](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/2.-Descri%C3%A7%C3%A3o-Projeto)
 - [Especificação Técnica](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/3.-Especifica%C3%A7%C3%A3o-T%C3%A9cnica)
 - [Testes](https://github.com/BorgesLeonardo/CatolicaSC-Portfolio/wiki/4.-Testes)
