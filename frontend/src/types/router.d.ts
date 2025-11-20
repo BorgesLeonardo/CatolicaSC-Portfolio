@@ -36,3 +36,5 @@ declare module 'vue-router' {
 
 
 
+
+
