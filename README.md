@@ -35,7 +35,6 @@ Objetivos Específicos:
 * Implementar criação/edição de campanhas com categorias, galeria de imagens/vídeo e comentários públicos.
 * Garantir persistência e consistência no PostgreSQL (migrations/índices com Prisma).
 * Disponibilizar eventos/métricas em tempo real (SSE) quando aplicável.
-* Com cobertura combinada ≥ 80% e análise contínua no SonarCloud.
 * Instrumentar observabilidade do backend com New Relic (APM) e logs estruturados.
 * Automatizar build/test/deploy via GitHub Actions e Vercel (frontend).
 
