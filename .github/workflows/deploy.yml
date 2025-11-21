@@ -132,3 +132,5 @@ jobs:
 
       - name: PM2 deploy release
         run: pm2 deploy ecosystem.config.js production
+
+        
