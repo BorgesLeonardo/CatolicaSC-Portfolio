@@ -332,6 +332,62 @@ const uploadingImages = ref(false)
 // Auth
 const { getToken } = useAuth()
 
+// ===== Helpers compartilhados para reduzir duplicação =====
+// Labels amigáveis para campos vindos do backend
+const friendlyFieldLabels: Record<string, string> = {
+  subscriptionPriceCents: 'Preço da Assinatura',
+  subscriptionInterval: 'Intervalo da Assinatura',
+  goalCents: 'Meta',
+  deadline: 'Data Limite',
+  categoryId: 'Categoria',
+  title: 'Título',
+  description: 'Descrição'
+}
+
+async function ensureAuthToken(): Promise<void> {
+  const token = await getToken.value?.()
+  if (token) {
+    setAuthToken(token)
+  }
+}
+
+function formatFieldErrors(fieldErrors: Record<string, string[]>): string {
+  if (fieldErrors.subscriptionPriceCents && fieldErrors.subscriptionPriceCents.length > 0) {
+    return fieldErrors.subscriptionPriceCents[0]
+  }
+  const joined = Object.entries(fieldErrors)
+    .map(([field, errors]) => `${friendlyFieldLabels[field] ?? field}: ${errors.join(', ')}`)
+    .join('; ')
+  return joined
+    ? `Algumas informações precisam de atenção: ${joined}`
+    : 'Algumas informações precisam de atenção. Verifique os campos e tente novamente.'
+}
+
+function extractAxiosErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as {
+      response?: {
+        status?: number
+        data?: {
+          message?: string
+          details?: unknown
+          fieldErrors?: Record<string, string[]>
+        }
+      }
+    }
+    const data = axiosError.response?.data
+    if (data?.fieldErrors) {
+      return formatFieldErrors(data.fieldErrors)
+    }
+    if (data?.details && typeof data.details === 'object' && 'fieldErrors' in (data.details as { fieldErrors?: Record<string, string[]> })) {
+      const details = data.details as { fieldErrors: Record<string, string[]> }
+      return formatFieldErrors(details.fieldErrors)
+    }
+    if (data?.message) return data.message
+  }
+  return fallback
+}
+
 // ===== Helpers de moeda (pt-BR) =====
 function formatBRL(value: number): string {
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -512,10 +568,7 @@ async function handleImageUpload(event: Event) {
     // noop: removed debug log
     
     // Configurar token
-    const token = await getToken.value?.()
-    if (token) {
-      setAuthToken(token)
-    }
+    await ensureAuthToken()
     
     // Se já existe uma imagem, remover a antiga primeiro
     if (currentImages.value.length > 0) {
@@ -565,10 +618,7 @@ async function removeExistingImages() {
   if (!props.project) return
   
   // Configurar token
-  const token = await getToken.value?.()
-  if (token) {
-    setAuthToken(token)
-  }
+  await ensureAuthToken()
   
   for (const image of currentImages.value) {
     try {
@@ -586,10 +636,7 @@ async function removeImage(imageId: string) {
     // noop: removed debug log
     
     // Configurar token
-    const token = await getToken.value?.()
-    if (token) {
-      setAuthToken(token)
-    }
+    await ensureAuthToken()
     
     await projectImagesService.deleteImage(props.project.id, imageId)
     
@@ -603,15 +650,7 @@ async function removeImage(imageId: string) {
     
   } catch (error: unknown) {
     // noop: removed debug log
-    
-    let errorMessage = 'Erro ao remover a imagem'
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { data?: { message?: string } } }
-      if (axiosError.response?.data?.message) {
-        errorMessage = axiosError.response.data.message
-      }
-    }
-    
+    const errorMessage = extractAxiosErrorMessage(error, 'Erro ao remover a imagem')
     Notify.create({
       type: 'negative',
       message: errorMessage
@@ -648,10 +687,7 @@ async function handleSubmit() {
   
   try {
     // Configurar token
-    const token = await getToken.value?.()
-    if (token) {
-      setAuthToken(token)
-    }
+    await ensureAuthToken()
     
     const updatedProject = await projectsService.update(props.project.id, updateData)
     // noop: removed debug log
@@ -681,75 +717,7 @@ async function handleSubmit() {
     
   } catch (error: unknown) {
     // noop: removed debug log
-    
-    let errorMessage = 'Erro ao atualizar a campanha. Tente novamente.'
-    
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { 
-        response?: { 
-          status?: number
-          data?: { 
-            message?: string
-            details?: unknown
-            fieldErrors?: Record<string, string[]>
-          } 
-        } 
-      }
-      
-      // noop: removed debug log
-      
-      if (axiosError.response?.data?.fieldErrors) {
-        const fieldErrors = axiosError.response.data.fieldErrors
-        // Mapeia chaves para rótulos amigáveis e prioriza mensagem específica
-        const fieldLabels: Record<string, string> = {
-          subscriptionPriceCents: 'Preço da Assinatura',
-          subscriptionInterval: 'Intervalo da Assinatura',
-          goalCents: 'Meta',
-          deadline: 'Data Limite',
-          categoryId: 'Categoria',
-          title: 'Título',
-          description: 'Descrição'
-        }
-        if (fieldErrors.subscriptionPriceCents && fieldErrors.subscriptionPriceCents.length > 0) {
-          // Mostra apenas a mensagem específica de preço quando presente
-          errorMessage = fieldErrors.subscriptionPriceCents[0]
-        } else {
-          const joined = Object.entries(fieldErrors)
-            .map(([field, errors]) => `${fieldLabels[field] ?? field}: ${errors.join(', ')}`)
-            .join('; ')
-          errorMessage = `Erro de validação: ${joined}`
-        }
-      } else if (axiosError.response?.data?.details) {
-        const details = axiosError.response.data.details
-        // Se vierem fieldErrors dentro de details, formata amigavelmente
-        if (details && typeof details === 'object' && 'fieldErrors' in details) {
-          const fieldErrors = (details as { fieldErrors: Record<string, string[]> }).fieldErrors
-          const fieldLabels: Record<string, string> = {
-            subscriptionPriceCents: 'Preço da Assinatura',
-            subscriptionInterval: 'Intervalo da Assinatura',
-            goalCents: 'Meta',
-            deadline: 'Data Limite',
-            categoryId: 'Categoria',
-            title: 'Título',
-            description: 'Descrição'
-          }
-          if (fieldErrors.subscriptionPriceCents && fieldErrors.subscriptionPriceCents.length > 0) {
-            errorMessage = fieldErrors.subscriptionPriceCents[0]
-          } else {
-            const joined = Object.entries(fieldErrors)
-              .map(([field, errors]) => `${fieldLabels[field] ?? field}: ${errors.join(', ')}`)
-              .join('; ')
-            errorMessage = joined ? `Algumas informações precisam de atenção: ${joined}` : 'Algumas informações precisam de atenção. Verifique os campos e tente novamente.'
-          }
-        } else {
-          // Genérico para leigos (evita JSON cru)
-          errorMessage = 'Algumas informações precisam de atenção. Verifique os campos e tente novamente.'
-        }
-      } else if (axiosError.response?.data?.message) {
-        errorMessage = axiosError.response.data.message
-      }
-    }
-    
+    const errorMessage = extractAxiosErrorMessage(error, 'Erro ao atualizar a campanha. Tente novamente.')
     Notify.create({
       type: 'negative',
       message: errorMessage,
