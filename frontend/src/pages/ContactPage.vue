@@ -77,11 +77,41 @@ const topics = [
   { label: 'Sugestão de melhoria', value: 'suggestion' }
 ]
 
-// Regex de e-mail segura e linear (evita backtracking catastrófico)
-const safeEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Validação de e-mail sem regex para evitar backtracking (linear)
+function isAlphaNumHyphen(str: string): boolean {
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i)
+    const isDigit = ch >= 48 && ch <= 57
+    const isUpper = ch >= 65 && ch <= 90
+    const isLower = ch >= 97 && ch <= 122
+    if (!(isDigit || isUpper || isLower || str[i] === '-')) return false
+  }
+  return true
+}
+
+function isSafeEmail(value: string): boolean {
+  const v = String(value ?? '').trim()
+  if (v.length === 0) return false
+  const atIndex = v.indexOf('@')
+  if (atIndex <= 0 || atIndex !== v.lastIndexOf('@') || atIndex === v.length - 1) return false
+  const local = v.slice(0, atIndex)
+  const domain = v.slice(atIndex + 1)
+  if (local.length === 0 || domain.length === 0) return false
+  if (domain.startsWith('.') || domain.endsWith('.')) return false
+  const labels = domain.split('.')
+  if (labels.length < 2) return false
+  for (const label of labels) {
+    if (label.length === 0 || label.length > 63) return false
+    if (label.startsWith('-') || label.endsWith('-')) return false
+    if (!isAlphaNumHyphen(label)) return false
+  }
+  // TLD mínimo 2 caracteres
+  if (labels[labels.length - 1].length < 2) return false
+  return true
+}
 
 const rules = {
-  email: (v: string) => safeEmailRegex.test(String(v ?? '').trim()) || 'E-mail inválido'
+  email: (v: string) => isSafeEmail(v) || 'E-mail inválido'
 }
 
 async function submit() {
