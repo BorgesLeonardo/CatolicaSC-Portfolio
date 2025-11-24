@@ -179,19 +179,39 @@
               </h3>
               
               <div class="form-grid">
-                <div class="form-field">
+                <div class="form-field" v-if="!isSubscription">
                   <label class="field-label">Meta de Arrecadação *</label>
                   <q-input
                     v-model="goalAmountInput"
                     outlined
                     dense
                     placeholder="0,00"
-                    :rules="[val => parseBRLToCents(String(val)) > 0 || 'Meta deve ser maior que zero']"
+                    :rules="[val => parseBRLToCents(String(val)) >= 500 || 'Meta mínima é R$ 5,00']"
                     class="form-input"
                     @blur="normalizeGoalAmount"
                   >
                     <template #prepend>
                       <q-icon name="attach_money" color="primary" />
+                    </template>
+                    <template #append>
+                      <span class="currency-label">BRL</span>
+                    </template>
+                  </q-input>
+                </div>
+
+                <div class="form-field" v-if="isSubscription">
+                  <label class="field-label">Preço da Assinatura *</label>
+                  <q-input
+                    v-model="subscriptionPriceInput"
+                    outlined
+                    dense
+                    placeholder="0,00"
+                    :rules="[val => parseBRLToCents(String(val)) >= 500 || 'Preço mínimo é R$ 5,00']"
+                    class="form-input"
+                    @blur="normalizeSubscriptionPrice"
+                  >
+                    <template #prepend>
+                      <q-icon name="payments" color="primary" />
                     </template>
                     <template #append>
                       <span class="currency-label">BRL</span>
@@ -302,7 +322,8 @@ const formData = ref({
   description: '',
   goalCents: 0,
   deadline: '',
-  categoryId: ''
+  categoryId: '',
+  subscriptionPriceCents: 0
 })
 
 const currentImages = ref<ProjectImage[]>([])
@@ -346,6 +367,26 @@ function normalizeGoalAmount() {
   }
 }
 
+// Computed para o input do preço de assinatura
+const subscriptionPriceInput = computed<string>({
+  get() {
+    return (formData.value.subscriptionPriceCents ?? 0) > 0
+      ? formatBRL(((formData.value.subscriptionPriceCents ?? 0) / 100))
+      : ''
+  },
+  set(val: string) {
+    formData.value.subscriptionPriceCents = parseBRLToCents(val)
+  }
+})
+
+function normalizeSubscriptionPrice() {
+  if ((formData.value.subscriptionPriceCents ?? 0) > 0) {
+    subscriptionPriceInput.value = formatBRL(((formData.value.subscriptionPriceCents ?? 0) / 100))
+  } else {
+    subscriptionPriceInput.value = ''
+  }
+}
+
 // ===== Computeds =====
 const isOpen = computed({
   get: () => props.modelValue,
@@ -358,13 +399,17 @@ const minDate = computed(() => {
   return tomorrow.toISOString().slice(0, 16)
 })
 
+// Campanha de assinatura (recorrente) não usa meta de arrecadação
+const isSubscription = computed(() => !!props.project?.subscriptionEnabled)
+
 const isFormValid = computed(() => {
-  const valid = formData.value.title.trim().length > 0 &&
-         formData.value.goalCents > 0 &&
-         formData.value.deadline &&
-         formData.value.categoryId &&
-         formData.value.categoryId.trim().length > 0 &&
-         new Date(formData.value.deadline) > new Date()
+  const hasTitle = formData.value.title.trim().length > 0
+  const hasValidDeadline = !!formData.value.deadline && new Date(formData.value.deadline) > new Date()
+  const hasCategory = !!formData.value.categoryId && formData.value.categoryId.trim().length > 0
+  const hasGoalWhenRequired = isSubscription.value ? true : formData.value.goalCents >= 500
+  const hasSubscriptionPriceWhenRequired = isSubscription.value ? (formData.value.subscriptionPriceCents ?? 0) >= 500 : true
+
+  const valid = hasTitle && hasValidDeadline && hasCategory && hasGoalWhenRequired && hasSubscriptionPriceWhenRequired
   
   // Debug logs
   if (!valid) {
@@ -410,7 +455,8 @@ function initializeForm() {
     description: props.project.description || '',
     goalCents: props.project.goalCents,
     deadline: new Date(props.project.deadline).toISOString().slice(0, 16),
-    categoryId: props.project.categoryId || ''
+    categoryId: props.project.categoryId || '',
+    subscriptionPriceCents: props.project.subscriptionPriceCents
   }
 
   // Carregar imagens existentes
@@ -418,6 +464,8 @@ function initializeForm() {
 
   // normaliza exibição da meta já na abertura
   normalizeGoalAmount()
+  // normaliza exibição do preço de assinatura
+  normalizeSubscriptionPrice()
 }
 
 function triggerImageUpload() {
@@ -584,7 +632,9 @@ async function handleSubmit() {
     description: formData.value.description && formData.value.description.trim().length >= 10 
       ? formData.value.description.trim() 
       : undefined,
-    goalCents: formData.value.goalCents,
+    goalCents: isSubscription.value ? undefined : formData.value.goalCents,
+    // preço de assinatura quando for campanha recorrente
+    subscriptionPriceCents: isSubscription.value ? (formData.value.subscriptionPriceCents ?? 0) : undefined,
     // converte o valor do input local (sem timezone) para ISO UTC corretamente
     deadline: formData.value.deadline
       ? new Date(formData.value.deadline).toISOString()
@@ -648,15 +698,55 @@ async function handleSubmit() {
       
       // noop: removed debug log
       
-      if (axiosError.response?.data?.message) {
-        errorMessage = axiosError.response.data.message
+      if (axiosError.response?.data?.fieldErrors) {
+        const fieldErrors = axiosError.response.data.fieldErrors
+        // Mapeia chaves para rótulos amigáveis e prioriza mensagem específica
+        const fieldLabels: Record<string, string> = {
+          subscriptionPriceCents: 'Preço da Assinatura',
+          subscriptionInterval: 'Intervalo da Assinatura',
+          goalCents: 'Meta',
+          deadline: 'Data Limite',
+          categoryId: 'Categoria',
+          title: 'Título',
+          description: 'Descrição'
+        }
+        if (fieldErrors.subscriptionPriceCents && fieldErrors.subscriptionPriceCents.length > 0) {
+          // Mostra apenas a mensagem específica de preço quando presente
+          errorMessage = fieldErrors.subscriptionPriceCents[0]
+        } else {
+          const joined = Object.entries(fieldErrors)
+            .map(([field, errors]) => `${fieldLabels[field] ?? field}: ${errors.join(', ')}`)
+            .join('; ')
+          errorMessage = `Erro de validação: ${joined}`
+        }
       } else if (axiosError.response?.data?.details) {
-        errorMessage = `Erro de validação: ${JSON.stringify(axiosError.response.data.details)}`
-      } else if (axiosError.response?.data?.fieldErrors) {
-        const fieldErrors = Object.entries(axiosError.response.data.fieldErrors)
-          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-          .join('; ')
-        errorMessage = `Erro de validação: ${fieldErrors}`
+        const details = axiosError.response.data.details
+        // Se vierem fieldErrors dentro de details, formata amigavelmente
+        if (details && typeof details === 'object' && 'fieldErrors' in details) {
+          const fieldErrors = (details as { fieldErrors: Record<string, string[]> }).fieldErrors
+          const fieldLabels: Record<string, string> = {
+            subscriptionPriceCents: 'Preço da Assinatura',
+            subscriptionInterval: 'Intervalo da Assinatura',
+            goalCents: 'Meta',
+            deadline: 'Data Limite',
+            categoryId: 'Categoria',
+            title: 'Título',
+            description: 'Descrição'
+          }
+          if (fieldErrors.subscriptionPriceCents && fieldErrors.subscriptionPriceCents.length > 0) {
+            errorMessage = fieldErrors.subscriptionPriceCents[0]
+          } else {
+            const joined = Object.entries(fieldErrors)
+              .map(([field, errors]) => `${fieldLabels[field] ?? field}: ${errors.join(', ')}`)
+              .join('; ')
+            errorMessage = joined ? `Algumas informações precisam de atenção: ${joined}` : 'Algumas informações precisam de atenção. Verifique os campos e tente novamente.'
+          }
+        } else {
+          // Genérico para leigos (evita JSON cru)
+          errorMessage = 'Algumas informações precisam de atenção. Verifique os campos e tente novamente.'
+        }
+      } else if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message
       }
     }
     

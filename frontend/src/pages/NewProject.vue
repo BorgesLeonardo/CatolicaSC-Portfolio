@@ -547,7 +547,7 @@ const rules = {
   minDescription: (v: string) => (v?.length >= 10) || 'Descrição deve ter pelo menos 10 caracteres',
   minGoal: (v: string) => {
     const numValue = parseFloat(v?.replace(',', '.') || '0')
-    return numValue > 0 || 'Meta deve ser maior que zero'
+    return numValue >= 5 || 'Meta mínima é R$ 5,00'
   },
   futureDate: (v: string) => {
     if (!v) return true

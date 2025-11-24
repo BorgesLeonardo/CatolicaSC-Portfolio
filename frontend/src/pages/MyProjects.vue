@@ -384,8 +384,16 @@ onMounted(fetchMyProjects)
                   
                   <div class="campaign-meta">
                     <div class="meta-item">
-                      <q-icon name="flag" size="sm" />
-                      {{ formatMoneyBRL(project.goalCents) }}
+                      <q-icon :name="project.subscriptionEnabled ? 'payments' : 'flag'" size="sm" />
+                      <template v-if="project.subscriptionEnabled">
+                        {{ formatMoneyBRL(project.subscriptionPriceCents || 0) }}
+                        <span class="text-caption text-hint">
+                          / {{ project.subscriptionInterval === 'MONTH' ? 'mês' : 'ano' }}
+                        </span>
+                      </template>
+                      <template v-else>
+                        {{ formatMoneyBRL(project.goalCents) }}
+                      </template>
                     </div>
                     <div class="meta-item">
                       <q-icon name="schedule" size="sm" />

@@ -25,12 +25,15 @@ export class ProjectsController {
   private updateProjectSchema = z.object({
     title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres').max(120, 'Título deve ter no máximo 120 caracteres').optional(),
     description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(5000, 'Descrição deve ter no máximo 5000 caracteres').optional(),
-    goalCents: z.number().int().positive('Meta deve ser um valor positivo').optional(),
+    goalCents: z.number().int().min(500, 'Meta deve ser pelo menos R$ 5,00').optional(),
     deadline: z.string().datetime('Data limite deve ser uma data válida').optional(),
     imageUrl: z.string().optional(),
     videoUrl: z.string().url('Informe uma URL de vídeo válida').optional(),
     categoryId: z.string().cuid('Categoria deve ser válida').optional(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
+    // Assinaturas (permitir atualização de preço/intervalo)
+    subscriptionPriceCents: z.number().int().min(500, 'Assinatura deve ser pelo menos R$ 5,00').max(100_000_000, 'Assinatura acima do limite permitido').optional(),
+    subscriptionInterval: z.enum(['MONTH', 'YEAR']).optional(),
   }).refine((b) => Object.values(b).some((v) => v !== undefined), {
     message: 'Envie ao menos um campo para atualização',
   });
@@ -82,8 +85,8 @@ export class ProjectsController {
 
       // Additional server-side range enforcement by funding type
       if (data.fundingType === 'DIRECT') {
-        if (typeof data.goalCents !== 'number' || data.goalCents < 1000 || data.goalCents > 100_000_000) {
-          throw new AppError('ValidationError', 422, { fieldErrors: { goalCents: ['Meta fora da faixa permitida'] } });
+        if (typeof data.goalCents !== 'number' || data.goalCents < 500 || data.goalCents > 100_000_000) {
+          throw new AppError('ValidationError', 422, { fieldErrors: { goalCents: ['Meta deve ser pelo menos R$ 5,00'] } });
         }
         if (data.subscriptionEnabled) {
           throw new AppError('ValidationError', 422, { fieldErrors: { subscriptionEnabled: ['Assinatura não é permitida para campanhas de pagamento direto'] } });

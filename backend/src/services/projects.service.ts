@@ -28,6 +28,9 @@ export interface UpdateProjectData {
   videoUrl?: string | undefined;
   categoryId?: string | undefined;
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | undefined;
+  // Assinaturas
+  subscriptionPriceCents?: number | undefined;
+  subscriptionInterval?: 'MONTH' | 'YEAR' | undefined;
 }
 
 export interface ProjectFilters {

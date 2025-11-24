@@ -67,6 +67,9 @@ export interface UpdateProjectData {
   imageUrl?: string
   categoryId?: string
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  // Assinaturas (recorrente)
+  subscriptionPriceCents?: number
+  subscriptionInterval?: 'MONTH' | 'YEAR'
 }
 
 export interface ProjectFilters {
