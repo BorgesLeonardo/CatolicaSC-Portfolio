@@ -77,8 +77,11 @@ const topics = [
   { label: 'Sugestão de melhoria', value: 'suggestion' }
 ]
 
+// Regex de e-mail segura e linear (evita backtracking catastrófico)
+const safeEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const rules = {
-  email: (v: string) => /.+@.+\..+/.test(v) || 'E-mail inválido'
+  email: (v: string) => safeEmailRegex.test(String(v ?? '').trim()) || 'E-mail inválido'
 }
 
 async function submit() {
