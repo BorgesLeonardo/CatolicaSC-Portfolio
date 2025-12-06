@@ -188,7 +188,7 @@
       <div class="container">
         <div class="text-center q-mb-xl">
           <div class="section-badge fade-in-up">
-            <q-icon name="lightbulb" size="sm" class="q-mr-xs" color="primary" />
+            <q-icon name="lightbulb" size="sm" class="q-mr-xs" />
             Processo Simples
           </div>
           <h2 class="section-title fade-in-up">Como Funciona</h2>
@@ -274,7 +274,7 @@
         <div class="q-mt-xl">
           <div class="text-center q-mb-lg">
             <div class="section-badge fade-in-up">
-              <q-icon name="volunteer_activism" size="sm" class="q-mr-xs" color="secondary" />
+              <q-icon name="volunteer_activism" size="sm" class="q-mr-xs" />
               Doar em 3 Passos
             </div>
             <p class="section-subtitle fade-in-up">
@@ -817,6 +817,9 @@ watch(period, () => {
   margin-bottom: 24px;
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
+
+// Variante totalmente roxa
+// (removido uso; manter referência caso precise no futuro)
 
 .steps-container {
   display: grid;

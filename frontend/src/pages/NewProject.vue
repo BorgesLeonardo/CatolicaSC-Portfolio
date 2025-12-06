@@ -138,7 +138,7 @@
 
             <!-- Para campanhas recorrentes não há campo de meta -->
 
-            <div class="col-12 col-md-3" v-if="form.fundingType === 'DIRECT'">
+            <div class="col-12 col-md-3">
               <q-input
                 v-model="form.date"
                 label="Data limite *"
@@ -152,7 +152,7 @@
               />
             </div>
 
-            <div class="col-12 col-md-3" v-if="form.fundingType === 'DIRECT'">
+            <div class="col-12 col-md-3">
               <q-input
                 v-model="form.time"
                 label="Hora limite (opcional)"
@@ -632,11 +632,9 @@ async function submit() {
       return
     }
   }
-  if (form.fundingType === 'DIRECT') {
-    if (!form.date) { 
-      fieldErrors.deadline = 'Selecione a data limite'
-      return 
-    }
+  if (!form.date) { 
+    fieldErrors.deadline = 'Selecione a data limite'
+    return 
   }
   // Exigir pelo menos uma mídia: imagem ou vídeo
   if (!useVideo.value && !selectedImage.value) {
@@ -665,8 +663,8 @@ async function submit() {
   
   // noop: removed debug log
   
-  // Validação de data futura (apenas para DIRECT)
-  if (form.fundingType === 'DIRECT' && form.date) {
+  // Validação de data futura (aplica a todos os tipos)
+  if (form.date) {
     // Parse local: aceita 'YYYY-MM-DD' ou 'DD/MM/YYYY'
     let y: number, m: number, d: number
     if (/^\d{4}-\d{2}-\d{2}$/.test(form.date)) {
@@ -719,7 +717,7 @@ async function submit() {
   const subscriptionPriceCents = form.fundingType === 'RECURRING' && form.subscriptionPriceReais
     ? reaisToCents(form.subscriptionPriceReais)
     : undefined
-  const deadline = form.fundingType === 'DIRECT' ? mergeDateTimeToISO(form.date, form.time) : undefined
+  const deadline = mergeDateTimeToISO(form.date, form.time)
 
   loading.value = true
   // noop: removed debug log

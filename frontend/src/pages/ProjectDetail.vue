@@ -811,6 +811,13 @@ function backToCover() {
                       </div>
                     </div>
                     <div class="info-row">
+                      <q-icon name="schedule" class="info-icon" />
+                      <div class="info-content">
+                        <div class="info-label">Prazo limite</div>
+                        <div class="info-value">{{ formatDateTimeBR(project.deadline) }}</div>
+                      </div>
+                    </div>
+                    <div class="info-row">
                       <q-icon name="payments" class="info-icon" />
                       <div class="info-content">
                         <div class="info-label">Preço do plano</div>

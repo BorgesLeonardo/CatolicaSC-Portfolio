@@ -39,18 +39,10 @@ export class ProjectsController {
   });
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      // Define um deadline padrão para campanhas recorrentes quando não informado pelo frontend
-      const shouldDefaultEndsAt =
-        (!req.body.deadline && !req.body.endsAt) && req.body.fundingType === 'RECURRING';
-
-      const defaultEndsAt = shouldDefaultEndsAt
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        : undefined;
-
       const parse = this.createProjectSchema.safeParse({
         ...req.body,
         // allow incoming ISO strings for endsAt
-        endsAt: req.body.deadline ? new Date(req.body.deadline) : (req.body.endsAt || defaultEndsAt),
+        endsAt: req.body.deadline ? new Date(req.body.deadline) : req.body.endsAt,
       });
       if (!parse.success) {
         throw new AppError('ValidationError', 422, parse.error.flatten());

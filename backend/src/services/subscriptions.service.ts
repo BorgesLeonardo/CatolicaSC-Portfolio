@@ -15,6 +15,7 @@ export class SubscriptionsService {
       select: {
         id: true,
         title: true,
+        deadline: true,
         deletedAt: true,
         status: true,
         subscriptionEnabled: true,
@@ -35,6 +36,12 @@ export class SubscriptionsService {
 
     // Only allow subscriptions when campaign is ACTIVE (PUBLISHED)
     if (project.status !== 'PUBLISHED') {
+      throw new AppError('Project is not accepting subscriptions', 400);
+    }
+
+    // Block new subscriptions after campaign deadline
+    const now = new Date();
+    if (project.deadline && now > project.deadline) {
       throw new AppError('Project is not accepting subscriptions', 400);
     }
 
