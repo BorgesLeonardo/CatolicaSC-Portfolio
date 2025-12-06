@@ -268,12 +268,14 @@
                 <div class="q-mt-lg">
                   <div class="text-subtitle2 q-mb-sm">
                     <q-icon name="image" class="q-mr-xs" />
-                    Capa do Vídeo (opcional)
+                    Capa do Vídeo *
                   </div>
                   <q-file
                     v-model="selectedCover"
                     accept="image/*"
                     max-file-size="5242880"
+                    :error="!!fieldErrors.cover"
+                    :error-message="fieldErrors.cover"
                     filled
                   >
                     <template v-slot:prepend>
@@ -544,10 +546,10 @@ const rules = {
   required: (v: unknown) => (!!v || v === 0) || 'Campo obrigatório',
   minTitle: (v: string) => (v?.length >= 3) || 'Título deve ter pelo menos 3 caracteres',
   maxTitle: (v: string) => (v?.length <= 120) || 'Título deve ter no máximo 120 caracteres',
-  minDescription: (v: string) => (v?.length >= 10) || 'Descrição deve ter pelo menos 10 caracteres',
+  minDescription: (v: string) => (v?.length >= 20) || 'Descrição deve ter pelo menos 20 caracteres',
   minGoal: (v: string) => {
     const numValue = parseFloat(v?.replace(',', '.') || '0')
-    return numValue >= 5 || 'Meta mínima é R$ 5,00'
+    return numValue >= 10 || 'Meta mínima é R$ 10,00'
   },
   futureDate: (v: string) => {
     if (!v) return true
@@ -600,14 +602,15 @@ async function submit() {
   fieldErrors.image = ''
   fieldErrors.video = ''
   fieldErrors.categoryId = ''
+  fieldErrors.cover = ''
 
   // validação mínima frontend
   if (!form.title || form.title.length < 3) { 
     fieldErrors.title = 'Título deve ter pelo menos 3 caracteres'
     return 
   }
-  if (!form.description || form.description.length < 10) { 
-    fieldErrors.description = 'Descrição deve ter pelo menos 10 caracteres'
+  if (!form.description || form.description.length < 20) { 
+    fieldErrors.description = 'Descrição deve ter pelo menos 20 caracteres'
     return 
   }
   if (!form.categoryId) { 
@@ -634,6 +637,29 @@ async function submit() {
       fieldErrors.deadline = 'Selecione a data limite'
       return 
     }
+  }
+  // Exigir pelo menos uma mídia: imagem ou vídeo
+  if (!useVideo.value && !selectedImage.value) {
+    fieldErrors.image = 'Envie uma imagem ou um vídeo'
+    try {
+      Notify.create({ type: 'negative', message: 'Você precisa enviar uma imagem ou um vídeo.' })
+    } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+    return
+  }
+  if (useVideo.value && !selectedVideo.value) {
+    fieldErrors.video = 'Envie uma imagem ou um vídeo'
+    try {
+      Notify.create({ type: 'negative', message: 'Você precisa enviar uma imagem ou um vídeo.' })
+    } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+    return
+  }
+  // Se usar vídeo, exigir capa obrigatória
+  if (useVideo.value && !selectedCover.value) {
+    fieldErrors.cover = 'Envie uma capa para o vídeo'
+    try {
+      Notify.create({ type: 'negative', message: 'A capa do vídeo é obrigatória.' })
+    } catch (_err) { if (import.meta.env.DEV) console.debug(_err) }
+    return
   }
   // validações específicas acima por tipo
   
@@ -828,7 +854,16 @@ async function submit() {
       const fe = resp.details.fieldErrors
       for (const key of Object.keys(fe)) {
         const msg = Array.isArray(fe[key]) ? fe[key][0] : String(fe[key])
-        fieldErrors[key] = msg
+        if (key === 'hasVideo' || key === 'hasImage') {
+          // Mostrar mensagem no campo de mídia visível
+          if (useVideo.value) {
+            fieldErrors.video = msg
+          } else {
+            fieldErrors.image = msg
+          }
+        } else {
+          fieldErrors[key] = msg
+        }
       }
       Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
     } else if (status === 422 && resp?.message) {
@@ -838,8 +873,16 @@ async function submit() {
       const fe = resp.issues.fieldErrors
       for (const key of Object.keys(fe)) {
         const msg = Array.isArray(fe[key]) ? fe[key][0] : String(fe[key])
-        // backend usa 'deadline' e 'goalCents' — mantenha nomes iguais aqui
-        fieldErrors[key] = msg
+        if (key === 'hasVideo' || key === 'hasImage') {
+          if (useVideo.value) {
+            fieldErrors.video = msg
+          } else {
+            fieldErrors.image = msg
+          }
+        } else {
+          // backend usa 'deadline' e 'goalCents' — mantenha nomes iguais aqui
+          fieldErrors[key] = msg
+        }
       }
       Notify.create({ type: 'negative', message: 'Verifique os campos destacados.' })
     } else if (status === 429) {

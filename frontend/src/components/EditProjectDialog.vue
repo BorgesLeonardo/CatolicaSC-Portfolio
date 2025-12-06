@@ -34,29 +34,142 @@
       <q-card-section class="dialog-content">
         <div class="form-container">
           <q-form @submit="handleSubmit" class="edit-form">
+            <!-- Project Video (when there is no video yet OR when marked for removal but no new file) -->
+            <div class="form-section" v-if="(!currentVideoUrl && !pendingNewVideoFile) || (currentVideoUrl && pendingRemoveVideo && !pendingNewVideoFile)">
+              <h3 class="section-title">
+                <q-icon name="videocam" class="q-mr-sm" />
+                {{ currentVideoUrl && pendingRemoveVideo ? 'Vídeo será removido ao salvar' : 'Adicionar Vídeo' }}
+              </h3>
+
+              <div class="video-upload-section">
+                <div class="text-caption text-muted">Formatos aceitos: MP4, WebM, etc. Tamanho máximo: 100MB.</div>
+                <div class="video-actions">
+                  <q-btn 
+                    outline 
+                    color="primary" 
+                    icon="upload"
+                    :label="currentVideoUrl && pendingRemoveVideo ? 'Adicionar novo Vídeo' : 'Adicionar Vídeo'"
+                    @click="triggerVideoUpload"
+                    class="upload-btn"
+                  >
+                  </q-btn>
+                  <q-btn
+                    v-if="currentVideoUrl && pendingRemoveVideo"
+                    flat
+                    color="grey-7"
+                    icon="undo"
+                    label="Desfazer remoção"
+                    @click="cancelPendingVideoChange"
+                  />
+                  <input
+                    ref="videoInputEmpty"
+                    type="file"
+                    accept="video/*"
+                    @change="handleVideoUpload"
+                    style="display: none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Project Video (preview of selected new file) -->
+            <div class="form-section" v-if="pendingNewVideoFile">
+              <h3 class="section-title">
+                <q-icon name="videocam" class="q-mr-sm" />
+                Pré-visualização do novo vídeo (será aplicado ao salvar)
+              </h3>
+              <div class="video-upload-section">
+                <div class="current-video">
+                  <video :src="pendingNewVideoPreviewUrl || ''" controls style="width: 100%; max-height: 360px; border-radius: 8px;" />
+                </div>
+                <div class="video-actions">
+                  <q-btn 
+                    outline 
+                    color="primary" 
+                    icon="upload"
+                    label="Trocar Vídeo"
+                    @click="triggerVideoUpload"
+                    class="upload-btn"
+                  />
+                  <q-btn
+                    flat
+                    color="grey-7"
+                    icon="close"
+                    label="Cancelar"
+                    @click="cancelPendingVideoChange"
+                  />
+                  <input
+                    ref="videoInput"
+                    type="file"
+                    accept="video/*"
+                    @change="handleVideoUpload"
+                    style="display: none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Project Video (only when there is a video and no pending new file or removal) -->
+            <div class="form-section" v-if="currentVideoUrl && !pendingRemoveVideo && !pendingNewVideoFile">
+              <h3 class="section-title">
+                <q-icon name="videocam" class="q-mr-sm" />
+                Vídeo da Campanha
+              </h3>
+
+              <div class="video-upload-section">
+                <div class="current-video">
+                  <video :src="currentVideoUrl" controls style="width: 100%; max-height: 360px; border-radius: 8px;" />
+                </div>
+
+                <div class="video-actions">
+                  <q-btn 
+                    outline 
+                    color="primary" 
+                    icon="upload"
+                    label="Alterar Vídeo"
+                    @click="triggerVideoUpload"
+                    class="upload-btn"
+                  >
+                  </q-btn>
+                  <q-btn
+                    flat
+                    color="negative"
+                    icon="delete"
+                    label="Remover Vídeo"
+                    @click="removeVideo"
+                  />
+                  <input
+                    ref="videoInput"
+                    type="file"
+                    accept="video/*"
+                    @change="handleVideoUpload"
+                    style="display: none"
+                  />
+                </div>
+              </div>
+            </div>
+
             <!-- Project Image -->
             <div class="form-section">
               <h3 class="section-title">
                 <q-icon name="image" class="q-mr-sm" />
-                Imagem da Campanha
+                {{ imageSectionTitle }}
               </h3>
               
               <div class="image-upload-section">
                 <!-- Current Image -->
-                <div v-if="currentImages.length > 0" class="current-image">
-                  <q-img 
-                    :src="getImageUrl(currentImages[0].url)" 
-                    ratio="16/9" 
-                    fit="cover"
-                    class="preview-image"
-                  />
+                <div v-if="pendingNewImagePreviewUrl" class="current-image">
+                  <img :src="pendingNewImagePreviewUrl" alt="Pré-visualização da imagem" class="preview-image native-preview" />
+                </div>
+                <div v-else-if="currentImages.length > 0 && !pendingRemoveImage" class="current-image">
+                  <img :src="getImageUrl(currentImages[0].url)" alt="Capa atual" class="preview-image native-preview" />
                   <div class="image-overlay">
                     <q-btn 
                       flat 
                       round 
                       icon="delete" 
                       color="negative"
-                      @click="removeImage(currentImages[0].id)"
+                      @click="removeImage()"
                       class="remove-image-btn"
                     />
                   </div>
@@ -65,7 +178,9 @@
                 <!-- Placeholder when no image -->
                 <div v-else class="image-placeholder">
                   <q-icon name="add_photo_alternate" size="3rem" class="icon-muted" />
-                  <p class="placeholder-text">Nenhuma imagem selecionada</p>
+                  <p class="placeholder-text">
+                    {{ pendingRemoveImage ? 'Imagem será removida ao salvar' : 'Nenhuma imagem selecionada' }}
+                  </p>
                 </div>
                 
                 <!-- Upload Actions -->
@@ -74,17 +189,19 @@
                     outline 
                     color="primary" 
                     icon="upload"
-                    :label="currentImages.length > 0 ? 'Alterar Imagem' : 'Adicionar Imagem'"
+                    :label="(currentImages.length > 0 && !pendingRemoveImage) ? 'Alterar Imagem' : 'Adicionar Imagem'"
                     @click="triggerImageUpload"
-                    :loading="uploadingImages"
-                    :disable="uploadingImages"
                     class="upload-btn"
                   >
-                    <template #loading>
-                      <q-spinner-hourglass class="on-left" />
-                      Enviando...
-                    </template>
                   </q-btn>
+                  <q-btn
+                    v-if="pendingRemoveImage"
+                    flat
+                    color="grey-7"
+                    icon="undo"
+                    label="Desfazer remoção"
+                    @click="cancelPendingImageChange"
+                  />
                 <input
                   ref="imageInput"
                   type="file"
@@ -186,7 +303,7 @@
                     outlined
                     dense
                     placeholder="0,00"
-                    :rules="[val => parseBRLToCents(String(val)) >= 500 || 'Meta mínima é R$ 5,00']"
+                    :rules="[val => parseBRLToCents(String(val)) >= 1000 || 'Meta mínima é R$ 10,00']"
                     class="form-input"
                     @blur="normalizeGoalAmount"
                   >
@@ -294,6 +411,7 @@ import { useAuth } from '@clerk/vue'
 import { setAuthToken } from 'src/utils/http'
 import { projectsService } from 'src/services/projects'
 import { projectImagesService } from 'src/services/project-images'
+import { projectVideosService } from 'src/services/project-videos'
 import { categoriesService } from 'src/services/categories'
 import type { Project, Category, ProjectImage } from 'src/components/models'
 
@@ -312,6 +430,8 @@ const emit = defineEmits<Emits>()
 
 // Refs
 const imageInput = ref<HTMLInputElement>()
+const videoInput = ref<HTMLInputElement>()
+const videoInputEmpty = ref<HTMLInputElement>()
 const saving = ref(false)
 const categories = ref<Category[]>([])
 const loadingCategories = ref(false)
@@ -327,7 +447,16 @@ const formData = ref({
 })
 
 const currentImages = ref<ProjectImage[]>([])
-const uploadingImages = ref(false)
+const currentVideoUrl = ref<string | undefined>(undefined)
+
+// Pending media changes (apply on save)
+const pendingNewImageFile = ref<File | null>(null)
+const pendingNewImagePreviewUrl = ref<string | null>(null)
+const pendingRemoveImage = ref(false)
+
+const pendingNewVideoFile = ref<File | null>(null)
+const pendingNewVideoPreviewUrl = ref<string | null>(null)
+const pendingRemoveVideo = ref(false)
 
 // Auth
 const { getToken } = useAuth()
@@ -486,6 +615,8 @@ const formatLastUpdate = computed(() => {
   })
 })
 
+const imageSectionTitle = computed(() => currentVideoUrl.value ? 'Capa do Vídeo' : 'Imagem da Campanha')
+
 // ===== Methods =====
 async function loadCategories() {
   loadingCategories.value = true
@@ -517,6 +648,18 @@ function initializeForm() {
 
   // Carregar imagens existentes
   currentImages.value = props.project.images || []
+  currentVideoUrl.value = props.project.videoUrl
+
+  // Reset pending media changes
+  pendingNewImageFile.value = null
+  pendingNewImagePreviewUrl.value = null
+  pendingRemoveImage.value = false
+  pendingNewVideoFile.value = null
+  pendingNewVideoPreviewUrl.value = null
+  pendingRemoveVideo.value = false
+
+  // Garantir que buscamos as imagens atuais do backend ao abrir
+  void refreshProjectImages()
 
   // normaliza exibição da meta já na abertura
   normalizeGoalAmount()
@@ -528,7 +671,38 @@ function triggerImageUpload() {
   imageInput.value?.click()
 }
 
-async function handleImageUpload(event: Event) {
+function triggerVideoUpload() {
+  if (videoInput.value) {
+    videoInput.value.click()
+    return
+  }
+  videoInputEmpty.value?.click()
+}
+
+async function refreshProjectImages() {
+  if (!props.project) return
+  try {
+    const resp = await projectImagesService.getProjectImages(props.project.id)
+    currentImages.value = resp.images
+
+    // Fallback: usar imageUrl legado como capa quando não houver imagens na API
+    if ((!currentImages.value || currentImages.value.length === 0) && props.project.imageUrl) {
+      currentImages.value = [{
+        id: 'legacy-cover',
+        projectId: props.project.id,
+        url: props.project.imageUrl,
+        mimeType: 'image/*',
+        order: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as unknown as ProjectImage]
+    }
+  } catch {
+    // noop
+  }
+}
+
+function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const files = target.files
   
@@ -562,56 +736,44 @@ async function handleImageUpload(event: Event) {
     return
   }
   
-  uploadingImages.value = true
-  
-  try {
-    // noop: removed debug log
-    
-    // Configurar token
-    await ensureAuthToken()
-    
-    // Se já existe uma imagem, remover a antiga primeiro
-    if (currentImages.value.length > 0) {
-      await removeExistingImages()
-    }
-    
-    const response = await projectImagesService.uploadImages(
-      props.project.id, 
-      [file]
-    )
-    
-    // noop: removed debug log
-    
-    // Substituir a imagem atual (sempre apenas 1)
-    currentImages.value = response.images
-    
-    Notify.create({
-      type: 'positive',
-      message: 'Imagem carregada com sucesso!'
-    })
-    
-  } catch (error: unknown) {
-    // noop: removed debug log
-    
-    let errorMessage = 'Erro ao fazer upload da imagem'
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { data?: { message?: string } } }
-      if (axiosError.response?.data?.message) {
-        errorMessage = axiosError.response.data.message
-      }
-    }
-    
-    Notify.create({
-      type: 'negative',
-      message: errorMessage
-    })
-  } finally {
-    uploadingImages.value = false
-    // Limpar input
-    if (imageInput.value) {
-      imageInput.value.value = ''
-    }
+  // Queue change locally (apply on save)
+  pendingNewImageFile.value = file
+  pendingRemoveImage.value = false
+  if (pendingNewImagePreviewUrl.value) URL.revokeObjectURL(pendingNewImagePreviewUrl.value)
+  pendingNewImagePreviewUrl.value = URL.createObjectURL(file)
+  if (imageInput.value) imageInput.value.value = ''
+  Notify.create({ type: 'info', message: 'Imagem selecionada. Clique em "Salvar Alterações" para aplicar.' })
+}
+
+function handleVideoUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  const file = files[0]
+
+  // Validações
+  if (!file.type.startsWith('video/')) {
+    Notify.create({ type: 'negative', message: 'Selecione um arquivo de vídeo válido' })
+    return
   }
+  if (file.size > 100 * 1024 * 1024) {
+    Notify.create({ type: 'negative', message: 'O vídeo deve ter no máximo 100MB' })
+    return
+  }
+  if (!props.project) {
+    Notify.create({ type: 'negative', message: 'Projeto não encontrado' })
+    return
+  }
+
+  // Queue change locally (apply on save)
+  pendingNewVideoFile.value = file
+  pendingRemoveVideo.value = false
+  if (pendingNewVideoPreviewUrl.value) URL.revokeObjectURL(pendingNewVideoPreviewUrl.value)
+  pendingNewVideoPreviewUrl.value = URL.createObjectURL(file)
+  if (videoInput.value) videoInput.value.value = ''
+  if (videoInputEmpty.value) videoInputEmpty.value.value = ''
+  Notify.create({ type: 'info', message: 'Vídeo selecionado. Clique em "Salvar Alterações" para aplicar.' })
 }
 
 async function removeExistingImages() {
@@ -629,33 +791,44 @@ async function removeExistingImages() {
   }
 }
 
-async function removeImage(imageId: string) {
-  if (!props.project) return
-  
-  try {
-    // noop: removed debug log
-    
-    // Configurar token
-    await ensureAuthToken()
-    
-    await projectImagesService.deleteImage(props.project.id, imageId)
-    
-    // Limpar a lista (sempre apenas 1 imagem)
-    currentImages.value = []
-    
-    Notify.create({
-      type: 'positive',
-      message: 'Imagem removida com sucesso!'
-    })
-    
-  } catch (error: unknown) {
-    // noop: removed debug log
-    const errorMessage = extractAxiosErrorMessage(error, 'Erro ao remover a imagem')
-    Notify.create({
-      type: 'negative',
-      message: errorMessage
-    })
+function removeImage() {
+  // Queue removal (apply on save)
+  pendingRemoveImage.value = true
+  pendingNewImageFile.value = null
+  if (pendingNewImagePreviewUrl.value) {
+    URL.revokeObjectURL(pendingNewImagePreviewUrl.value)
+    pendingNewImagePreviewUrl.value = null
   }
+  Notify.create({ type: 'info', message: 'A imagem será removida ao salvar.' })
+}
+
+function removeVideo() {
+  // Queue removal (apply on save)
+  pendingRemoveVideo.value = true
+  pendingNewVideoFile.value = null
+  if (pendingNewVideoPreviewUrl.value) {
+    URL.revokeObjectURL(pendingNewVideoPreviewUrl.value)
+    pendingNewVideoPreviewUrl.value = null
+  }
+  Notify.create({ type: 'info', message: 'O vídeo será removido ao salvar.' })
+}
+
+function cancelPendingVideoChange() {
+  pendingRemoveVideo.value = false
+  if (pendingNewVideoPreviewUrl.value) {
+    URL.revokeObjectURL(pendingNewVideoPreviewUrl.value)
+    pendingNewVideoPreviewUrl.value = null
+  }
+  pendingNewVideoFile.value = null
+}
+
+function cancelPendingImageChange() {
+  pendingRemoveImage.value = false
+  if (pendingNewImagePreviewUrl.value) {
+    URL.revokeObjectURL(pendingNewImagePreviewUrl.value)
+    pendingNewImagePreviewUrl.value = null
+  }
+  pendingNewImageFile.value = null
 }
 
 async function handleSubmit() {
@@ -688,6 +861,43 @@ async function handleSubmit() {
   try {
     // Configurar token
     await ensureAuthToken()
+
+    // ----- Apply media changes (Video) -----
+    let latestVideoUrl: string | undefined = currentVideoUrl.value
+    if (pendingNewVideoFile.value) {
+      try {
+        const resp = await projectVideosService.uploadVideo(props.project.id, pendingNewVideoFile.value)
+        latestVideoUrl = resp.videoUrl
+      } catch (err) {
+        const message = extractAxiosErrorMessage(err, 'Erro ao enviar o vídeo')
+        throw new Error(message)
+      }
+    } else if (pendingRemoveVideo.value && currentVideoUrl.value) {
+      try {
+        await projectVideosService.deleteVideo(props.project.id)
+        latestVideoUrl = undefined
+      } catch (err) {
+        const message = extractAxiosErrorMessage(err, 'Erro ao remover o vídeo')
+        throw new Error(message)
+      }
+    }
+
+    // ----- Apply media changes (Image/Cover) -----
+    if (pendingNewImageFile.value) {
+      if (currentImages.value.length > 0) {
+        await removeExistingImages()
+      }
+      try {
+        const response = await projectImagesService.uploadImages(props.project.id, [pendingNewImageFile.value])
+        currentImages.value = response.images
+      } catch (err) {
+        const message = extractAxiosErrorMessage(err, 'Erro ao fazer upload da imagem')
+        throw new Error(message)
+      }
+    } else if (pendingRemoveImage.value && currentImages.value.length > 0) {
+      await removeExistingImages()
+      currentImages.value = []
+    }
     
     const updatedProject = await projectsService.update(props.project.id, updateData)
     // noop: removed debug log
@@ -697,6 +907,7 @@ async function handleSubmit() {
       const imagesResponse = await projectImagesService.getProjectImages(props.project.id)
       const projectWithImages = {
         ...updatedProject,
+        videoUrl: latestVideoUrl,
         images: imagesResponse.images
       }
       // noop: removed debug log
@@ -704,7 +915,7 @@ async function handleSubmit() {
       emit('projectUpdated', projectWithImages)
     } catch {
       // noop: removed debug log
-      emit('projectUpdated', updatedProject)
+      emit('projectUpdated', { ...updatedProject, videoUrl: latestVideoUrl })
     }
     
     Notify.create({
@@ -866,6 +1077,12 @@ onMounted(() => {
   .preview-image {
     border-radius: 12px;
   }
+  .native-preview {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+  }
   
   .image-overlay {
     position: absolute;
@@ -915,6 +1132,17 @@ onMounted(() => {
   .upload-btn {
     font-weight: 600;
   }
+}
+
+.video-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.video-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* FORM FIELDS */
