@@ -89,6 +89,92 @@ describe('SubscriptionsService', () => {
     await expect(service.createCheckout({ projectId: 'p1' }, userId)).rejects.toThrow(new AppError('Campaign owner not connected to payouts', 422))
   })
 
+  it('throws when campaign deadline has passed', async () => {
+    const userId = 'u1'
+    mockPrisma.project.findUnique.mockResolvedValue({
+      id: 'p1', title: 'T', deletedAt: null, status: 'PUBLISHED',
+      subscriptionEnabled: true, subscriptionPriceCents: 990, subscriptionInterval: 'MONTH',
+      deadline: new Date(Date.now() - 3600_000),
+      ownerId: 'o1', owner: { stripeAccountId: 'acct_1' },
+    })
+    await expect(service.createCheckout({ projectId: 'p1' }, userId)).rejects.toThrow(
+      new AppError('Project is not accepting subscriptions', 400)
+    )
+  })
+
+  it('uses YEAR interval label and hash router when configured', async () => {
+    const userId = 'u1'
+    process.env.APP_USE_HASH_ROUTER = 'true'
+    mockPrisma.project.findUnique.mockResolvedValue({
+      id: 'p1', title: 'Proj', deletedAt: null, status: 'PUBLISHED',
+      subscriptionEnabled: true, subscriptionPriceCents: 990, subscriptionInterval: 'YEAR',
+      ownerId: 'o1', owner: { stripeAccountId: 'acct_1' },
+    })
+    mockPrisma.user.upsert.mockResolvedValue({ id: userId })
+    mockPrisma.subscription.findUnique.mockResolvedValue(null)
+    mockPrisma.subscription.create.mockResolvedValue({ id: 's1' })
+    mockStripe.checkout.sessions.create.mockResolvedValue({ url: 'https://stripe/session' })
+
+    await service.createCheckout({ projectId: 'p1' }, userId)
+
+    const call = mockStripe.checkout.sessions.create.mock.calls[0][0]
+    expect(call.line_items[0].price_data.product_data.name).toContain('Anual')
+    expect(call.success_url).toContain('/#/subscribe/success')
+    expect(call.cancel_url).toContain('/#/subscribe/cancel')
+  })
+
+  it('omits application_fee_percent when PLATFORM_FEE_PERCENT is invalid', async () => {
+    const userId = 'u1'
+    process.env.PLATFORM_FEE_PERCENT = 'abc'
+    mockPrisma.project.findUnique.mockResolvedValue({
+      id: 'p1', title: 'T', deletedAt: null, status: 'PUBLISHED',
+      subscriptionEnabled: true, subscriptionPriceCents: 990, subscriptionInterval: 'MONTH',
+      ownerId: 'o1', owner: { stripeAccountId: 'acct_1' },
+    })
+    mockPrisma.user.upsert.mockResolvedValue({ id: userId })
+    mockPrisma.subscription.findUnique.mockResolvedValue(null)
+    mockPrisma.subscription.create.mockResolvedValue({ id: 's1' })
+    mockStripe.checkout.sessions.create.mockResolvedValue({ url: 'https://stripe/session' })
+
+    await service.createCheckout({ projectId: 'p1' }, userId)
+
+    const call = mockStripe.checkout.sessions.create.mock.calls[0][0]
+    expect(call.subscription_data).not.toHaveProperty('application_fee_percent')
+  })
+
+  it('rethrows unexpected Stripe account error', async () => {
+    const userId = 'u1'
+    const unexpected = new Error('boom')
+    mockPrisma.project.findUnique.mockResolvedValue({
+      id: 'p1', title: 'T', deletedAt: null, status: 'PUBLISHED',
+      subscriptionEnabled: true, subscriptionPriceCents: 990, subscriptionInterval: 'MONTH',
+      ownerId: 'o1', owner: { stripeAccountId: 'acct_1' },
+    })
+    mockStripe.accounts.retrieve.mockRejectedValueOnce(unexpected)
+
+    await expect(service.createCheckout({ projectId: 'p1' }, userId)).rejects.toBe(unexpected)
+  })
+
+  it('respects custom successUrl and cancelUrl when provided', async () => {
+    const userId = 'u1'
+    mockPrisma.project.findUnique.mockResolvedValue({
+      id: 'p1', title: 'T', deletedAt: null, status: 'PUBLISHED',
+      subscriptionEnabled: true, subscriptionPriceCents: 990, subscriptionInterval: 'MONTH',
+      ownerId: 'o1', owner: { stripeAccountId: 'acct_1' },
+    })
+    mockPrisma.user.upsert.mockResolvedValue({ id: userId })
+    mockPrisma.subscription.findUnique.mockResolvedValue(null)
+    mockPrisma.subscription.create.mockResolvedValue({ id: 's1' })
+    mockStripe.checkout.sessions.create.mockResolvedValue({ url: 'https://stripe/session' })
+
+    const data = { projectId: 'p1', successUrl: 'https://ok/s', cancelUrl: 'https://ok/c' }
+    await service.createCheckout(data, userId)
+
+    const call = mockStripe.checkout.sessions.create.mock.calls[0][0]
+    expect(call.success_url).toBe('https://ok/s')
+    expect(call.cancel_url).toBe('https://ok/c')
+  })
+
   it('cancels subscription immediately when cancelAtPeriodEnd = false', async () => {
     const userId = 'u1'
     mockPrisma.subscription.findUnique.mockResolvedValue({ id: 's1', subscriberId: userId, stripeSubscriptionId: 'sub_123' })
@@ -109,6 +195,18 @@ describe('SubscriptionsService', () => {
 
     await service.cancelSubscription('s1', userId, true)
     expect(mockStripe.subscriptions.update).toHaveBeenCalledWith('sub_123', { cancel_at_period_end: true })
+  })
+
+  it('updates local status without hitting Stripe when no stripeSubscriptionId', async () => {
+    const userId = 'u1'
+    mockPrisma.subscription.findUnique.mockResolvedValue({ id: 's1', subscriberId: userId, stripeSubscriptionId: null })
+    mockPrisma.subscription.update.mockResolvedValue({ id: 's1', status: 'CANCELED' })
+
+    await service.cancelSubscription('s1', userId)
+
+    expect(mockStripe.subscriptions.cancel).not.toHaveBeenCalled()
+    expect(mockStripe.subscriptions.update).not.toHaveBeenCalled()
+    expect(mockPrisma.subscription.update).toHaveBeenCalled()
   })
 
   it('throws 404 when subscription not found', async () => {
